@@ -4,13 +4,78 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **generate-secrets**
+
+### Fixed
+
+- **context-forge "No server info found"** – When `REGISTER_CURSOR_MCP_SERVER_NAME` is unset, `make register` now writes `data/.cursor-mcp-url` for the **first** virtual server in `virtual-servers.txt` (e.g. cursor-default) instead of the last (cursor-router). Avoids stale or wrong server UUID after DB reset or first run. Wrapper validates URL format and suggests `make start && make register` when the file is missing; README and verify-cursor-setup troubleshooting updated.
+
+### Added
+
+- **generate-secrets** – `make generate-secrets` prints `JWT_SECRET_KEY` and `AUTH_ENCRYPTION_SECRET` (32-byte base64) for pasting into `.env`. Weak or short secrets cause gateway warnings and context-forge "Server disconnected" / "Needs authentication". See README troubleshooting and `.env.example`.
+
+- **REGISTER_CURSOR_MCP_SERVER_NAME** – When set, `make register` writes `data/.cursor-mcp-url` only for that virtual server (e.g. `cursor-default`). If unset, the last server in `virtual-servers.txt` wins. After register, script prints which server URL was written. See `.env.example` and scripts/README.md.
+
+- **Full Cursor restart and "No server info found"** – `make verify-cursor-setup` and `make use-cursor-wrapper` now tell users to fully quit Cursor (Cmd+Q / Alt+F4) and reopen; Reload Window is not enough. README troubleshooting: if logs show "No server info found" or "Server not yet created" after a full restart, try `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default`, run `make register`, then quit and reopen Cursor again.
+
+- **Cleanup duplicate virtual servers** – `scripts/cleanup-duplicate-servers.sh` and `make cleanup-duplicates`: remove virtual servers that have the same set of associated tools, keeping one per unique tool set (prefers server names listed in `virtual-servers.txt`). Use `CLEANUP_DRY_RUN=1 make cleanup-duplicates` to report only. Requires jq and gateway running. See [scripts/README.md](scripts/README.md).
+
+- **Tool router (single entry point)** – New **tool-router** MCP server (Python) that exposes 1–2 tools (`execute_task`, optional `search_tools`). Registered as a gateway and exposed via the **cursor-router** virtual server. When Cursor connects to cursor-router, it sees only the router’s tools; `execute_task(task, context)` fetches all tools from the gateway (GET /tools with JWT), selects the best match by keyword scoring, and invokes it via POST /rpc. Requires `GATEWAY_JWT` in `.env` (run `make jwt`, paste, refresh periodically). `scripts/gateways.txt`: tool-router entry; `scripts/virtual-servers.txt`: cursor-router|tool-router. Docker service `tool-router` (Dockerfile.tool-router, port 8030). Docs: README “Single entry point (router)”, [docs/AI_USAGE.md](docs/AI_USAGE.md#single-entry-point-router), .env.example and scripts/README.md.
+
+- **Automatic JWT for Cursor (context-forge)** – `scripts/cursor-mcp-wrapper.sh`: run as the Cursor MCP command for context-forge; generates a fresh JWT on each connection and execs the gateway Docker image so no token is stored in mcp.json and no weekly refresh is needed. `make register` writes the container MCP URL to `data/.cursor-mcp-url` (gitignored) for the wrapper; optional `CURSOR_MCP_SERVER_URL` in `.env` overrides. README "Connect Cursor": new "Automatic JWT (recommended)" subsection; .env.example and scripts/README.md document the wrapper and `data/.cursor-mcp-url`. On Linux the wrapper adds `--add-host=host.docker.internal:host-gateway` automatically.
+- **Verify Cursor (wrapper) setup** – `scripts/verify-cursor-setup.sh` and `make verify-cursor-setup`: check gateway health, presence and content of `data/.cursor-mcp-url`, and that the server UUID in that URL exists on the gateway. Use when context-forge shows Error in Cursor to see which check fails; then run `make start`, `make register`, and restart Cursor as needed. README troubleshooting updated for wrapper vs manual JWT.
+
+- **Switch to Cursor wrapper** – `scripts/use-cursor-wrapper.sh` and `make use-cursor-wrapper`: set the context-forge (or user-context-forge) entry in `~/.cursor/mcp.json` to the automatic JWT wrapper command, replacing any URL/headers or docker-args config. Requires jq and `make register` (or `CURSOR_MCP_SERVER_URL`). README Connect Cursor section updated to recommend this one-step switch.
+
+- **Refresh Cursor JWT in mcp.json** – `scripts/refresh-cursor-jwt.sh` and `make refresh-cursor-jwt`: update the Bearer token for the context-forge entry in `~/.cursor/mcp.json` in place (docker args or streamableHttp/SSE headers). Uses `CURSOR_MCP_JSON` for path (default `~/.cursor/mcp.json`). Requires jq. Creates a backup (`mcp.json.bak`) before overwriting. README documents running it weekly (e.g. cron `0 9 * * 0`) for manual JWT configs.
+
+### Changed
+
+- **Weak secrets and context-forge** – `.env.example` and README now require `JWT_SECRET_KEY` and `AUTH_ENCRYPTION_SECRET` of at least 32 characters; document that weak values cause "Server disconnected" / "Needs authentication". `start.sh` error message and README quick start mention `make generate-secrets`. Troubleshooting bullet for context-forge errors updated with weak-secrets fix (generate-secrets → update .env → make stop/start/register → restart Cursor). scripts/README.md documents `make generate-secrets`.
+
+- **refresh-cursor-jwt** – Script now tries MCP keys `context-forge` and `user-context-forge` (Cursor may show the server as "user-context-forge"); set `CONTEXT_FORGE_MCP_KEY` if your key differs. For URL/streamableHttp configs, the script now sets `headers.Authorization` even when `headers` was missing. README troubleshooting updated with a quick-fix sequence (make start → make refresh-cursor-jwt → restart Cursor) and URL/host.docker.internal notes.
+
+- **Virtual server registration: no duplicate tool sets** – When `virtual-servers.txt` is used, `scripts/register-gateways.sh` now filters tools by gateway using `.gatewaySlug`, `.gateway_slug`, `.gateway.slug`, or `.gateway.name` (Context Forge API). If two virtual server lines would attach the same set of tool IDs, only the first is created/updated; the second is skipped with a warning to avoid duplicate servers with identical tools. See [scripts/virtual-servers.txt](scripts/virtual-servers.txt).
+
+- **make jwt: standalone generator** – `make jwt` now prefers a local script (`scripts/create_jwt_token_standalone.py`) that builds the same JWT as Context Forge without loading gateway config, so no SQLite/BASIC_AUTH/admin password logs appear. Requires PyJWT (`pip install pyjwt`) when using the standalone path. If the script is unavailable or PyJWT is missing, the target falls back to `docker exec … create_jwt_token` with stderr suppressed. Uses `PLATFORM_ADMIN_EMAIL`, `JWT_SECRET_KEY`; optional `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_EXP_MINUTES`.
+
 ### Security
 
 - **.env.example placeholders** – Replaced weak example values (`my-test-key`, `changeme`, `my-test-salt`) with `REPLACE_WITH_STRONG_SECRET` / `REPLACE_ME` so they are not used in production; added a note that placeholder values must not be used in production.
 
 ### Added
 
+- **Virtual servers for Cursor 60-tool limit** – `scripts/virtual-servers.txt`: define multiple virtual servers (format `ServerName|gateway1,gateway2,...`). When present, `make register` creates or updates each server with up to 60 tools from the listed gateways and prints one Cursor URL per server. Use one URL in Cursor (e.g. `cursor-default`) to stay under the ~60-tool limit. Docs: README (virtual server behaviour and 60-tool note), [scripts/README.md](scripts/README.md) (virtual-servers.txt), [docs/AI_USAGE.md](docs/AI_USAGE.md#tool-limit-and-virtual-servers) (tool limit and virtual servers), [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (when to use virtual-servers.txt).
+
+- **Registration reliability** – `.env.example` now sets `REGISTER_WAIT_SECONDS=30` by default so translate containers (e.g. sqlite) are ready before gateways are registered, reducing "Unable to connect to gateway" on first run. `make register-wait` runs register with a 30s wait. `scripts/gateways.txt`: context-awesome and prisma-remote commented out (often unreachable or 406); sqlite, github, and Context7 commented out so `make register` / `make register-wait` succeed by default (uncomment or add via Admin UI after checking logs or setting API keys). README and scripts/README.md updated. **register-gateways.sh**: on "Unable to connect" or "Unexpected error" for local SSE gateways (ports 8013–8029), script retries once after 15s; local-fail hint and HAS_LOCAL_FAIL now include sqlite/github (8022–8029).
+
+- **README context-forge Cursor failure** – Troubleshooting: if context-forge shows Error in Cursor or logs "No stored tokens found" / "Client error for command fetch failed", add JWT to MCP config (`headers.Authorization = Bearer <token>`), run `make jwt`, restart Cursor. Connect Cursor section now states that the gateway requires a Bearer JWT on every request.
+
+- **README "Missing servers and authentication"** – New Troubleshooting subsection: how to uncomment local gateways (sqlite, github) and remote gateways (Context7, context-awesome, prisma-remote, cloudflare-\*, v0, apify-dribbble); short authentication checklist (local .env keys vs Admin UI Passthrough Headers/OAuth for remote). Links to docs/ADMIN_UI_MANUAL_REGISTRATION.md.
+
+- **register-gateways.sh Cursor URLs** – After creating/updating the virtual server, the script now prints both `Cursor (mcp):` and `Cursor (sse):` URLs on separate lines for easier copy-paste and to match README (mcp vs sse transport).
+
+- **make reset-db** – Stops the stack and removes `./data/mcp.db`, `mcp.db-shm`, and `mcp.db-wal` for recovery from SQLite corruption ("database disk image is malformed"). After running it, use `make start` then `make register`. README troubleshooting: new bullet linking admin 500s (gateways/partial, prompts/partial, "Loading gateways...") to corrupted DB and `make reset-db`; existing "database disk image is malformed" bullet updated to mention `make reset-db`. scripts/README.md documents the new target.
+
+- **.env.example and Make-first** – .env.example: grouped sections (Required, Register script, Optional translate services, Optional debug), Make-first header, REGISTER_VERBOSE and MCPGATEWAY_CONTAINER. Makefile: `gateway-only` target. README, .cursor/COMMANDS.md, docs/DEVELOPMENT.md, scripts/README.md: prefer `make start`, `make register`, `make jwt`, `make list-prompts`, `make gateway-only`; script invocations as alternatives. Troubleshooting and prompts workaround use make where applicable.
+
+- **Project structure and productivity** – [scripts/README.md](scripts/README.md): index of scripts and commands (start, register, list-prompts, JWT, gateways/prompts/resources format). [.cursor/COMMANDS.md](.cursor/COMMANDS.md): replaced with mcp-gateway-specific workflows (no npm; use Docker and scripts). [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): local dev loop, adding gateways/prompts/resources, troubleshooting links. [docs/AI_USAGE.md](docs/AI_USAGE.md): which tools for planning, docs, search, browser, DB. [scripts/prompts.txt](scripts/prompts.txt): task-breakdown prompt and format comment. [scripts/resources.txt](scripts/resources.txt): format comment and example resource. [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md): current setup (virtual server name, gateways/prompts location). [Makefile](Makefile): targets `start`, `stop`, `register`, `jwt`, `list-prompts`. README: Development subsection (links to DEVELOPMENT.md, scripts/README.md), Using the gateway with AI (link to AI_USAGE.md), make shortcuts.
+
+- **Gateways and register script (stack-focused)** – `scripts/gateways.txt`: header naming stack (React, Node, TypeScript, Java, Spring, Tailwind, Next.js, Jest, Prisma), optional third column Transport (SSE / STREAMABLEHTTP), remote section with Context7, context-awesome, prisma-remote uncommented; cloudflare-\*, v0, apify-dribbble remain commented (auth in Admin UI). `scripts/register-gateways.sh`: transport in POST /gateways (from column or inferred from URL); after gateways, optional virtual server create/update (REGISTER_VIRTUAL_SERVER=true, default) using jq, sync delay 3s, GET /tools then PUT or POST /servers with all tool IDs, prints server UUID and Cursor URL; optional REGISTER_PROMPTS from scripts/prompts.txt (name|description|template, {{arg}} and \\n); optional REGISTER_RESOURCES from scripts/resources.txt (name|uri|description|mime_type). `.env.example`: EXTRA_GATEWAYS with Transport, REGISTER_VIRTUAL_SERVER, REGISTER_VIRTUAL_SERVER_NAME, REGISTER_PROMPTS, REGISTER_RESOURCES; note Context7/Prisma auth in Admin UI. README: gateways.txt format, virtual server output, subsection "Stack-focused gateways" (Next.js project-local, Spring on host). Optional `scripts/prompts.txt` with one code-review prompt (format documented in file).
+
+- **docs/ADMIN_UI_MANUAL_REGISTRATION.md** – Documentation for registrations that must be done manually in the Context Forge Admin UI: exact API/UI structure for gateways (name, url, transport, auth), virtual servers (associated_tools), prompts, and resources; which gateways require Passthrough Headers or OAuth (Context7, v0, apify-dribbble, etc.); quick-reference table for remote gateways. README links to this doc for auth and manual setup.
+
 - **Local translate services: reactbits, snyk, sqlite, github** – Four new stdio→SSE translate services (ports 8022–8025). reactbits runs `reactbits-dev-mcp-server`; snyk runs `snyk mcp -t stdio --experimental` (set `SNYK_TOKEN` in .env); sqlite runs `mcp-sqlite` (npm) with configurable `SQLITE_DB_PATH` and `SQLITE_VOLUME`; github runs `@modelcontextprotocol/server-github` (set `GITHUB_PERSONAL_ACCESS_TOKEN` in .env). `scripts/gateways.txt`, `.env.example`, and README table updated.
+
+- **Logging and UX in bash scripts** – Added `scripts/lib/log.sh` with TTY-aware colors and helpers: `log_step`, `log_info`, `log_ok`, `log_warn`, `log_fail`, `log_err`. `start.sh`, `scripts/register-gateways.sh`, and `scripts/list-prompts.sh` now use them for consistent section headers (==>), success (✓), warnings (⚠), and errors (✗). Colors disabled when stdout is not a TTY (pipes/CI stay plain).
+
+- **scripts/list-prompts.sh** – Script to list prompts via GET /prompts (JWT from gateway, .env). Works in any shell (e.g. fish); README and docs/ADMIN_UI_MANUAL_REGISTRATION.md now point to it instead of inline curl/JWT commands.
+
+- **Admin Prompts page infinite loading** – README and docs/ADMIN_UI_MANUAL_REGISTRATION.md now document the issue and workarounds: use GET/POST /prompts with JWT, register via REGISTER_PROMPTS and scripts/prompts.txt, or inspect Network tab and report upstream to IBM/mcp-context-forge.
+
+- **register-gateways.sh auth reminder** – After "Done.", the script now prints a single line pointing to docs/ADMIN_UI_MANUAL_REGISTRATION.md for gateways that need API keys or OAuth (Context7, v0, apify-dribbble, etc.), so users know to configure them in Admin UI.
 
 - **register-gateways.sh curl timeouts** – POST to /gateways now uses --connect-timeout 10 and --max-time 45 so the script does not hang when the gateway is slow to validate URLs.
 - **register-gateways.sh idempotent for "already exists"** – When the API returns "Gateway name already exists" (e.g. after restart with same DB), the script now reports "OK name (already registered)" instead of FAIL, so re-running after start is safe.
@@ -69,7 +134,15 @@ All notable changes to this project are documented here.
 - **README** – "Profiles (toggle by technology)" recommends `./scripts/up.sh [profiles]` so profile start works on systems where `docker compose` does not support `--profile`; direct `docker-compose` examples for copy-paste. "Full stack: registering gateways" notes that script registers all gateways and skips unreachable ones; pointer to Java & Spring AI MCP in MCP_SERVERS_RECOMMENDED.md.
 - **docs/PIPELINE.md** – Step 2 mentions profiles (node, python, reference). [docs/MCP_SERVERS_RECOMMENDED.md](docs/MCP_SERVERS_RECOMMENDED.md) "Adding to Context Forge" includes profiles and register-gateways behavior.
 
-## [1.0.0]
+## [1.0.0] - 2026-02-04
+
+### Changed
+
+- **scripts/ and docs/ cleanup** – Removed `docs/PROJECT_STATE.md` (content duplicated in README and .env). Slimmed `scripts/README.md` to a compact command/file index and file-format summary. Tightened `docs/DEVELOPMENT.md` (shorter sections, same content). Kept `docs/DEVELOPMENT.md`, `docs/AI_USAGE.md`, `docs/ADMIN_UI_MANUAL_REGISTRATION.md` as the only docs; all scripts and data files retained as essential.
+
+- **Script output (color and structure)** – All scripts now use `scripts/lib/log.sh`: `log_section` (bold section titles), `log_line` (separator), `log_step`, `log_ok`, `log_info`, `log_warn`, `log_fail`, `log_err`. Colors only when stdout is a TTY; pipes/CI stay plain. Applied to start.sh, register-gateways.sh, verify-cursor-setup.sh, use-cursor-wrapper.sh, refresh-cursor-jwt.sh, cursor-mcp-wrapper.sh, list-prompts.sh, cleanup-duplicate-servers.sh.
+
+## [0.1.0]
 
 ### Added
 
