@@ -6,6 +6,48 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- **Pre-commit hooks** – `.pre-commit-config.yaml` with gitleaks (secret detection), detect-private-key, check-yaml/check-json, trailing-whitespace, end-of-file-fixer, check-added-large-files (max 1MB), check-merge-conflict, and Ruff for `tool_router/`. `make pre-commit-install` installs the hook; see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#pre-commit). Pre-commit complements CI (Trufflehog secret scan, lint, test, Trivy).
+- **.gitignore** – Python/coverage entries: `.pytest_cache/`, `__pycache__/`, `.ruff_cache/`, `.mypy_cache/`, `htmlcov/`, `.coverage`, `*.cover`, `bandit-report.json`.
+- **Trivy gateway image scan** – CI Trivy job now also scans the gateway image `ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1` (report only; exit-code 0 so upstream findings do not fail the build). Inline comment in workflow explains that the image is external/pre-built and fixes belong upstream (IBM/mcp-context-forge).
+
+### Changed
+
+- **.gitignore** – Replaced generic `test.js` with `test.local.js` and `*.temp.js` so only ad-hoc/local test artifacts are ignored and legitimate `test.js` files are not excluded.
+- **CI** – Merged gateway health smoke into the build job so smoke runs on the same runner as the Docker build (avoids cross-job image reuse); removed standalone smoke job.
+- **LICENSE** – Added copyright holder "MCP Gateway Contributors" to the MIT copyright line (standard format).
+
+## [1.2.0] - 2026-02-13
+
+### Added
+
+- **Trivy image scan** – CI workflow now includes a Trivy job that builds the tool-router image and runs Trivy for vulnerability scanning (CRITICAL,HIGH; exit-code 1 so findings fail the build).
+
+### Changed
+
+- **Trufflehog pinned** – Secret scan uses `trufflesecurity/trufflehog@v3.93.3` instead of `@main` for reproducible CI.
+- **Gateway image pinned** – `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh` use `ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1` instead of `latest` for reproducible deploys.
+
+### Documentation
+
+- **Contributing / Forking** – README now has a short "Contributing / Forking" section: fork setup and how to contribute (lint, test, PR, CHANGELOG).
+- **DEVELOPMENT.md Next steps** – Updated to reflect Trufflehog pin, Trivy in CI, and gateway image locations (`docker-compose.yml`, `scripts/cursor-mcp-wrapper.sh`).
+
+## [1.1.0] - 2026-02-13
+
+### Added
+
+- **CI, lint, and tests** – GitHub Actions workflow (`.github/workflows/ci.yml`): shellcheck on `start.sh` and `scripts/**/*.sh`, ruff on `tool_router/`, pytest for tool_router (gateway_client, scoring, args), Docker build (sequential-thinking + tool-router), gateway health smoke, and optional Trufflehog secret scan. Makefile: `make lint` (shellcheck + ruff), `make test` (pytest). Root `pyproject.toml` and `requirements.txt` for Python deps; Dockerfile.tool-router uses them. `.cursor/`: COMMANDS.md documents `make lint`, `make test`, and CI; rule `mcp-gateway-ci.mdc` (Bash/Docker + Python); format-edited hook skips when no package.json or file under scripts/tool_router. See [.cursor/COMMANDS.md](.cursor/COMMANDS.md).
+
+- **verify-cursor-setup and GATEWAY_JWT** – When the Cursor URL points to cursor-router and the server has 0 tools, `make verify-cursor-setup` now fails with a clear message to set `GATEWAY_JWT` (run `make jwt`, paste into `.env`, then `make start` and `make register`).
+
+- **DevContainer** – `.devcontainer/` for one-click dev: Ubuntu base, repo mounted at `/workspace`, postCreate installs shellcheck and pip deps (requirements.txt, ruff, pytest). Use "Reopen in Container" in VS Code/Cursor. Documented in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#dev-container-optional) and README Prerequisites.
+
+- **Next steps and docs** – [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) now has a "Dev Container" section and a "Next steps (after setup)" section (CI, local lint/test, gateway updates, Python deps, Cursor). CI secret scan uses `trufflesecurity/trufflehog@main` (no v4 tag).
+
+- **How to add gateway to Cursor (mcp.json)** – [docs/AI_USAGE.md](docs/AI_USAGE.md) now has a "How to add the gateway to Cursor (~/.cursor/mcp.json)" section: Option A (wrapper via `make use-cursor-wrapper`) and Option B (manual streamableHttp URL + JWT), with link to README Connect Cursor.
+
+- **Context-forge "Error" / "NO SERVER INFO FOUND"** – [docs/AI_USAGE.md](docs/AI_USAGE.md) troubleshooting: step-by-step fix (run `make verify-cursor-setup`, then `make start` + `make register`, set `GATEWAY_JWT` for cursor-router, full Cursor restart) when context-forge shows Error or logs "NO SERVER INFO FOUND" / "Server not yet created".
+
 - **generate-secrets**
 
 - **list-servers** – `make list-servers` and `scripts/list-servers.sh`: list virtual MCP servers (id, name, tool count) via the gateway API. Use when the Admin UI "Virtual MCP Servers" page shows "No tags found" or 0 items but servers were created via `make register` or the API; see [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md).
@@ -18,9 +60,13 @@ All notable changes to this project are documented here.
 
 ### Fixed
 
-- **GET /servers HTTP 500 and virtual server create failures** – `list-servers.sh` retries `GET /servers` without query params when the gateway returns 500/502/503 (some Context Forge versions fail on `limit=0&include_pagination=false`). `register-gateways.sh` does the same retry for the servers list and logs when virtual server create/update fails (HTTP code and, for 5xx, first lines of response and a hint to check gateway logs). See [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md#troubleshooting-get-servers-returns-500-or-virtual-server-create-fails).
+- **Virtual MCP Servers infinite loading** – When the Admin UI Virtual MCP Servers page stays on "Loading servers...", the usual cause is GET /servers returning 500 due to a **corrupted SQLite DB** (`database disk image is malformed`). [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md) now has a dedicated "Virtual MCP Servers page stuck on Loading servers..." section: check gateway logs and run `make reset-db` then `make start` and `make register` to recover.
 
-- **Virtual server create HTTP 400** – On 400, the script prints the gateway response (validation error) and retries with a flat request body and `associatedTools` (camelCase), for gateway versions that do not accept the nested `{"server": {"associated_tools": ...}}` shape. When the gateway returns "This transaction is inactive", the script skips the flat-body retry and prints a workaround (Admin UI or retry later). Docs now note that the same error can appear in the Admin UI when clicking Add Server, with workarounds (fewer servers/tools, restart gateway, report upstream). When GET /servers returns non-200, the script skips virtual server create/update and suggests Admin UI or retry (no delay/retry).
+- **fetch_servers_list exit code** – `fetch_servers_list` now always returns 0 so the register script does not exit under `set -e` when GET /servers remains non-200 after retries; the caller decides behavior from `servers_code` and `servers_body`.
+
+- **GET /servers HTTP 500 and virtual server create failures** – `list-servers.sh` retries `GET /servers` without query params when the gateway returns 500/502/503 (some Context Forge versions fail on `limit=0&include_pagination=false`). `register-gateways.sh` uses a shared `fetch_servers_list` helper: same initial retry, then for 5xx/408 up to 2 delayed retries (delay configurable via `REGISTER_GET_SERVERS_RETRY_DELAY`, default 5s; set to 0 to disable). Optional `REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS=true` allows create-only (POST) when GET /servers still fails after retries (no update, possible duplicates if run again). See [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md#troubleshooting-get-servers-returns-500-or-virtual-server-create-fails) and `.env.example`.
+
+- **Virtual server create HTTP 400** – On 400, the script prints the gateway response (validation error) and retries with a flat request body and `associatedTools` (camelCase), for gateway versions that do not accept the nested `{"server": {"associated_tools": ...}}` shape. When the gateway returns "This transaction is inactive", the script skips the flat-body retry and prints a workaround (Admin UI or retry later). Docs now note that the same error can appear in the Admin UI when clicking Add Server, with workarounds (fewer servers/tools, restart gateway, report upstream). When GET /servers returns non-200 (and the opt-in create flag is not set), the script skips virtual server create/update and suggests Admin UI or retry.
 
 - **context-forge "No server info found"** – When `REGISTER_CURSOR_MCP_SERVER_NAME` is unset, `make register` writes `data/.cursor-mcp-url` for the default virtual server (cursor-router). Avoids stale or wrong server UUID after DB reset or first run. Wrapper validates URL format and suggests `make start && make register` when the file is missing; README and verify-cursor-setup troubleshooting updated.
 

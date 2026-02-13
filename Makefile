@@ -1,4 +1,4 @@
-.PHONY: start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup reset-db cleanup-duplicates generate-secrets
+.PHONY: start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup reset-db cleanup-duplicates generate-secrets lint test pre-commit-install
 
 generate-secrets:
 	@echo "# Add these to .env (min 32 chars; weak secrets cause 'Server disconnected' / context-forge errors):"
@@ -47,3 +47,14 @@ verify-cursor-setup:
 
 cleanup-duplicates:
 	./scripts/cleanup-duplicate-servers.sh
+
+lint:
+	shellcheck -s bash start.sh scripts/*.sh scripts/lib/*.sh
+	ruff check tool_router/
+
+test:
+	pytest tool_router/ -v
+
+pre-commit-install:
+	pre-commit install
+	@echo "Run 'pre-commit run --all-files' once to check the whole repo."

@@ -1,0 +1,21 @@
+[project]
+name = "mcp-gateway"
+version = "0.1.0"
+description = "Self-hosted MCP gateway (Context Forge) with tool-router"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp",
+    "mcp-contextforge-gateway",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.1.0",
+    "pre-commit>=3.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tool_router"]
+pythonpath = ["."]

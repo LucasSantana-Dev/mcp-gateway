@@ -26,6 +26,11 @@ Thumbs.db
 .cursor/hooks.log
 logs/
 
+# Ad-hoc / local (avoid committing one-off files)
+stdin
+test.local.js
+*.temp.js
+
 # Build and artifacts
 dist/
 build/
@@ -47,3 +52,13 @@ docker-compose.override.yml
 
 # Filesystem MCP server workspace (profile reference)
 workspace/
+
+# Python / coverage
+.pytest_cache/
+__pycache__/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+*.cover
+bandit-report.json
