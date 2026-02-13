@@ -34,13 +34,15 @@ KEY=$(get_context_forge_key "$MCP_JSON") || true
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 
-jq --arg key "$KEY" --arg path "$WRAPPER_PATH" '
+MCP_TIMEOUT_MS="${CURSOR_MCP_TIMEOUT_MS:-120000}"
+jq --arg key "$KEY" --arg path "$WRAPPER_PATH" --argjson timeout "$MCP_TIMEOUT_MS" '
+  def entry: {"command": $path, "timeout": $timeout};
   if .mcpServers[$key] != null then
-    .mcpServers[$key] = {"command": $path}
+    .mcpServers[$key] = entry
   elif .[$key] != null then
-    .[$key] = {"command": $path}
+    .[$key] = entry
   else
-    .mcpServers = ((.mcpServers // {}) | .[$key] = {"command": $path})
+    .mcpServers = ((.mcpServers // {}) | .[$key] = entry)
   end
 ' "$MCP_JSON" > "$tmp"
 
@@ -48,4 +50,4 @@ cp "$MCP_JSON" "${MCP_JSON}.bak"
 mv "$tmp" "$MCP_JSON"
 log_section "Cursor MCP wrapper"
 log_ok "Set \"$KEY\" to use the wrapper in $MCP_JSON (backup: ${MCP_JSON}.bak)."
-log_info "Fully quit Cursor (Cmd+Q / Alt+F4) and reopen so it reconnects with automatic JWT."
+log_info "Fully quit Cursor (Cmd+Q / Alt+F4) and reopen to use automatic JWT."
