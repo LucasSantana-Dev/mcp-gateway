@@ -12,6 +12,8 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- **Commit/PR rule** – `.cursor/rules/commit-pr-release.mdc`: explicit rule to never add Cursor co-authoring in commits.
+
 - **.gitignore** – Replaced generic `test.js` with `test.local.js` and `*.temp.js` so only ad-hoc/local test artifacts are ignored and legitimate `test.js` files are not excluded.
 - **CI** – Merged gateway health smoke into the build job so smoke runs on the same runner as the Docker build (avoids cross-job image reuse); removed standalone smoke job.
 - **LICENSE** – Added copyright holder "MCP Gateway Contributors" to the MIT copyright line (standard format).

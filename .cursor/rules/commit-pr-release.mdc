@@ -23,6 +23,8 @@ When to apply: authoring commits, PR templates, or release process changes.
 
 **Footer:** reference issues, breaking changes, release notes.
 
+Don't add Cursor co-authoring in any commits, never.
+
 **Pre-commit hooks & validation**
 
 * Enforce conventional commit message format.
