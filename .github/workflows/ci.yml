@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Run lint
+        run: make lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run tests
+        run: make test
+
+  build:
+    name: Docker build and gateway smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build translate and tool-router images
+        run: |
+          docker compose build sequential-thinking tool-router
+
+      - name: Create minimal .env
+        run: |
+          echo "HOST=0.0.0.0" >> .env
+          echo "PORT=4444" >> .env
+          echo "DATABASE_URL=sqlite:////data/mcp.db" >> .env
+          echo "JWT_SECRET_KEY=$(openssl rand -base64 32)" >> .env
+          echo "AUTH_ENCRYPTION_SECRET=$(openssl rand -base64 32)" >> .env
+          echo "PLATFORM_ADMIN_EMAIL=ci@localhost" >> .env
+          echo "PLATFORM_ADMIN_PASSWORD=ci-test-password-min-32-chars" >> .env
+          echo "PLATFORM_ADMIN_FULL_NAME=CI" >> .env
+          echo "MCPGATEWAY_UI_ENABLED=true" >> .env
+          echo "MCPGATEWAY_ADMIN_API_ENABLED=true" >> .env
+          echo "SECURE_COOKIES=false" >> .env
+          echo "AUTH_REQUIRED=true" >> .env
+
+      - name: Start gateway
+        run: |
+          mkdir -p data
+          docker compose up -d gateway
+
+      - name: Wait for gateway health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4444/health >/dev/null; then
+              echo "Gateway healthy after ${i}s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Gateway did not become healthy"
+          docker compose logs gateway
+          exit 1
+
+      - name: Stop gateway
+        if: always()
+        run: docker compose down --remove-orphans
+
+  trivy:
+    name: Trivy image scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build tool-router image
+        run: docker compose build tool-router
+
+      - name: Run Trivy on tool-router image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: "mcp-gateway-tool-router:latest"
+          format: table
+          exit-code: "1"
+          severity: "CRITICAL,HIGH"
+
+      # External pre-built image: report only so upstream CVEs do not fail CI; fix upstream (IBM/mcp-context-forge).
+      - name: Run Trivy on gateway image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: "ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1"
+          format: table
+          exit-code: "0"
+          severity: "CRITICAL,HIGH"
+
+  security:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Trufflehog (filesystem)
+        uses: trufflesecurity/trufflehog@v3.93.3
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
