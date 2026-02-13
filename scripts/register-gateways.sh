@@ -238,20 +238,17 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
     :
   elif [[ -f "$SCRIPT_DIR/virtual-servers.txt" ]]; then
     tools_arr=$(echo "$tools_body" | jq -c 'if type == "array" then . else .tools? // [] end' 2>/dev/null)
-    servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
-      -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
-    servers_code=$(parse_http_code "$servers_resp")
-    servers_body=$(parse_http_body "$servers_resp")
+    fetch_servers_list
     if [[ "$servers_code" != "200" ]]; then
-      servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
-        -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers" 2>/dev/null)
-      servers_code=$(parse_http_code "$servers_resp")
-      servers_body=$(parse_http_body "$servers_resp")
+      if [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then
+        log_warn "GET /servers returned $servers_code; attempting create-only (no update, possible duplicates if run again)."
+        servers_body="[]"
+      else
+        log_warn "GET /servers returned $servers_code; skipping virtual server create/update (gateway cannot list servers)."
+        log_info "Create virtual servers in Admin UI ($GATEWAY_URL) or retry 'make register' later. See docs/ADMIN_UI_MANUAL_REGISTRATION.md"
+      fi
     fi
-    if [[ "$servers_code" != "200" ]]; then
-      log_warn "GET /servers returned $servers_code; skipping virtual server create/update (gateway cannot list servers)."
-      log_info "Create virtual servers in Admin UI ($GATEWAY_URL) or retry 'make register' later. See docs/ADMIN_UI_MANUAL_REGISTRATION.md"
-    else
+    if [[ "$servers_code" == "200" ]] || [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then
       used_tool_sets=""
       while IFS= read -r line || [[ -n "$line" ]]; do
       line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -289,20 +286,17 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
     tool_ids=$(echo "$tools_body" | jq -r 'if type == "array" then .[] else .tools[]? // empty end | .id // empty' 2>/dev/null)
     if [[ -n "$tool_ids" ]]; then
       tool_ids_json=$(echo "$tool_ids" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-      servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
-        -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
-      servers_code=$(parse_http_code "$servers_resp")
-      servers_body=$(parse_http_body "$servers_resp")
+      fetch_servers_list
       if [[ "$servers_code" != "200" ]]; then
-        servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
-          -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers" 2>/dev/null)
-        servers_code=$(parse_http_code "$servers_resp")
-        servers_body=$(parse_http_body "$servers_resp")
+        if [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then
+          log_warn "GET /servers returned $servers_code; attempting create-only (no update, possible duplicates if run again)."
+          servers_body="[]"
+        else
+          log_warn "GET /servers returned $servers_code; skipping virtual server create/update."
+          log_info "Create virtual servers in Admin UI ($GATEWAY_URL) or retry 'make register' later. See docs/ADMIN_UI_MANUAL_REGISTRATION.md"
+        fi
       fi
-      if [[ "$servers_code" != "200" ]]; then
-        log_warn "GET /servers returned $servers_code; skipping virtual server create/update."
-        log_info "Create virtual servers in Admin UI ($GATEWAY_URL) or retry 'make register' later. See docs/ADMIN_UI_MANUAL_REGISTRATION.md"
-      else
+      if [[ "$servers_code" == "200" ]] || [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then
         server_name="${REGISTER_VIRTUAL_SERVER_NAME:-default}"
         existing_id=$(echo "$servers_body" | jq -r --arg n "$server_name" 'if type == "array" then .[] else .servers[]? // empty end | select(.name == $n) | .id' 2>/dev/null | head -1)
         [[ "$existing_id" == "null" ]] && existing_id=""

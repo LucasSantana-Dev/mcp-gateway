@@ -76,7 +76,11 @@ if [[ -n "$JWT" ]]; then
           log_info "  → URL points to server \"$server_name\"."
         fi
         if [[ "$tool_count" =~ ^[0-9]+$ ]] && [[ "$tool_count" -eq 0 ]]; then
-          log_warn "  → Server has no tools. For cursor-router: set GATEWAY_JWT in .env, run make start, then make register."
+          if [[ "$server_name" == "cursor-router" ]]; then
+            check 0 "cursor-router has 0 tools; set GATEWAY_JWT in .env (run make jwt, paste token), then make start and make register"
+          else
+            log_warn "  → Server has no tools. For cursor-router: set GATEWAY_JWT in .env, run make start, then make register."
+          fi
         fi
         if [[ "$server_name" == "cursor-default" ]]; then
           log_info "  → To use default cursor-router (tool-router), remove REGISTER_CURSOR_MCP_SERVER_NAME from .env and run make register."

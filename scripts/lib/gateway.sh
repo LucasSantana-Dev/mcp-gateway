@@ -80,6 +80,36 @@ parse_http_body() {
   echo "$1" | sed '$d'
 }
 
+# Fetches GET /servers with retries: first with ?limit=0&include_pagination=false,
+# then plain /servers; if still non-200 and 5xx/408, delayed retries (2 extra attempts).
+# Sets servers_code and servers_body in caller scope. Requires JWT and GATEWAY_URL.
+# REGISTER_GET_SERVERS_RETRY_DELAY (default 5); set to 0 to disable delayed retries.
+fetch_servers_list() {
+  local delay="${REGISTER_GET_SERVERS_RETRY_DELAY:-5}"
+  servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
+    -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
+  servers_code=$(parse_http_code "$servers_resp")
+  servers_body=$(parse_http_body "$servers_resp")
+  if [[ "$servers_code" != "200" ]]; then
+    servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
+      -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers" 2>/dev/null)
+    servers_code=$(parse_http_code "$servers_resp")
+    servers_body=$(parse_http_body "$servers_resp")
+  fi
+  if [[ "$servers_code" != "200" ]] && [[ "$delay" -gt 0 ]] && { [[ "$servers_code" =~ ^5 ]] || [[ "$servers_code" == "408" ]]; }; then
+    local i
+    for i in 1 2; do
+      sleep "$delay"
+      servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
+        -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers" 2>/dev/null)
+      servers_code=$(parse_http_code "$servers_resp")
+      servers_body=$(parse_http_body "$servers_resp")
+      [[ "$servers_code" == "200" ]] && return 0
+    done
+  fi
+  return 0
+}
+
 get_context_forge_key() {
   local mcp_json="${1:-${CURSOR_MCP_JSON:-$HOME/.cursor/mcp.json}}"
   local k

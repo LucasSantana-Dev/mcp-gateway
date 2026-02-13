@@ -35,6 +35,6 @@ docker_args=(run --rm -i
 if [[ "$(uname -s)" == "Linux" ]]; then
   docker_args+=(--add-host=host.docker.internal:host-gateway)
 fi
-docker_args+=(ghcr.io/ibm/mcp-context-forge:latest python3 -m mcpgateway.wrapper)
+docker_args+=(ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1 python3 -m mcpgateway.wrapper)
 
 exec docker "${docker_args[@]}"
