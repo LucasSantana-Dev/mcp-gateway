@@ -2,6 +2,20 @@
 
 Map of registered tools to typical use cases. Use a virtual server in Cursor to expose tools; when you have many gateways, use multiple virtual servers so each connection stays under the tool limit (see below).
 
+## Using the MCP Gateway with the tool router in Cursor IDE
+
+To use the **MCP Gateway with the tool router** in Cursor (one connection that routes tasks to the right upstream tool):
+
+1. **Prerequisites:** Docker, Docker Compose. Copy `.env.example` to `.env`, set `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, and `AUTH_ENCRYPTION_SECRET` (or run `make generate-secrets`).
+2. **Start the stack:** From the repo run `make start` (gateway + tool-router and other services).
+3. **Register gateways and virtual server:** Run `make register`. This registers the tool-router and creates the **cursor-router** virtual server; it writes `data/.cursor-mcp-url` for the wrapper. Do not set `REGISTER_CURSOR_MCP_SERVER_NAME` if you want the default cursor-router.
+4. **Set GATEWAY_JWT:** Run `make jwt`, copy the token, and add `GATEWAY_JWT=<token>` to `.env`. The tool-router needs this to call the gateway API. Refresh periodically (e.g. weekly).
+5. **Point Cursor at the wrapper:** Run `make use-cursor-wrapper` so `~/.cursor/mcp.json` uses `scripts/cursor-mcp-wrapper.sh` (generates a fresh JWT per connection; no token in mcp.json; sets 2-minute MCP timeout).
+6. **Pre-pull image (recommended):** Run `make cursor-pull` once so the first Cursor connection does not time out while the Context Forge image downloads.
+7. **Restart Cursor:** Fully quit Cursor (Cmd+Q / Alt+F4) and reopen.
+
+In Cursor you will see the **context-forge** (or **user-context-forge**) MCP server with the tool-router’s tools (e.g. `execute_task`). Describe a task in chat; the router selects the best upstream tool and runs it via the gateway. To confirm setup: run `make verify-cursor-setup` from the repo. For manual JWT or URL-based config, see [How to add the gateway to Cursor](#how-to-add-the-gateway-to-cursor-cursormcpmcpjson) and [README – Connect Cursor](../README.md#connect-cursor).
+
 ## Tool limit and virtual servers
 
 Cursor (and some MCP clients) warn or misbehave when a single connection exposes **more than ~60 tools**. With many gateways registered, one virtual server that includes every tool can exceed this.
@@ -65,13 +79,21 @@ Add an entry with the server URL and a Bearer token. Get the URL from the Admin 
 
 Refresh the token regularly (e.g. `make refresh-cursor-jwt` or paste a new `make jwt`). Full details and docker-wrapper variant: [README – Connect Cursor](../README.md#connect-cursor).
 
-make### Context-forge shows "Error" or logs "NO SERVER INFO FOUND" / "Server not yet created"
+### Context-forge shows "Error" or logs "NO SERVER INFO FOUND" / "Server not yet created"
 
 Those messages mean the MCP client (Cursor) could not get server info from the gateway. Fix in order:
 
-1. **Check setup:** From the repo run `make verify-cursor-setup`. It checks gateway health, `data/.cursor-mcp-url`, and that the server ID exists.
+1. **Check setup:** From the repo run `make verify-cursor-setup`. It checks gateway health, `data/.cursor-mcp-url`, server ID, Context Forge image, and gateway reachability from Docker.
 2. **Ensure URL file and server exist:** Run `make start` then `make register`. That (re)creates virtual servers and writes `data/.cursor-mcp-url`. If you ran `make reset-db` earlier, the old server UUID is gone—register again.
 3. **cursor-router only:** Set `GATEWAY_JWT` in `.env` (run `make jwt`, paste the token). Without it the server has 0 tools and the gateway can report no server info.
 4. **Reconnect Cursor:** Fully quit Cursor (Cmd+Q / Alt+F4) and reopen. Reload Window is not enough.
 
 If it still fails: from the repo run `make verify-cursor-setup` and follow its output; see also [README troubleshooting](../README.md#troubleshooting) and [ADMIN_UI_MANUAL_REGISTRATION.md](ADMIN_UI_MANUAL_REGISTRATION.md).
+
+### Context-forge logs "Request timed out" (MCP error -32001)
+
+Cursor’s default MCP server-creation timeout is 60 seconds. The wrapper starts a Docker container that must connect to the gateway; if the Context Forge image is not cached, the first run can exceed 60s and Cursor reports -32001. Fix:
+
+1. **Pre-pull the image:** From the repo run `make cursor-pull` so the image is cached before Cursor starts the wrapper.
+2. **Increase client timeout:** Run `make use-cursor-wrapper` again; it sets `"timeout": 120000` (2 minutes) in `~/.cursor/mcp.json` for the context-forge entry. Optionally set `CURSOR_MCP_TIMEOUT_MS=180000` in `.env` before running it for 3 minutes.
+3. **Fully restart Cursor:** Quit Cursor (Cmd+Q / Alt+F4) and reopen.
