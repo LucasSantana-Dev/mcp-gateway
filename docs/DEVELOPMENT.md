@@ -39,7 +39,7 @@ Format: prompts `name|description|template` ({{arg}}, `\n`); resources `name|uri
 
 ## Pre-commit
 
-Pre-commit runs secret detection (gitleaks), private-key detection, YAML/JSON checks, trailing-whitespace/EOF fixers, large-file check, merge-conflict check, and Ruff on `tool_router/` before each commit. CI still runs full lint, test, Trufflehog secret scan, and Trivy (see [.cursor/rules/security-secrets.mdc](../.cursor/rules/security-secrets.mdc)).
+Pre-commit runs secret detection (gitleaks), private-key detection, YAML/JSON checks, trailing-whitespace/EOF fixers, large-file check, merge-conflict check, and Ruff on `tool_router/` before each commit. CI still runs full lint, test, Trufflehog secret scan, and Trivy.
 
 1. Install pre-commit: `pip install pre-commit` or `pip install -e ".[dev]"` (adds pre-commit from pyproject.toml dev deps).
 2. Install the git hook: `make pre-commit-install` or `pre-commit install`.

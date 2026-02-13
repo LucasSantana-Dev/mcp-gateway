@@ -2,7 +2,9 @@
 .env
 .env.local
 .env.*.local
-.cursor/.env.mcp
+
+# Cursor IDE (local rules, skills, hooks; do not commit)
+.cursor/
 
 # Database (SQLite local files)
 data/*.db
@@ -23,7 +25,6 @@ Thumbs.db
 
 # Logs
 *.log
-.cursor/hooks.log
 logs/
 
 # Ad-hoc / local (avoid committing one-off files)

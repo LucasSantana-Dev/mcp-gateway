@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **.cursor/ ignored and removed from repo** – `.cursor/` is now in `.gitignore` and has been removed from the repository. Rules, skills, and hooks remain local-only; the remote no longer tracks `.cursor/`. Use your own `.cursor/` (or a shared config elsewhere) for Cursor IDE setup.
+
 ## [1.4.0] - 2026-02-13
 
 ### Added
