@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-13
+
 ### Added
 
 - **Pre-commit hooks** – `.pre-commit-config.yaml` with gitleaks (secret detection), detect-private-key, check-yaml/check-json, trailing-whitespace, end-of-file-fixer, check-added-large-files (max 1MB), check-merge-conflict, and Ruff for `tool_router/`. `make pre-commit-install` installs the hook; see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#pre-commit). Pre-commit complements CI (Trufflehog secret scan, lint, test, Trivy).
@@ -13,7 +15,6 @@ All notable changes to this project are documented here.
 ### Changed
 
 - **Commit/PR rule** – `.cursor/rules/commit-pr-release.mdc`: explicit rule to never add Cursor co-authoring in commits.
-
 - **.gitignore** – Replaced generic `test.js` with `test.local.js` and `*.temp.js` so only ad-hoc/local test artifacts are ignored and legitimate `test.js` files are not excluded.
 - **CI** – Merged gateway health smoke into the build job so smoke runs on the same runner as the Docker build (avoids cross-job image reuse); removed standalone smoke job.
 - **LICENSE** – Added copyright holder "MCP Gateway Contributors" to the MIT copyright line (standard format).
