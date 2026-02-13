@@ -12,6 +12,7 @@ source "$SCRIPT_DIR/lib/gateway.sh"
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:${PORT:-4444}}"
 DRY_RUN="${CLEANUP_DRY_RUN:-0}"
 COMPOSE=$(compose_cmd)
+export COMPOSE
 JWT=$(get_jwt) || { log_err "Failed to generate JWT."; exit 1; }
 
 if ! command -v jq &>/dev/null; then
@@ -61,7 +62,6 @@ fi
 
 declare -A sig_to_ids
 declare -A id_to_name
-declare -A id_to_sig
 
 while IFS= read -r obj; do
   [[ -z "$obj" ]] && continue
@@ -83,7 +83,6 @@ while IFS= read -r obj; do
   sig=$(echo "$tools" | jq -c 'sort' 2>/dev/null)
   [[ -z "$sig" ]] && sig="[]"
   id_to_name["$id"]="$name"
-  id_to_sig["$id"]="$sig"
   sig_to_ids["$sig"]="${sig_to_ids[$sig]:+${sig_to_ids[$sig]}$'\n'}$id"
 done < <(echo "$server_list")
 
@@ -91,7 +90,7 @@ duplicates_found=0
 to_delete=()
 
 for sig in "${!sig_to_ids[@]}"; do
-  ids=($(echo "${sig_to_ids[$sig]}" | tr '\n' ' '))
+  IFS=' ' read -ra ids <<< "$(echo "${sig_to_ids[$sig]}" | tr '\n' ' ')"
   if [[ ${#ids[@]} -le 1 ]]; then
     continue
   fi

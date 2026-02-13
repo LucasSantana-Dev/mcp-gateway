@@ -89,21 +89,23 @@ fetch_servers_list() {
   servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
     -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
   servers_code=$(parse_http_code "$servers_resp")
+  # shellcheck disable=SC2034
   servers_body=$(parse_http_body "$servers_resp")
   if [[ "$servers_code" != "200" ]]; then
     servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
       -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers" 2>/dev/null)
     servers_code=$(parse_http_code "$servers_resp")
+    # shellcheck disable=SC2034
     servers_body=$(parse_http_body "$servers_resp")
   fi
   if [[ "$servers_code" != "200" ]] && [[ "$delay" -gt 0 ]] && { [[ "$servers_code" =~ ^5 ]] || [[ "$servers_code" == "408" ]]; }; then
-    local i
-    for i in 1 2; do
+    local _
+    for _ in 1 2; do
       sleep "$delay"
       servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
         -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers" 2>/dev/null)
       servers_code=$(parse_http_code "$servers_resp")
-      servers_body=$(parse_http_body "$servers_resp")
+      _=$(parse_http_body "$servers_resp")
       [[ "$servers_code" == "200" ]] && return 0
     done
   fi

@@ -7,6 +7,7 @@ source "$SCRIPT_DIR/lib/gateway.sh"
 
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:${PORT:-4444}}"
 COMPOSE=$(compose_cmd)
+export COMPOSE
 JWT=$(get_jwt) || { log_err "Failed to generate JWT. Is the gateway running? Try: docker compose ps gateway"; exit 1; }
 
 log_section "Prompts"

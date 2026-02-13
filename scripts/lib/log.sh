@@ -8,7 +8,7 @@ if [[ -t 1 ]]; then
   _c_bold='\033[1m'
   _c_reset='\033[0m'
 else
-  _c_red= _c_green= _c_yellow= _c_cyan= _c_dim= _c_bold= _c_reset=
+  _c_red='' _c_green='' _c_yellow='' _c_cyan='' _c_dim='' _c_bold='' _c_reset=''
 fi
 
 log_section() { echo ""; echo -e "${_c_bold}${_c_cyan}$*${_c_reset}"; }

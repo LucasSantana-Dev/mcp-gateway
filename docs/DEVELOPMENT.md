@@ -49,8 +49,22 @@ The gitleaks hook uses the default `gitleaks` id so pre-commit installs the bina
 
 ## Next steps (after setup)
 
-- **CI:** Runs on push/PR (lint, test, build, Trivy image scan, smoke, secret scan). Trufflehog is pinned to `v3.93.3` in [.github/workflows/ci.yml](../.github/workflows/ci.yml). Trivy scans the tool-router image (fail on CRITICAL/HIGH) and the gateway image `ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1` (report only; upstream image).
+- **CI:** Runs on push/PR (lint, test, build, Trivy image scan, smoke, secret scan). Trufflehog is pinned to `v3.93.3` in [.github/workflows/ci.yml](../.github/workflows/ci.yml). Trivy scans the tool-router image (fail on CRITICAL/HIGH, unfixed vulns ignored) and the gateway image `ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2` (report only; upstream image).
 - **Lint/test locally:** Install shellcheck and ruff (e.g. `brew install shellcheck`, `pip install ruff`), then `make lint` and `make test`; or use the Dev Container above.
+
+## Run CI-like checks locally
+
+Run the same checks CI runs so failures are caught before push:
+
+| CI job | Local command |
+|--------|----------------|
+| Lint | `make lint` (requires shellcheck and ruff; or use Dev Container) |
+| Test | `make test` (requires Python 3.12, `pip install -r requirements.txt pytest`) |
+| Docker build + gateway smoke | `docker compose build sequential-thinking tool-router`, then create a minimal `.env` (see CI workflow), `docker compose up -d gateway`, then `curl -sf http://localhost:4444/health` (requires Docker and a pullable gateway image tag) |
+| Trivy | `trivy image mcp-gateway-tool-router:latest` (optional; install [Trivy](https://github.com/aquasecurity/trivy) or run in Dev Container) |
+| Secret scan | `pre-commit run --all-files` (includes secret checks), or run Trufflehog manually with base/head refs |
+
+Gateway smoke requires the gateway image to be pullable (see [docker-compose.yml](../docker-compose.yml)); if the image tag is missing or changed upstream, update the tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh`.
 - **Gateway updates:** Watch [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge) releases; update the gateway image tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh` when upgrading.
 - **Python deps:** Bump versions in `requirements.txt` / `pyproject.toml` and run `make test`; rebuild tool-router image if needed.
 - **Cursor:** Keep `GATEWAY_JWT` set for cursor-router; run `make verify-cursor-setup` if the IDE shows "Error" or "No server info found".

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 
 from tool_router.scoring import pick_best_tools, score_tool
 

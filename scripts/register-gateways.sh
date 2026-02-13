@@ -63,6 +63,7 @@ fi
 
 log_step "Generating JWT for admin API..."
 COMPOSE=$(compose_cmd)
+export COMPOSE
 JWT=$(get_jwt) || { log_err "Failed to generate JWT."; exit 1; }
 log_ok "JWT generated."
 
@@ -238,6 +239,8 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
     :
   elif [[ -f "$SCRIPT_DIR/virtual-servers.txt" ]]; then
     tools_arr=$(echo "$tools_body" | jq -c 'if type == "array" then . else .tools? // [] end' 2>/dev/null)
+    servers_code=""
+    servers_body=""
     fetch_servers_list
     if [[ "$servers_code" != "200" ]]; then
       if [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then
@@ -286,6 +289,8 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
     tool_ids=$(echo "$tools_body" | jq -r 'if type == "array" then .[] else .tools[]? // empty end | .id // empty' 2>/dev/null)
     if [[ -n "$tool_ids" ]]; then
       tool_ids_json=$(echo "$tool_ids" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+      servers_code=""
+      servers_body=""
       fetch_servers_list
       if [[ "$servers_code" != "200" ]]; then
         if [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then

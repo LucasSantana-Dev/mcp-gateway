@@ -2,6 +2,10 @@
 
 Self-hosted MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge). One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.
 
+**GitHub repo description** (paste in Settings → General → Description, 350 char max):
+
+> Self-hosted MCP gateway using IBM Context Forge. One Cursor (or MCP client) connection; add upstream servers via Admin UI. Docker, virtual servers, tool-router. MIT.
+
 **License:** [MIT](LICENSE)
 
 ## Prerequisites
@@ -116,7 +120,7 @@ Use the wrapper script so no token is stored in mcp.json and no weekly refresh i
            "MCP_AUTH=Bearer YOUR_JWT_TOKEN",
            "-e",
            "MCP_TOOL_CALL_TIMEOUT=120",
-           "ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1",
+           "ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2",
            "python3",
            "-m",
            "mcpgateway.wrapper"

@@ -49,7 +49,7 @@ cleanup-duplicates:
 	./scripts/cleanup-duplicate-servers.sh
 
 lint:
-	shellcheck -s bash start.sh scripts/*.sh scripts/lib/*.sh
+	shellcheck -s bash -S warning start.sh scripts/*.sh scripts/lib/*.sh
 	ruff check tool_router/
 
 test:

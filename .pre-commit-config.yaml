@@ -28,3 +28,16 @@ repos:
       - id: ruff
         args: [--fix]
         files: ^tool_router/
+
+  - repo: local
+    hooks:
+      - id: lint
+        name: Lint (shellcheck + ruff)
+        entry: make lint
+        language: system
+        pass_filenames: false
+      - id: test
+        name: Test (pytest)
+        entry: make test
+        language: system
+        pass_filenames: false

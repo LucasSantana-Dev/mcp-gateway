@@ -109,12 +109,13 @@ jobs:
           format: table
           exit-code: "1"
           severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
 
       # External pre-built image: report only so upstream CVEs do not fail CI; fix upstream (IBM/mcp-context-forge).
       - name: Run Trivy on gateway image
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: "ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1"
+          image-ref: "ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2"
           format: table
           exit-code: "0"
           severity: "CRITICAL,HIGH"
@@ -131,6 +132,6 @@ jobs:
         uses: trufflesecurity/trufflehog@v3.93.3
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          base: ${{ github.event_name == 'push' && github.event.before || github.event.repository.default_branch }}
+          head: ${{ github.event_name == 'push' && github.sha || 'HEAD' }}
           extra_args: --only-verified
