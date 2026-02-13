@@ -55,6 +55,29 @@ else
   check 1 "JWT generated"
 fi
 
+CONTEXT_FORGE_IMAGE="${CONTEXT_FORGE_IMAGE:-ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2}"
+if docker image inspect "$CONTEXT_FORGE_IMAGE" &>/dev/null; then
+  check 1 "Context Forge image present ($CONTEXT_FORGE_IMAGE)"
+  GATEWAY_FROM_DOCKER_URL="http://host.docker.internal:${PORT:-4444}"
+  add_host_args=()
+  [[ "$(uname -s)" == "Linux" ]] && add_host_args=(--add-host=host.docker.internal:host-gateway)
+  if docker run --rm "${add_host_args[@]}" "$CONTEXT_FORGE_IMAGE" python3 -c "
+import urllib.request, sys
+try:
+  r = urllib.request.urlopen('$GATEWAY_FROM_DOCKER_URL/health', timeout=8)
+  sys.exit(0 if r.getcode() == 200 else 1)
+except Exception:
+  sys.exit(1)
+" 2>/dev/null; then
+    check 1 "Gateway reachable from Docker (host.docker.internal:${PORT:-4444})"
+  else
+    log_warn "Gateway not reachable from Docker (wrapper runs in container). If Cursor shows errors, ensure gateway is running and host.docker.internal works (Linux: Docker 20.10+)."
+    ok=$((ok + 1))
+  fi
+else
+  check 0 "Context Forge image missing (first Cursor start may timeout). Run: make cursor-pull"
+fi
+
 if [[ -n "$JWT" ]]; then
   servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 5 --max-time 15 \
     -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
@@ -105,3 +128,4 @@ log_info "If context-forge still shows Error:"
 log_info "  → Fully quit Cursor (Cmd+Q / Alt+F4) and reopen. Reload Window is not enough."
 log_info "  → To use default cursor-router: remove REGISTER_CURSOR_MCP_SERVER_NAME from .env, run make register, then quit and reopen Cursor."
 log_info "  → If logs show 'No server info found': ensure gateway is reachable from Docker (host.docker.internal:${PORT:-4444}); run make start, make register, then quit and reopen Cursor."
+log_info "  → If logs show 'Request timed out' (-32001): run make cursor-pull once, add timeout in mcp.json (make use-cursor-wrapper sets 120s), then quit and reopen Cursor."
