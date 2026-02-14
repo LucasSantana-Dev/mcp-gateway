@@ -25,6 +25,9 @@ All notable changes to this project are documented here.
 
 ### Documentation
 
+- **Multi-user database configuration guide** – New `docs/MULTI_USER_DATABASE_CONFIG.md` explaining deployment-level vs per-user configuration options for PostgreSQL and MongoDB. Covers per-deployment instances (recommended), Admin UI Passthrough Headers (advanced), and environment-based multi-tenancy patterns.
+- **Database connection string documentation** – Enhanced `.env` comments to clarify that connection strings are deployment-level configuration shared across all users of a gateway instance. Added guidance for multi-user/multi-tenant scenarios.
+- **README database entries** – Updated PostgreSQL and MongoDB table entries to link to multi-user configuration guide.
 - **Automated Maintenance section** – Added comprehensive documentation for automation workflows in README.md, including setup instructions, schedule details, and how to configure secrets.
 - **Development guide updates** – Updated docs/DEVELOPMENT.md with maintenance automation section covering Renovate configuration, MCP registry checks, and Docker update process.
 

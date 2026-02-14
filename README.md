@@ -78,8 +78,8 @@ The default `./start.sh` starts the gateway and these local translate services (
 | memory              | http://memory:8027/sse              | Persistent knowledge graph; data in `./data/memory` (no API key)   |
 | git-mcp             | http://git-mcp:8028/sse             | Local git operations: commit, branch, diff, log (no API key)      |
 | fetch               | http://fetch:8029/sse               | Web content fetching to markdown for LLM use (no API key)          |
-| postgres            | http://postgres:8031/sse            | Set `POSTGRES_CONNECTION_STRING` in .env (read-only queries)       |
-| mongodb             | http://mongodb:8032/sse             | Set `MONGODB_CONNECTION_STRING` in .env (full DB operations)       |
+| postgres            | http://postgres:8031/sse            | Set `POSTGRES_CONNECTION_STRING` in .env; see [Multi-User Config](docs/MULTI_USER_DATABASE_CONFIG.md) |
+| mongodb             | http://mongodb:8032/sse             | Set `MONGODB_CONNECTION_STRING` in .env; see [Multi-User Config](docs/MULTI_USER_DATABASE_CONFIG.md) |
 | tool-router         | http://tool-router:8030/sse         | Single entry point; set `GATEWAY_JWT` in .env (see cursor-router)  |
 | sqlite              | http://sqlite:8024/sse              | Set `SQLITE_DB_PATH` / `SQLITE_VOLUME` in .env; default `./data`   |
 | github              | http://github:8025/sse              | Set `GITHUB_PERSONAL_ACCESS_TOKEN` in .env                         |
