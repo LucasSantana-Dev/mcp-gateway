@@ -47,6 +47,95 @@ Pre-commit runs secret detection (gitleaks), private-key detection, YAML/JSON ch
 
 The gitleaks hook uses the default `gitleaks` id so pre-commit installs the binary; no need to install gitleaks on the system. To use a system-installed gitleaks instead, change the hook id to `gitleaks-system` in `.pre-commit-config.yaml` and install gitleaks (e.g. `brew install gitleaks` on macOS).
 
+## Automated Maintenance
+
+This repository includes three automated workflows that run weekly to minimize manual maintenance.
+
+### Renovate (Dependency Updates)
+
+**Schedule:** Monday 2 AM UTC
+**Workflow:** `.github/workflows/renovate.yml`
+**Config:** `.github/renovate.json`
+
+Automatically updates:
+- Python dependencies (`requirements.txt`)
+- Docker images (Context Forge gateway)
+- GitHub Actions
+
+**Auto-merge behavior:**
+- Patch/minor: Auto-merge after 3-day stabilization + passing CI
+- Major: Manual review required (labeled `breaking-change`)
+- Security: Immediate auto-merge
+
+**Setup:**
+1. Go to repository Settings → Secrets → Actions
+2. Add `RENOVATE_TOKEN` secret (GitHub PAT with `repo` and `workflow` scopes)
+3. Renovate will run on schedule or via manual workflow dispatch
+
+**Monitoring:**
+- Check the "Dependency Dashboard" issue for pending updates
+- Review auto-merged PRs in the PR history
+- Major updates appear as PRs requiring review
+
+### MCP Server Registry Check
+
+**Schedule:** Monday 3 AM UTC
+**Workflow:** `.github/workflows/mcp-server-check.yml`
+**Script:** `scripts/check-mcp-registry.py`
+
+Scans the MCP Registry API for:
+- New servers not in `gateways.txt`
+- Updates to existing servers
+- Status of commented servers
+
+Creates/updates a GitHub issue with findings. No secrets required.
+
+**Manual run:**
+```bash
+python3 scripts/check-mcp-registry.py
+cat mcp-registry-report.md
+```
+
+### Docker Image Updates
+
+**Schedule:** Monday 4 AM UTC
+**Workflow:** `.github/workflows/docker-updates.yml`
+**Script:** `scripts/check-docker-updates.sh`
+
+Checks IBM/mcp-context-forge for new releases and creates PRs with:
+- Updated image tags in all files
+- Link to release changelog
+- Testing checklist
+
+**Manual run:**
+```bash
+./scripts/check-docker-updates.sh
+cat docker-update-report.md
+```
+
+**Files updated by automation:**
+- `docker-compose.yml`
+- `scripts/cursor-mcp-wrapper.sh`
+- `.github/workflows/ci.yml`
+- `Makefile`
+- `README.md`
+- `docs/DEVELOPMENT.md`
+
+### Modifying Automation
+
+**Change schedule:**
+Edit the `cron` expression in workflow files:
+```yaml
+schedule:
+  - cron: '0 2 * * 1'  # Monday 2 AM UTC
+```
+
+**Disable auto-merge:**
+In `.github/renovate.json`, set `automerge: false` for specific package rules.
+
+**Add MCP servers to monitoring:**
+Add to `gateways.txt` (active) or keep commented (monitoring only).
+
 ## Next steps (after setup)
 
 - **CI:** Runs on push/PR (lint, test, build, Trivy image scan, smoke, secret scan). Trufflehog is pinned to `v3.93.3` in [.github/workflows/ci.yml](../.github/workflows/ci.yml). Trivy scans the tool-router image (fail on CRITICAL/HIGH, unfixed vulns ignored) and the gateway image `ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2` (report only; upstream image).
