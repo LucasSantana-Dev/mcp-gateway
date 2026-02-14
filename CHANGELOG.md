@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-02-14
+
 ### Added
 
 - **Database MCP servers** – 3 new database servers for TypeScript/Node.js development:
