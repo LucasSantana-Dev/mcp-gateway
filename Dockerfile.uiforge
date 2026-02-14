@@ -12,7 +12,7 @@ ARG UIFORGE_BRANCH=main
 
 RUN git clone --depth 1 --branch "$UIFORGE_BRANCH" "$UIFORGE_REPO" .
 
-RUN npm ci --ignore-scripts && \
+RUN npm ci --ignore-scripts --legacy-peer-deps && \
     npm rebuild @resvg/resvg-js && \
     npm run build
 
