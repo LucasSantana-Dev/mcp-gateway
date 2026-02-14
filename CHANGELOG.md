@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-02-14
+
 ### Changed
 
 - **Clean Code Refactoring: Improved Naming Conventions**
