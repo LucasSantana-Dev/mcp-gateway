@@ -81,7 +81,7 @@ Automatically updates:
 
 **Schedule:** Monday 3 AM UTC
 **Workflow:** `.github/workflows/mcp-server-check.yml`
-**Script:** `scripts/check-mcp-registry.py`
+**Script:** `scripts/utils/check-mcp-registry.py`
 
 Scans the MCP Registry API for:
 - New servers not in `gateways.txt`
@@ -92,7 +92,7 @@ Creates/updates a GitHub issue with findings. No secrets required.
 
 **Manual run:**
 ```bash
-python3 scripts/check-mcp-registry.py
+python3 scripts/utils/check-mcp-registry.py
 cat mcp-registry-report.md
 ```
 
@@ -100,7 +100,7 @@ cat mcp-registry-report.md
 
 **Schedule:** Monday 4 AM UTC
 **Workflow:** `.github/workflows/docker-updates.yml`
-**Script:** `scripts/check-docker-updates.sh`
+**Script:** `scripts/utils/check-docker-updates.sh`
 
 Checks IBM/mcp-context-forge for new releases and creates PRs with:
 - Updated image tags in all files
@@ -109,7 +109,7 @@ Checks IBM/mcp-context-forge for new releases and creates PRs with:
 
 **Manual run:**
 ```bash
-./scripts/check-docker-updates.sh
+./scripts/utils/check-docker-updates.sh
 cat docker-update-report.md
 ```
 

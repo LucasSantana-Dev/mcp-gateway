@@ -1,1 +1,0 @@
-utils/check-mcp-registry.py

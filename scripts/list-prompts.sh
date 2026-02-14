@@ -1,1 +1,0 @@
-gateway/list-prompts.sh

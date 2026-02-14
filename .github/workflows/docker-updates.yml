@@ -24,12 +24,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Make script executable
-        run: chmod +x scripts/check-docker-updates.sh
+        run: chmod +x scripts/utils/check-docker-updates.sh
 
       - name: Check for updates
         id: check
         run: |
-          scripts/check-docker-updates.sh || true
+          scripts/utils/check-docker-updates.sh || true
 
       - name: Upload report
         if: steps.check.outputs.status == 'update-available'
@@ -85,34 +85,34 @@ jobs:
           title: "chore(docker): update Context Forge to ${{ needs.check-updates.outputs.latest_version }}"
           body: |
             ## Context Forge Gateway Update
-            
+
             Updates the Context Forge Docker image from `${{ needs.check-updates.outputs.current_version }}` to `${{ needs.check-updates.outputs.latest_version }}`.
-            
+
             ### Changes
-            
+
             - Updated `docker-compose.yml`
             - Updated `scripts/cursor-mcp-wrapper.sh`
             - Updated `.github/workflows/ci.yml`
             - Updated `Makefile`
             - Updated `README.md`
             - Updated `docs/DEVELOPMENT.md`
-            
+
             ### Release Notes
-            
+
             View the full changelog at:
             https://github.com/IBM/mcp-context-forge/releases/tag/${{ needs.check-updates.outputs.latest_version }}
-            
+
             ### Testing Checklist
-            
+
             - [ ] Run `make stop` to stop current stack
             - [ ] Run `make start` to start with new version
             - [ ] Run `make register` to verify gateway registration
             - [ ] Run `make verify-cursor-setup` to verify Cursor integration
             - [ ] Run `make lint` and `make test` to verify CI checks
             - [ ] Test Cursor connection with wrapper
-            
+
             ---
-            
+
             *This PR was automatically created by the Docker update checker workflow.*
           branch: chore/update-context-forge-${{ needs.check-updates.outputs.latest_version }}
           delete-branch: true

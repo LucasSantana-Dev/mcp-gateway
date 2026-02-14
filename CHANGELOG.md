@@ -6,6 +6,11 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- **Scripts Cleanup** – Removed all backward compatibility symlinks from scripts root directory:
+  - Removed 12 symlinks that were pointing to subdirectory scripts
+  - Updated Makefile to use subdirectory paths directly
+  - Updated all documentation and workflow files with new paths
+  - Result: Clean scripts directory with only essential subdirectories (gateway/, cursor/, virtual-servers/, utils/, lib/)
 - **Scripts Reorganization** – Reorganized scripts directory by functional domain:
   - Created subdirectories: `gateway/`, `cursor/`, `virtual-servers/`, `utils/`
   - Moved scripts to appropriate domains (e.g., `register-gateways.sh` → `gateway/register.sh`)
@@ -116,8 +121,8 @@ All notable changes to this project are documented here.
   - **fullstack** – Complete dev workflow with database tools + memory + git-mcp + fetch.
 - **Connection string examples** – `.env` includes commented examples for `POSTGRES_CONNECTION_STRING` and `MONGODB_CONNECTION_STRING` with placeholder values.
 - **Automated dependency updates** – Renovate integration for weekly automated dependency updates with breaking change detection. Auto-merges patch/minor updates after 3-day stabilization period when all CI checks pass. Major updates require manual review. Configuration in `.github/renovate.json` and workflow in `.github/workflows/renovate.yml`.
-- **MCP Server Registry monitoring** – Weekly automated check for new MCP servers from the official registry. Creates/updates GitHub issues with new server discoveries and status of commented servers. Script: `scripts/check-mcp-registry.py`, workflow: `.github/workflows/mcp-server-check.yml`.
-- **Docker image update automation** – Weekly check for Context Forge updates from IBM/mcp-context-forge releases. Automatically creates PRs with version bumps across all relevant files (docker-compose.yml, scripts, CI, docs). Script: `scripts/check-docker-updates.sh`, workflow: `.github/workflows/docker-updates.yml`.
+- **MCP Server Registry monitoring** – Weekly automated check for new MCP servers from the official registry. Creates/updates GitHub issues with new server discoveries and status of commented servers. Script: `scripts/utils/check-mcp-registry.py`, workflow: `.github/workflows/mcp-server-check.yml`.
+- **Docker image update automation** – Weekly check for Context Forge updates from IBM/mcp-context-forge releases. Automatically creates PRs with version bumps across all relevant files (docker-compose.yml, scripts, CI, docs). Script: `scripts/utils/check-docker-updates.sh`, workflow: `.github/workflows/docker-updates.yml`.
 
 ### Changed
 

@@ -1,1 +1,0 @@
-gateway/register.sh

@@ -1,1 +1,0 @@
-cursor/use-wrapper.sh

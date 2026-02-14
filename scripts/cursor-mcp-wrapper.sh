@@ -1,1 +1,0 @@
-cursor/mcp-wrapper.sh

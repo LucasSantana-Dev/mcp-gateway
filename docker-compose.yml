@@ -202,6 +202,15 @@ services:
     ports:
       - "${MONGODB_PORT:-8032}:8032"
 
+  uiforge:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @uiforge/mcp-server" --expose-sse --port 8026 --host 0.0.0.0'
+    ports:
+      - "${UIFORGE_PORT:-8026}:8026"
   tool-router:
     build:
       context: .

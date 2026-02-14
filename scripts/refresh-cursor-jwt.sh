@@ -1,1 +1,0 @@
-cursor/refresh-jwt.sh
