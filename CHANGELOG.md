@@ -6,6 +6,155 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- **Clean Code Refactoring: Improved Naming Conventions**
+  - Refactored Python codebase for better readability and maintainability
+    - `tool_router/core/config.py`: Renamed `jwt` → `jwt_auth_token`, `from_env()` → `load_from_environment()`, `timeout_ms` → `timeout_milliseconds`, `max_retries` → `maximum_retry_attempts`
+    - `tool_router/core/server.py`: Improved variable names in `execute_task` and `search_tools` functions
+    - `tool_router/gateway/client.py`: Renamed `_headers()` → `_build_authentication_headers()`, `_make_request()` → `_execute_http_request_with_retry()`
+    - `tool_router/args/builder.py`: Renamed `TASK_PARAM_NAMES` → `COMMON_TASK_PARAMETER_NAMES`, improved variable clarity
+    - `tool_router/scoring/matcher.py`: Renamed `_tokens()` → `_extract_normalized_tokens()`, `_expand_with_synonyms()` → `_enrich_tokens_with_synonyms()`, `score_tool()` → `calculate_tool_relevance_score()`, `pick_best_tools()` → `select_top_matching_tools()`
+    - `tool_router/observability/health.py`: Updated to use new config property names
+    - `tool_router/observability/metrics.py`: Renamed `duration_ms` → `duration_milliseconds`, improved variable names
+  - Refactored TypeScript client for consistency
+    - `src/index.ts`: Renamed `TIMEOUT_MS` → `REQUEST_TIMEOUT_MILLISECONDS`, `gatewayRequest()` → `sendGatewayRequest()`, improved variable names
+  - Refactored shell scripts for better clarity
+    - `scripts/lib/gateway.sh`: Renamed `compose_cmd()` → `detect_docker_compose_command()`, `get_jwt()` → `generate_or_retrieve_jwt_token()`, `wait_for_health()` → `wait_for_healthy_gateway_status()`, `fetch_servers_list()` → `fetch_registered_servers_list()`
+    - `scripts/gateway/register.sh`: Updated to use renamed functions
+  - Maintained backward compatibility with aliases where appropriate
+  - All changes follow Clean Code principles: intention-revealing names, pronounceable names, searchable names, no mental mapping
+
+### Added
+
+- **Phase 3.3: Observability and Health Checks**
+  - Comprehensive observability module (`tool_router/observability/`)
+  - Health check system with component-level monitoring
+    - Gateway connectivity checks with latency tracking
+    - Configuration validation
+    - Readiness and liveness probes
+    - JSON-serializable health check results
+  - Structured logging infrastructure
+    - Configurable log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    - Structured log formatting for easy parsing
+    - Log context manager for adding contextual fields
+  - Metrics collection system
+    - Thread-safe metrics collector
+    - Timing metrics with statistical summaries (avg, min, max)
+    - Counter metrics for tracking events
+    - Timing context manager for automatic duration tracking
+    - Global metrics singleton for application-wide tracking
+  - Server instrumentation
+    - Integrated logging and metrics into `execute_task` and `search_tools`
+    - Detailed performance tracking for all operations
+    - Error tracking with categorized counters
+    - Tool selection metrics
+  - Comprehensive test coverage (25 tests, 100% pass rate)
+  - Monitoring documentation (`docs/operations/MONITORING.md`)
+    - Health check usage examples
+    - Metrics collection patterns
+    - Integration examples (FastAPI, Prometheus, Docker)
+    - Troubleshooting guides
+
+- **Phase 3.2: Hierarchical Documentation Structure**
+  - Created organized documentation hierarchy with 7 categories
+  - Added comprehensive documentation index (`docs/README.md`)
+  - New documentation structure:
+    - `docs/setup/` - Installation and IDE configuration
+    - `docs/architecture/` - System architecture and design
+    - `docs/configuration/` - Configuration and deployment
+    - `docs/development/` - Development and contributing
+    - `docs/operations/` - Operations and maintenance
+    - `docs/migration/` - Migration and upgrade guides
+    - `docs/tools/` - CI/CD and automation tools
+  - New documentation files:
+    - `docs/setup/INSTALLATION.md` - Complete installation guide
+    - `docs/architecture/OVERVIEW.md` - System architecture overview
+    - `docs/architecture/VIRTUAL_SERVERS.md` - Virtual servers guide
+  - Reorganized existing documentation into logical categories
+  - Added quick links and common tasks sections
+  - Improved navigation with cross-references
+
+- **Test Coverage Boost to 100%**
+  - Added 10 comprehensive error path tests for gateway client
+  - Coverage for all testable code modules: 100%
+  - Total test suite: 55 tests (45 existing + 10 new)
+  - Error scenarios covered:
+    - HTTP 5xx server errors with retry logic
+    - HTTP 4xx client errors (no retry)
+    - Network errors (URLError) with exponential backoff
+    - Timeout errors with retry
+    - JSON decode errors (immediate failure)
+    - Mixed error scenarios across retries
+    - Successful retry after transient failures
+  - Updated coverage configuration to exclude MCP runtime (tested via integration)
+
+- **Phase 3.1: Monorepo Build System**
+  - Unified build system coordinating TypeScript and Python packages
+  - Makefile targets for cross-platform development workflow
+    - `make build`: Build both TypeScript client and Python package
+    - `make clean`: Clean all build artifacts
+    - `make install`: Install all dependencies
+    - `make dev`: Complete development environment setup
+    - `make check`: Run all quality checks (lint + test)
+    - `make ci`: Full CI pipeline simulation
+  - Enhanced CI/CD workflow with dedicated build job
+  - NPM configuration (`.npmrc`) for strict engine and exact versions
+  - Build system configuration in `pyproject.toml`
+  - Cross-platform compatibility using `python3 -m` for all Python tools
+
+- **Phase 1: Foundation Architecture Improvements**
+  - Restructured `tool_router` package with modular organization:
+    - `tool_router/core/` - Server and configuration
+    - `tool_router/gateway/` - Gateway client
+    - `tool_router/tools/` - Tool execution logic
+    - `tool_router/scoring/` - Tool matching and scoring
+    - `tool_router/args/` - Argument building
+    - `tool_router/tests/unit/` - Unit tests
+    - `tool_router/tests/integration/` - Integration tests
+  - Created centralized configuration management (`tool_router/core/config.py`)
+    - Type-safe `GatewayConfig` and `ToolRouterConfig` dataclasses
+    - Environment variable validation with clear error messages
+    - Configurable timeouts, retries, and tool selection parameters
+  - Standardized shell script error handling (`scripts/lib/errors.sh`)
+    - Standard exit codes for common failure scenarios
+    - Dependency checking utilities
+    - Gateway and Docker health checks
+    - Environment and file validation helpers
+- **Phase 2: Quality & Testing Improvements**
+  - Implemented dependency injection for gateway client
+    - Created `HTTPGatewayClient` class with constructor injection
+    - Added `GatewayClient` protocol for interface abstraction
+    - Removed direct `os.environ` access from client code
+    - Maintained backward compatibility with module-level functions
+  - Comprehensive integration test suite (12 tests)
+    - End-to-end workflow tests (tool selection → argument building → execution)
+    - Gateway client integration tests with retry logic validation
+    - Configuration validation and error handling tests
+    - Mock-based tests for network failures and edge cases
+  - Enhanced CI/CD pipeline
+    - Multi-version Python testing (3.9, 3.10, 3.11, 3.12)
+    - Code coverage reporting with pytest-cov (67% coverage)
+    - Codecov integration for coverage tracking
+    - Coverage configuration in `pyproject.toml`
+  - Comprehensive unit test coverage (45 total tests)
+    - Configuration management tests (11 tests for GatewayConfig and ToolRouterConfig)
+    - 100% coverage for args, scoring, and config modules
+    - 79% coverage for gateway client with error path testing
+
+### Changed
+
+- Moved test files to `tool_router/tests/unit/` directory
+- Updated all imports to use new module structure
+- Updated `pyproject.toml` test paths to `tool_router/tests`
+- Enhanced `.env.example` with tool-router configuration variables
+- **IDE-Agnostic Refactoring** – Removed Cursor-specific coupling to support any MCP-compatible IDE:
+  - Renamed `scripts/cursor/` → `scripts/mcp-client/`
+  - Environment variables: `CURSOR_*` → `MCP_CLIENT_*` (backward compatible)
+  - File paths: `data/.cursor-mcp-url` → `data/.mcp-client-url`
+  - Makefile targets: `cursor-pull` → `mcp-client-pull` (aliased for compatibility)
+  - Virtual servers: `cursor-router` → `mcp-router`, `cursor-default` → `mcp-default`
+  - Function names: `get_context_forge_key()` → `get_mcp_client_key()` (aliased)
+  - All old variables and targets continue to work via backward compatibility
+  - See [docs/IDE_AGNOSTIC_MIGRATION.md](docs/IDE_AGNOSTIC_MIGRATION.md) for migration guide
 - **Scripts Cleanup** – Removed all backward compatibility symlinks from scripts root directory:
   - Removed 12 symlinks that were pointing to subdirectory scripts
   - Updated Makefile to use subdirectory paths directly
@@ -24,9 +173,6 @@ All notable changes to this project are documented here.
   - All scripts now use `CONFIG_DIR` variable pointing to `/config`
   - Updated `data/README.md` to reference new config locations
   - Backward compatibility maintained via fallback paths during transition
-
-### Added
-
 - **NPX Client Package** – Standard MCP server NPX wrapper for connecting to gateway:
   - Created `@mcp-gateway/client` NPM package with TypeScript source
   - Enables standard `npx` usage pattern like other MCP servers
@@ -72,9 +218,6 @@ All notable changes to this project are documented here.
   - `docs/TOOL_ROUTER_GUIDE.md` – How tool-router works, architecture diagrams, and performance details
   - `docs/MONOREPO_VS_SINGLE_REPO.md` – Choosing the right profile based on project architecture
 - **Minimal .env Configuration Philosophy** – Stack-specific API keys now configured in IDE's mcp.json instead of .env file for better security and portability
-
-### Changed
-
 - **Environment Configuration** – Updated `.env.example` and `.env` with minimal configuration approach:
   - Added philosophy header explaining gateway infrastructure vs. stack-specific credentials separation
   - Moved stack-specific API keys (GitHub, Snyk, Tavily, database connections) to IDE configuration
