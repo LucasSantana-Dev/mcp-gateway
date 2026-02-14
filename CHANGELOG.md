@@ -4,6 +4,89 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **Scripts Reorganization** – Reorganized scripts directory by functional domain:
+  - Created subdirectories: `gateway/`, `cursor/`, `virtual-servers/`, `utils/`
+  - Moved scripts to appropriate domains (e.g., `register-gateways.sh` → `gateway/register.sh`)
+  - Updated all script internals to calculate `SCRIPT_DIR` as parent directory
+  - Created backward compatibility symlinks at old script locations
+  - Updated `Makefile` shellcheck target to check subdirectories
+  - Updated `start.sh` to reference new script paths
+  - Updated `scripts/README.md` with new organization structure
+- **Config Files Migration** – Completed migration of configuration files to `/config`:
+  - Removed old config files from `scripts/` directory (`gateways.txt`, `virtual-servers.txt`, `prompts.txt`, `resources.txt`)
+  - All scripts now use `CONFIG_DIR` variable pointing to `/config`
+  - Updated `data/README.md` to reference new config locations
+  - Backward compatibility maintained via fallback paths during transition
+
+### Added
+
+- **NPX Client Package** – Standard MCP server NPX wrapper for connecting to gateway:
+  - Created `@mcp-gateway/client` NPM package with TypeScript source
+  - Enables standard `npx` usage pattern like other MCP servers
+  - Users can configure gateway in IDE's `mcp.json` using `npx -y @mcp-gateway/client`
+  - **JWT authentication is optional** - not required for local development (`AUTH_REQUIRED=false`)
+  - Supports both CLI arguments (`--url`, `--token`) and environment variables
+  - Cross-platform Node.js client (no Docker/Bash dependencies)
+  - Comprehensive documentation in `NPM_PACKAGE_README.md` and `PUBLISHING.md`
+  - Added TypeScript build configuration (`tsconfig.json`, `package.json`)
+  - Updated main README with NPX usage section showing local (no auth) and remote (with auth) examples
+  - Updated `.env.example` and `.env` with comments explaining `AUTH_REQUIRED` setting
+
+### Changed
+
+- **uiforge Dynamic Configuration** – Converted uiforge to use translate pattern for per-user FIGMA_ACCESS_TOKEN configuration:
+  - Modified `docker-compose.yml` to use translate pattern instead of standalone image
+  - Removed hardcoded `FIGMA_ACCESS_TOKEN` from container environment
+  - Users now configure `FIGMA_ACCESS_TOKEN` in IDE's `mcp.json` env object (per-user, not in .env)
+  - Updated `.env.example` to document FIGMA_ACCESS_TOKEN as IDE-configured key
+  - Added UI/Design Development configuration example in `docs/IDE_SETUP_GUIDE.md`
+  - Enables multi-user setup without sharing Figma tokens in repository
+
+- **CodeRabbit Configuration** – Comprehensive AI code review setup for IDE, GitHub, and CLI:
+  - `.coderabbit.yaml` – Centralized configuration with assertive review profile, enabled linters (shellcheck, ruff, markdownlint, yamllint, hadolint, gitleaks, trufflehog, actionlint), path-based instructions for shell scripts, Python, Dockerfiles, YAML, and Markdown files
+  - `docs/CODERABBIT_SETUP.md` – Complete setup guide covering GitHub integration, IDE extension installation, and CLI usage with authentication, review commands, and troubleshooting
+- **Optimal MCP Stack Configurations** – 26 new stack profiles (13 stacks × 2 variants each) optimized for various tech stacks, all using tool-router for IDE compatibility:
+  - **Node.js/TypeScript** (Full + Minimal) – JavaScript/TypeScript development with Node.js runtime
+  - **React/Next.js** (Full + Minimal) – Modern web application development with React and Next.js
+  - **Mobile Development** (Full + Minimal) – React Native and Flutter mobile application development
+  - **Database Development** (Full + Minimal) – Database design, queries, and ORM management
+  - **Java/Spring Boot** (Full + Minimal) – Enterprise Java development with Spring Boot framework
+  - **Python Development** (Full + Minimal) – Python application development and data science
+  - **AWS Cloud** (Full + Minimal) – AWS cloud infrastructure and serverless development
+  - **Testing & QA** (Full + Minimal) – Comprehensive testing and quality assurance
+  - **Code Quality & Security** (Full + Minimal) – Code analysis, security scanning, and quality enforcement
+  - **Full-Stack Universal** (Full + Minimal) – Comprehensive full-stack development with all tools
+  - **Monorepo Universal** (Full + Minimal) – Optimized for monorepo architectures (Nx, Turborepo, Lerna)
+  - **DevOps & CI/CD** (Full + Minimal) – DevOps workflows, CI/CD pipelines, and infrastructure automation
+- **Comprehensive Documentation** – 5 new documentation files with clear, step-by-step guides:
+  - `docs/MCP_STACK_CONFIGURATIONS.md` – Complete guide to all stack profiles with use cases, required API keys, and configuration examples
+  - `docs/IDE_SETUP_GUIDE.md` – IDE-specific configuration examples for Cursor, VSCode, Windsurf, and JetBrains with copy-paste ready configs
+  - `docs/ENVIRONMENT_CONFIGURATION.md` – Minimal .env approach guide with migration instructions and security best practices
+  - `docs/TOOL_ROUTER_GUIDE.md` – How tool-router works, architecture diagrams, and performance details
+  - `docs/MONOREPO_VS_SINGLE_REPO.md` – Choosing the right profile based on project architecture
+- **Minimal .env Configuration Philosophy** – Stack-specific API keys now configured in IDE's mcp.json instead of .env file for better security and portability
+
+### Changed
+
+- **Environment Configuration** – Updated `.env.example` and `.env` with minimal configuration approach:
+  - Added philosophy header explaining gateway infrastructure vs. stack-specific credentials separation
+  - Moved stack-specific API keys (GitHub, Snyk, Tavily, database connections) to IDE configuration
+  - Added clear documentation references and migration instructions
+- **Virtual Server Definitions** – Updated `scripts/virtual-servers.txt` with 26 new stack profiles, all using tool-router for IDE compatibility
+- **Gateway Registration** – Added notes to `scripts/gateways.txt` indicating GitHub gateway configuration requirements and IDE setup references
+
+### Documentation
+
+- **Documentation Principles** – All new documentation follows 6 core principles:
+  1. **Clarity First** – Simple language, no jargon, explain technical terms
+  2. **Step-by-Step** – Numbered steps with clear outcomes
+  3. **Visual Aids** – Code examples, ASCII/mermaid diagrams, tables
+  4. **Quick Start** – "5-minute setup" paths for common use cases
+  5. **Troubleshooting** – Common errors and solutions included
+  6. **Copy-Paste Ready** – All commands and configs ready to use
+
 ## [1.6.1] - 2026-02-14
 
 ### Fixed

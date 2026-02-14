@@ -15,7 +15,7 @@ The gateway will create a new empty database. Re-register gateways via Admin UI 
 
 ## Local Docker translate services
 
-These run with `./start.sh` and are registered via `./scripts/register-gateways.sh` (see `scripts/gateways.txt`).
+These run with `./start.sh` and are registered via `./scripts/gateway/register.sh` (see `config/gateways.txt`).
 
 | Service             | Port | Internal URL                        |
 | ------------------- | ---- | ----------------------------------- |
