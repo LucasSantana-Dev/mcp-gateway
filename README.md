@@ -75,7 +75,7 @@ The default `./start.sh` starts the gateway and these local translate services (
 | filesystem          | http://filesystem:8021/sse          | Set `FILESYSTEM_VOLUME` (host path) in .env; default `./workspace` |
 | reactbits           | http://reactbits:8022/sse           | reactbits-dev-mcp-server                                           |
 | snyk                | http://snyk:8023/sse                | Set `SNYK_TOKEN` in .env (Snyk CLI auth)                           |
-| memory              | http://memory:8027/sse              | Persistent knowledge graph (no API key)                            |
+| memory              | http://memory:8027/sse              | Persistent knowledge graph; data in `./data/memory` (no API key)   |
 | git-mcp             | http://git-mcp:8028/sse             | Local git operations: commit, branch, diff, log (no API key)      |
 | fetch               | http://fetch:8029/sse               | Web content fetching to markdown for LLM use (no API key)          |
 | tool-router         | http://tool-router:8030/sse         | Single entry point; set `GATEWAY_JWT` in .env (see cursor-router)  |

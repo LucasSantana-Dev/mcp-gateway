@@ -150,6 +150,10 @@ services:
 
   memory:
     <<: *translate
+    environment:
+      MEMORY_FILE_PATH: /data/memory.jsonl
+    volumes:
+      - "${MEMORY_VOLUME:-./data/memory}:/data"
     command:
       - sh
       - -c
