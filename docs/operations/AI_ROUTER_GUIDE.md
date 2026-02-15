@@ -218,6 +218,7 @@ docker restart tool-router
 3. **Tune gradually** - adjust one parameter at a time
 4. **Test with realistic tasks** to validate routing accuracy
 5. **Keep Ollama updated** for model improvements
+6. **Use observability tools** - Regularly check metrics and health status
 
 ## Advanced: Custom Models
 

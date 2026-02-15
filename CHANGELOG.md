@@ -33,18 +33,28 @@ All notable changes to this project are documented here.
 
 ### Added
 
-- **AI-Powered Tool Router with Ollama** - Enhanced tool-router with intelligent LLM-based tool selection
-  - **Hybrid scoring system**: Combines AI selection (70% weight) with keyword matching (30% weight) for optimal accuracy
-  - **Ollama integration**: Free, local LLM service using `llama3.2:3b` model (~2GB)
-  - **Automatic fallback**: Seamlessly falls back to keyword matching on timeout (2s), errors, or low confidence
-  - **Docker service**: Ollama container included in `docker-compose.yml` with health checks
-  - **Configurable**: Tune AI weight, timeout, model selection, and enable/disable via environment variables
-  - **Alternative models**: Support for `llama3.2:1b` (faster), `mistral:7b`, `llama3.1:8b` (more accurate)
-  - **Comprehensive metrics**: Track AI vs keyword selection rates, confidence scores, and fallback events
-  - **Full test coverage**: Unit tests for AI selector, prompt templates, and hybrid scoring
-  - **Documentation**: New `docs/operations/AI_ROUTER_GUIDE.md` with setup, tuning, and troubleshooting
-  - Configuration via `.env`: `ROUTER_AI_ENABLED`, `ROUTER_AI_MODEL`, `ROUTER_AI_ENDPOINT`, `ROUTER_AI_TIMEOUT_MS`, `ROUTER_AI_WEIGHT`
-  - Port override: `OLLAMA_PORT` (default: 11434)
+- **AI Router with Ollama Integration**: Intelligent tool selection using local LLM
+  - Hybrid scoring combining AI confidence (70%) and keyword matching (30%)
+  - Automatic fallback to keyword matching on timeout or low confidence
+  - Configurable via environment variables (model, timeout, weight, min_confidence)
+  - Support for llama3.2:3b (default), mistral:7b, and other Ollama models
+  - Docker Compose integration with Ollama service
+  - Comprehensive test coverage (>85%) for AI selector and prompts
+  - Detailed operational guide at `docs/operations/AI_ROUTER_GUIDE.md`
+
+- **AI Router Observability & Management**:
+  - MCP tool `get_ai_router_metrics_tool` for real-time performance metrics
+    - Selection method counts (AI vs keyword)
+    - AI confidence statistics
+    - Fallback event tracking
+    - Usage rate calculations
+  - MCP tool `get_ai_router_health_tool` for health monitoring
+    - Overall status (healthy/degraded/unhealthy)
+    - Ollama service availability checks
+    - Configuration snapshot
+    - Issue detection and reporting
+  - Comprehensive test coverage (96.67%) for API endpoints
+  - Updated operational guide with observability best practices
 
 - **CodeQL Security Scanning** - Added GitHub CodeQL workflow for automated security analysis
   - Scans JavaScript/TypeScript and Python code

@@ -22,7 +22,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tool_router/tests", "tool_router/ai/tests"]
+testpaths = ["tool_router/tests", "tool_router/ai/tests", "tool_router/api/tests"]
 pythonpath = ["."]
 addopts = "-v --strict-markers"
 
@@ -140,6 +140,12 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "PT011",   # Allow broad exception types in pytest.raises
     "B017",    # Allow asserting on Exception in tests
     "PLC0415", # Allow imports inside test functions
+]
+"tool_router/api/tests/**/*.py" = [
+    "S101",    # Allow assert in tests
+    "ANN",     # Don't require type hints in tests
+    "PLR2004", # Allow magic values in tests
+    "ARG",     # Allow unused arguments in test fixtures
 ]
 "tool_router/server.py" = [
     "PLR0911", # Allow more return statements in main routing function
