@@ -77,15 +77,21 @@ Commands:
     detect             Auto-detect installed IDEs
 
   wizard               Interactive setup wizard
+  logs [service]       View gateway logs (all, gateway, tool-router, etc.)
+  doctor               Run health checks and diagnostics
+  completion <shell>   Generate shell completion script (bash, zsh, fish)
   help                 Show this help message
 
 Examples:
   mcp init                        # Initialize project
   mcp start                       # Start gateway
+  mcp logs                        # View all logs
+  mcp logs gateway                # View gateway logs only
+  mcp doctor                      # Run health checks
   mcp server list                 # List all servers
   mcp server enable cursor-search # Enable a server
   mcp ide setup                   # Run IDE setup wizard
-  mcp wizard                      # Run full setup wizard
+  mcp completion bash             # Generate bash completion
 
 For more information, see: https://github.com/lucassantana/mcp-gateway
 EOF
@@ -165,6 +171,166 @@ cmd_restart() {
     cmd_stop
     sleep 2
     cmd_start
+}
+
+# Command: logs
+cmd_logs() {
+    local service="${1:-all}"
+
+    info "Viewing logs for: $service"
+    cd "$PROJECT_ROOT"
+
+    case "$service" in
+        all)
+            docker compose logs -f --tail=100
+            ;;
+        gateway|tool-router|ollama|postgres|redis|uiforge)
+            docker compose logs -f --tail=100 "$service"
+            ;;
+        *)
+            error "Unknown service: $service"
+            echo "Available services: all, gateway, tool-router, ollama, postgres, redis, uiforge"
+            exit 1
+            ;;
+    esac
+}
+
+# Command: doctor
+cmd_doctor() {
+    info "Running MCP Gateway health checks..."
+    echo ""
+
+    local issues=0
+
+    # Check 1: Docker
+    echo "🔍 Checking Docker..."
+    if command -v docker &> /dev/null; then
+        if docker info &> /dev/null; then
+            success "Docker is installed and running"
+        else
+            error "Docker is installed but not running"
+            echo "   → Start Docker Desktop or Docker daemon"
+            ((issues++))
+        fi
+    else
+        error "Docker is not installed"
+        echo "   → Install Docker from https://docker.com"
+        ((issues++))
+    fi
+
+    # Check 2: Docker Compose
+    echo "🔍 Checking Docker Compose..."
+    if command -v docker-compose &> /dev/null || docker compose version &> /dev/null; then
+        success "Docker Compose is available"
+    else
+        error "Docker Compose is not installed"
+        echo "   → Install Docker Compose"
+        ((issues++))
+    fi
+
+    # Check 3: Python
+    echo "🔍 Checking Python..."
+    if command -v python3 &> /dev/null; then
+        local python_version
+        python_version=$(python3 --version 2>&1 | cut -d' ' -f2)
+        success "Python is installed (version $python_version)"
+    else
+        warn "Python3 is not installed (optional for tool_router)"
+        echo "   → Install Python 3.9+ for tool_router MCP server"
+    fi
+
+    # Check 4: Configuration files
+    echo "🔍 Checking configuration..."
+    if [ -f "$PROJECT_ROOT/.env" ]; then
+        success ".env file exists"
+    else
+        warn ".env file not found"
+        echo "   → Run 'mcp init' to create .env file"
+        ((issues++))
+    fi
+
+    if [ -f "$PROJECT_ROOT/config/virtual-servers.txt" ]; then
+        local server_count
+        server_count=$(grep -v '^#' "$PROJECT_ROOT/config/virtual-servers.txt" | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
+        success "Virtual servers configured ($server_count servers)"
+    else
+        warn "Virtual servers configuration not found"
+        ((issues++))
+    fi
+
+    # Check 5: Gateway status
+    echo "🔍 Checking gateway status..."
+    cd "$PROJECT_ROOT"
+    if docker compose ps 2>/dev/null | grep -q "Up"; then
+        success "Gateway is running"
+
+        # Check gateway health endpoint
+        if command -v curl &> /dev/null; then
+            if curl -sf "$GATEWAY_URL/health" &> /dev/null; then
+                success "Gateway health endpoint responding"
+            else
+                warn "Gateway health endpoint not responding"
+                echo "   → Gateway may still be starting up"
+            fi
+        fi
+    else
+        warn "Gateway is not running"
+        echo "   → Run 'mcp start' to start the gateway"
+    fi
+
+    # Check 6: Disk space
+    echo "🔍 Checking disk space..."
+    local available_space
+    available_space=$(df -h "$PROJECT_ROOT" | awk 'NR==2 {print $4}')
+    success "Available disk space: $available_space"
+
+    # Summary
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    if [ $issues -eq 0 ]; then
+        success "All checks passed! Your MCP Gateway is healthy."
+    else
+        warn "Found $issues issue(s) that need attention."
+        echo ""
+        echo "💡 Quick fixes:"
+        echo "   • Run 'mcp init' to initialize the project"
+        echo "   • Run 'mcp start' to start the gateway"
+        echo "   • Check Docker Desktop is running"
+    fi
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
+# Command: completion
+cmd_completion() {
+    local shell="${1:-bash}"
+    local completion_file="$SCRIPT_DIR/completions/mcp.$shell"
+
+    if [ ! -f "$completion_file" ]; then
+        error "Completion script for '$shell' not found"
+        echo "Available shells: bash, zsh, fish"
+        exit 1
+    fi
+
+    cat "$completion_file"
+    echo ""
+    echo "# Installation instructions:"
+    case "$shell" in
+        bash)
+            echo "# Copy the output to: /etc/bash_completion.d/mcp"
+            echo "# Or add to ~/.bashrc:"
+            echo "#   source <(mcp completion bash)"
+            ;;
+        zsh)
+            echo "# Copy the output to: /usr/local/share/zsh/site-functions/_mcp"
+            echo "# Or add to ~/.zshrc:"
+            echo "#   source <(mcp completion zsh)"
+            ;;
+        fish)
+            echo "# Copy the output to: ~/.config/fish/completions/mcp.fish"
+            echo "# Or run:"
+            echo "#   mcp completion fish > ~/.config/fish/completions/mcp.fish"
+            ;;
+    esac
 }
 
 # Command: server list
@@ -443,6 +609,17 @@ main() {
             ;;
         wizard)
             cmd_wizard
+            ;;
+        logs)
+            shift
+            cmd_logs "$@"
+            ;;
+        doctor)
+            cmd_doctor
+            ;;
+        completion)
+            shift
+            cmd_completion "$@"
             ;;
         help|--help|-h)
             usage
