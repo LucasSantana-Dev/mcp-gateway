@@ -8,22 +8,11 @@ All notable changes to this project are documented here.
 
 - **Developer Experience Enhancements** - Intuitive configuration and easy usage
   - Shell completions for bash, zsh, and fish
-  - `mcp logs` command for easy debugging (view all or specific service logs)
-  - `mcp doctor` command for comprehensive health checks and diagnostics
-  - `mcp completion` command to generate shell completion scripts
-  - Quick-start guide with copy-paste commands (`docs/QUICKSTART.md`)
-  - Actionable error messages with suggested fixes
-  - Real-time log viewing with `docker compose logs -f`
-  - Health checks for Docker, Python, configuration, and gateway status
 
-- **Phase 5: Unified CLI Tool** - Created `mcp` command for simplified gateway operations
-  - Interactive setup wizard (`mcp wizard`)
-  - IDE auto-detection (`mcp ide detect`)
-  - Server lifecycle management (`mcp server enable/disable/list/info`)
-  - Gateway control (`mcp start/stop/restart/status`)
-  - IDE configuration generator (`mcp ide setup/config`)
-  - Comprehensive CLI documentation (`docs/cli/MCP_CLI.md`)
-  - Makefile integration (`make mcp ARGS="command"`)
+### Fixed
+
+- **Ollama Health Check**: Changed from `curl` to `ollama list` command (curl not available in container)
+- **IDE Setup Wizard**: Added server selection prompt to fix missing SERVER parameter error (`docs/cli/MCP_CLI.md`)
 
 - **Phase 4: Admin UI Enhancement** - Approach revised to CLI-first strategy
   - REST API backend complete (Sprint 5)
