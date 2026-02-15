@@ -83,9 +83,24 @@ if command -v curl &> /dev/null; then
     RESPONSE=$(curl -s "${GATEWAY_URL}/api/virtual-servers" 2>/dev/null || echo "")
 
     if [[ -n "$RESPONSE" ]]; then
-        # Try to extract UUID using basic text processing
-        # This is a simplified version - in production, use jq or python
-        SERVER_UUID=$(echo "$RESPONSE" | grep -o "\"name\":\"${SERVER_NAME}\"" -A 10 | grep -o "\"uuid\":\"[^\"]*\"" | head -1 | cut -d'"' -f4 || echo "")
+        # Try jq first for robust JSON parsing
+        if command -v jq &> /dev/null; then
+            SERVER_UUID=$(echo "$RESPONSE" | jq -r ".[] | select(.name==\"${SERVER_NAME}\") | .uuid" 2>/dev/null || echo "")
+        else
+            # Fall back to Python for JSON parsing
+            SERVER_UUID=$(python3 -c "
+import json
+import sys
+try:
+    data = json.loads(sys.stdin.read())
+    for item in data:
+        if item.get('name') == sys.argv[1]:
+            print(item.get('uuid', ''))
+            break
+except Exception:
+    pass
+" "${SERVER_NAME}" <<< "$RESPONSE" 2>/dev/null || echo "")
+        fi
     fi
 fi
 
@@ -97,20 +112,33 @@ fi
 
 echo "Generating $IDE configuration for server: $SERVER_NAME (UUID: $SERVER_UUID)" >&2
 
-# Generate configuration using Python
+# Generate configuration using Python with environment variables to avoid injection
+export IDE SERVER_NAME SERVER_UUID GATEWAY_URL JWT_TOKEN PROJECT_ROOT
 python3 -c "
 import json
+import os
 import sys
-sys.path.insert(0, '${PROJECT_ROOT}')
+
+project_root = os.environ.get('PROJECT_ROOT', '')
+sys.path.insert(0, project_root)
 
 from tool_router.api.ide_config import generate_ide_config
 
+ide = os.environ.get('IDE', '')
+server_name = os.environ.get('SERVER_NAME', '')
+server_uuid = os.environ.get('SERVER_UUID', '')
+gateway_url = os.environ.get('GATEWAY_URL', '')
+jwt_token = os.environ.get('JWT_TOKEN', '')
+
+# Convert empty JWT_TOKEN to None
+jwt_token = jwt_token if jwt_token else None
+
 config = generate_ide_config(
-    ide='${IDE}',
-    server_name='${SERVER_NAME}',
-    server_uuid='${SERVER_UUID}',
-    gateway_url='${GATEWAY_URL}',
-    jwt_token='${JWT_TOKEN}' if '${JWT_TOKEN}' else None,
+    ide=ide,
+    server_name=server_name,
+    server_uuid=server_uuid,
+    gateway_url=gateway_url,
+    jwt_token=jwt_token,
 )
 
 print(json.dumps(config, indent=2))

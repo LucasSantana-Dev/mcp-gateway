@@ -27,51 +27,48 @@ def generate_ide_config(
     Returns:
         Dictionary with mcpServers configuration for the IDE
 
+    Raises:
+        ValueError: If ide is not 'windsurf' or 'cursor', or if server_name,
+                    server_uuid, or gateway_url are empty strings, or if
+                    jwt_token is an empty string (must be None or non-empty).
+
     Example:
         >>> config = generate_ide_config("windsurf", "my-server", "abc-123")
         >>> print(config["mcpServers"]["my-server"]["command"])
         'npx'
     """
+    # Validate inputs
+    if ide not in ("windsurf", "cursor"):
+        raise ValueError(f"ide must be 'windsurf' or 'cursor', got: {ide}")
+    if not server_name:
+        raise ValueError("server_name must be a non-empty string")
+    if not server_uuid:
+        raise ValueError("server_uuid must be a non-empty string")
+    if not gateway_url:
+        raise ValueError("gateway_url must be a non-empty string")
+    if jwt_token is not None and not jwt_token:
+        raise ValueError("jwt_token must be None or a non-empty string")
+
     mcp_url = f"{gateway_url}/servers/{server_uuid}/mcp"
-
-    if ide == "windsurf":
-        return _generate_windsurf_config(server_name, mcp_url, jwt_token)
-    return _generate_cursor_config(server_name, mcp_url, jwt_token)
+    return _generate_mcp_config(server_name, mcp_url, jwt_token)
 
 
-def _generate_windsurf_config(
+def _generate_mcp_config(
     server_name: str,
     mcp_url: str,
     jwt_token: str | None,
 ) -> dict[str, dict]:
-    """Generate Windsurf MCP configuration.
+    """Generate MCP configuration for Windsurf and Cursor.
 
-    Windsurf uses standard MCP JSON format with npx client.
-    """
-    args = ["-y", "@mcp-gateway/client", f"--url={mcp_url}"]
-    if jwt_token:
-        args.append(f"--token={jwt_token}")
+    Both IDEs use the same standard MCP JSON format with npx client.
 
-    return {
-        "mcpServers": {
-            server_name: {
-                "command": "npx",
-                "args": args,
-                "env": {},
-            }
-        }
-    }
+    Args:
+        server_name: Name for the MCP server entry
+        mcp_url: Full MCP endpoint URL
+        jwt_token: Optional JWT token for authenticated access
 
-
-def _generate_cursor_config(
-    server_name: str,
-    mcp_url: str,
-    jwt_token: str | None,
-) -> dict[str, dict]:
-    """Generate Cursor MCP configuration.
-
-    Cursor also uses standard MCP JSON format with npx client.
-    Same as Windsurf but kept separate for future customization.
+    Returns:
+        Dictionary with mcpServers configuration
     """
     args = ["-y", "@mcp-gateway/client", f"--url={mcp_url}"]
     if jwt_token:

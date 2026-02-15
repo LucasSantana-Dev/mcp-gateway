@@ -73,7 +73,9 @@ def create_virtual_server(jwt, name, gateways):
             or tool.get("gateway", {}).get("name", "")
         )
         if gateway_slug in gateways:
-            tool_ids.append(tool.get("id"))
+            tool_id = tool.get("id")
+            if tool_id is not None:
+                tool_ids.append(tool_id)
 
     if not tool_ids:
         print(f"  ⚠ {name} (no tools found for gateways: {', '.join(gateways)})")
@@ -128,6 +130,7 @@ def main():
     created = 0
     failed = 0
 
+    skipped = 0
     with open(VIRTUAL_SERVERS_FILE) as f:
         for line in f:
             line = line.strip()
@@ -135,11 +138,23 @@ def main():
                 continue
 
             parts = line.split("|")
-            if len(parts) != 2:
+            if len(parts) < 2:
                 continue
 
             name = parts[0].strip()
             gateways = [g.strip() for g in parts[1].split(",")]
+
+            # Check enabled flag (default is enabled if not specified)
+            enabled = True
+            if len(parts) >= 3:
+                enabled_flag = parts[2].strip().lower()
+                enabled = enabled_flag != "false"
+
+            # Skip disabled servers
+            if not enabled:
+                print(f"  ⊘ {name} (disabled, skipping)")
+                skipped += 1
+                continue
 
             if create_virtual_server(jwt, name, gateways):
                 created += 1
@@ -147,7 +162,7 @@ def main():
                 failed += 1
 
     print("=" * 60)
-    print(f"\nSummary: {created} created/updated, {failed} failed")
+    print(f"\nSummary: {created} created/updated, {skipped} skipped (disabled), {failed} failed")
 
     if failed > 0:
         sys.exit(1)

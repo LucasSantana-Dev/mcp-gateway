@@ -143,8 +143,8 @@ class AIToolSelector:
             try:
                 decoder = json.JSONDecoder()
                 selection, _consumed_length = decoder.raw_decode(response[json_start:])
-            except json.JSONDecodeError:
-                logger.warning("No matching closing brace found in AI response")
+            except json.JSONDecodeError as e:
+                logger.warning("Malformed JSON in AI response: %s", e)
                 return None
 
             # Validate required fields

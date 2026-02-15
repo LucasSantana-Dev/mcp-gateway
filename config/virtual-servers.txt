@@ -10,7 +10,7 @@
 # cursor-default: core dev + search + browser (aim for under 60 tools; verify with make register)
 cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,uiforge,memory,fetch
 # cursor-search: search and docs only
-cursor-search|tavily
+cursor-search|tavily|true
 # cursor-browser: browser automation
 cursor-browser|playwright,puppeteer,browser-tools,chrome-devtools,desktop-commander
 # cursor-git: git operations (local + GitHub)

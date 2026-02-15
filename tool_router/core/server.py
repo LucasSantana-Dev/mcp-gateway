@@ -202,8 +202,8 @@ def get_ai_router_metrics_tool() -> str:
     try:
         metrics_data = get_ai_router_metrics()
         return json.dumps(metrics_data, indent=2)
-    except Exception as e:
-        logger.exception("Failed to get AI router metrics")
+    except (ValueError, RuntimeError) as e:
+        logger.exception("Failed to get AI router metrics: %s", e)
         return json.dumps({"error": str(e)}, indent=2)
 
 

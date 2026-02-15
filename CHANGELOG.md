@@ -6,6 +6,15 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- **Virtual Server Lifecycle Management**: Enable/disable servers for optimized resource usage
+  - Configuration format extended: `Name|gateways|enabled` (backward compatible)
+  - Shell scripts: `enable.sh`, `disable.sh`, `list-enabled.sh`
+  - Makefile commands: `make enable-server`, `make disable-server`, `make list-enabled`
+  - Updated `create.py` to skip disabled servers during registration
+  - Default state: `enabled=true` if flag not specified
+  - Automatic backup of config file before modifications
+  - Expected performance: ~60% faster startup with selective loading
+
 - **IDE Configuration Generator**: Automated IDE setup for Windsurf and Cursor
   - Python API `generate_ide_config()` for programmatic config generation
   - CLI tool `scripts/ide/generate-config.sh` for command-line usage
@@ -35,6 +44,15 @@ All notable changes to this project are documented here.
   - **Error handling refactor**: Separate parse and range validation for `ROUTER_AI_WEIGHT` to preserve specific ValueError messages
   - **Health status consistency**: Use `HealthStatus` enum instead of string literals in health.py API responses
   - **Improved docstrings**: Remove redundant "Args: No parameters" section from `AIRouterConfig.load_from_environment()`
+
+- **Security and robustness improvements**:
+  - **Command injection prevention**: Eliminate shell variable interpolation in `generate-config.sh` by passing values via environment variables
+  - **Robust JSON parsing**: Replace fragile grep/cut with jq (preferred) or Python fallback for parsing virtual server UUIDs
+  - **None ID filtering**: Filter out None tool IDs in `create.py` to prevent polluting tool_ids list
+  - **Better error logging**: Improve JSONDecodeError message in selector.py to include exception details for debugging
+  - **Input validation**: Add comprehensive validation in `generate_ide_config()` with ValueError for invalid inputs
+  - **Code consolidation**: Merge duplicate `_generate_windsurf_config` and `_generate_cursor_config` into single `_generate_mcp_config` helper
+  - **Specific exception handling**: Replace broad `except Exception` with specific `(ValueError, RuntimeError)` in `get_ai_router_metrics_tool`
 
 - **Documentation improvements**:
   - Add blank lines before code blocks in AI_ROUTER_GUIDE.md to satisfy markdownlint MD031

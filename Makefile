@@ -1,4 +1,4 @@
-.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update pre-commit-install ide-config ide-windsurf ide-cursor help
+.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update pre-commit-install ide-config ide-windsurf ide-cursor enable-server disable-server list-enabled help
 
 # Default target
 .DEFAULT_GOAL := help
@@ -158,3 +158,23 @@ ide-windsurf: ## Generate Windsurf config (SERVER=name [TOKEN=jwt])
 
 ide-cursor: ## Generate Cursor config (SERVER=name [TOKEN=jwt])
 	@$(MAKE) ide-config IDE=cursor SERVER=$(SERVER) $(if $(TOKEN),TOKEN=$(TOKEN))
+
+# === Server Lifecycle Management ===
+enable-server: ## Enable a virtual server (SERVER=name)
+	@if [ -z "$(SERVER)" ]; then \
+		echo "Usage: make enable-server SERVER=server-name"; \
+		echo "Example: make enable-server SERVER=cursor-default"; \
+		exit 1; \
+	fi; \
+	./scripts/virtual-servers/enable.sh $(SERVER)
+
+disable-server: ## Disable a virtual server (SERVER=name)
+	@if [ -z "$(SERVER)" ]; then \
+		echo "Usage: make disable-server SERVER=server-name"; \
+		echo "Example: make disable-server SERVER=cursor-git"; \
+		exit 1; \
+	fi; \
+	./scripts/virtual-servers/disable.sh $(SERVER)
+
+list-enabled: ## List enabled virtual servers
+	@./scripts/virtual-servers/list-enabled.sh
