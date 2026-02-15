@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import os
 from pathlib import Path
 from typing import Any
@@ -10,15 +11,22 @@ from typing import Any
 def get_virtual_servers_file() -> Path:
     """Get path to virtual-servers.txt configuration file."""
     repo_root = Path(__file__).parent.parent.parent
-    config_dir = os.environ.get("CONFIG_DIR", repo_root / "config")
-    return Path(config_dir) / "virtual-servers.txt"
+    config_dir_str = os.environ.get("CONFIG_DIR", str(repo_root / "config"))
+    config_dir = Path(config_dir_str)
+    return config_dir / "virtual-servers.txt"
 
 
 def parse_server_line(line: str) -> dict[str, Any] | None:
     """Parse a line from virtual-servers.txt.
 
     Format: Name|gateways|enabled
-    Returns dict with name, gateways, enabled or None if invalid.
+
+    Args:
+        line: A line from the configuration file in format "Name|gateways|enabled"
+
+    Returns:
+        Dictionary with keys "name" (str), "gateways" (list[str]), and "enabled" (bool),
+        or None if the line is invalid, empty, or a comment.
     """
     line = line.strip()
     if not line or line.startswith("#"):
@@ -121,7 +129,7 @@ def get_server_status(server_name: str) -> dict[str, Any]:
 
 
 def update_server_status(server_name: str, enabled: bool) -> dict[str, Any]:
-    """Enable or disable a virtual server.
+    """Update the enabled status of a virtual server.
 
     Args:
         server_name: Name of the server to update.
@@ -138,38 +146,54 @@ def update_server_status(server_name: str, enabled: bool) -> dict[str, Any]:
             "error": f"Configuration file not found: {config_file}",
         }
 
-    # Read all lines
-    lines = []
-    server_found = False
+    # Use file locking for concurrent safety
+    with config_file.open("r+") as f:
+        # Acquire exclusive lock
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        try:
+            # Read all lines
+            lines = f.readlines()
 
-    with config_file.open() as f:
-        for line in f:
-            original_line = line
-            server = parse_server_line(line)
+            # Update the target server
+            server_found = False
+            for i, line in enumerate(lines):
+                server = parse_server_line(line)
+                if server and server["name"] == server_name:
+                    server_found = True
+                    # Update enabled status
+                    parts = line.strip().split("|")
+                    if len(parts) >= 3:
+                        parts[2] = str(enabled).lower()
+                    else:
+                        parts.append(str(enabled).lower())
+                    lines[i] = "|".join(parts) + "\n"
+                    break
 
-            if server and server["name"] == server_name:
-                server_found = True
-                # Update the line with new enabled status
-                enabled_str = "true" if enabled else "false"
-                gateways_str = ",".join(server["gateways"])
-                new_line = f"{server['name']}|{gateways_str}|{enabled_str}\n"
-                lines.append(new_line)
-            else:
-                lines.append(original_line)
+            if not server_found:
+                return {
+                    "success": False,
+                    "error": f"Server '{server_name}' not found",
+                }
 
-    if not server_found:
-        return {
-            "success": False,
-            "error": f"Server '{server_name}' not found",
-        }
+            # Create backup
+            backup_file = config_file.with_suffix(".txt.bak")
+            if backup_file.exists():
+                backup_file.unlink()
 
-    # Create backup
-    backup_file = config_file.with_suffix(".txt.bak")
-    config_file.rename(backup_file)
+            # Write backup atomically
+            with backup_file.open("w") as backup_f:
+                backup_f.writelines(lines)
 
-    # Write updated content
-    with config_file.open("w") as f:
-        f.writelines(lines)
+            # Atomic write: truncate and write updated content
+            f.seek(0)
+            f.truncate()
+            f.writelines(lines)
+            f.flush()
+            os.fsync(f.fileno())
+
+        finally:
+            # Release lock
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     action = "enabled" if enabled else "disabled"
     return {

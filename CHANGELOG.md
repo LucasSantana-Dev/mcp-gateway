@@ -6,6 +6,23 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- **Phase 5: Unified CLI Tool** - Created `mcp` command for simplified gateway operations
+  - Interactive setup wizard (`mcp wizard`)
+  - IDE auto-detection (`mcp ide detect`)
+  - Server lifecycle management (`mcp server enable/disable/list/info`)
+  - Gateway control (`mcp start/stop/restart/status`)
+  - IDE configuration generator (`mcp ide setup/config`)
+  - Comprehensive CLI documentation (`docs/cli/MCP_CLI.md`)
+  - Makefile integration (`make mcp ARGS="command"`)
+
+- **Phase 4: Admin UI Enhancement** - Approach revised to CLI-first strategy
+  - REST API backend complete (Sprint 5)
+  - UI implementation deferred to Phase 6
+  - Documented rationale in `docs/PHASE_4_REVISED.md`
+  - Focus on API-first approach with CLI tools
+
+### Changed
+
 - **Virtual Server Lifecycle Management**: Enable/disable servers for optimized resource usage
   - Configuration format extended: `Name|gateways|enabled` (backward compatible)
   - Shell scripts: `enable.sh`, `disable.sh`, `list-enabled.sh`

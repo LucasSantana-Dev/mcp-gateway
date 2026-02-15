@@ -1,0 +1,431 @@
+#!/usr/bin/env bash
+#
+# MCP Gateway Unified CLI Tool
+#
+# Provides a simplified interface for common MCP Gateway operations.
+# Usage: mcp <command> [options]
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load environment variables
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    # shellcheck disable=SC1091
+    source "$PROJECT_ROOT/.env"
+fi
+
+# Default values
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:4444}"
+
+# Helper functions
+info() {
+    echo -e "${BLUE}ℹ${NC} $*"
+}
+
+success() {
+    echo -e "${GREEN}✓${NC} $*"
+}
+
+error() {
+    echo -e "${RED}✗${NC} $*" >&2
+}
+
+warn() {
+    echo -e "${YELLOW}⚠${NC} $*"
+}
+
+usage() {
+    cat <<EOF
+MCP Gateway Unified CLI Tool
+
+Usage: mcp <command> [options]
+
+Commands:
+  init                 Initialize MCP Gateway project
+  start                Start the gateway stack
+  stop                 Stop the gateway stack
+  status               Check gateway health and status
+  restart              Restart the gateway stack
+
+  server               Manage virtual servers
+    list               List all virtual servers
+    enable <name>      Enable a virtual server
+    disable <name>     Disable a virtual server
+    info <name>        Get server details
+
+  ide                  IDE configuration tools
+    setup              Interactive IDE setup wizard
+    config             Generate IDE configuration
+    detect             Auto-detect installed IDEs
+
+  wizard               Interactive setup wizard
+  help                 Show this help message
+
+Examples:
+  mcp init                        # Initialize project
+  mcp start                       # Start gateway
+  mcp server list                 # List all servers
+  mcp server enable cursor-search # Enable a server
+  mcp ide setup                   # Run IDE setup wizard
+  mcp wizard                      # Run full setup wizard
+
+For more information, see: https://github.com/lucassantana/mcp-gateway
+EOF
+}
+
+# Command: init
+cmd_init() {
+    info "Initializing MCP Gateway..."
+
+    # Check prerequisites
+    if ! command -v docker &> /dev/null; then
+        error "Docker is not installed. Please install Docker first."
+        exit 1
+    fi
+
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+        error "Docker Compose is not installed. Please install Docker Compose first."
+        exit 1
+    fi
+
+    # Create .env if it doesn't exist
+    if [ ! -f "$PROJECT_ROOT/.env" ]; then
+        if [ -f "$PROJECT_ROOT/.env.example" ]; then
+            info "Creating .env from .env.example..."
+            cp "$PROJECT_ROOT/.env.example" "$PROJECT_ROOT/.env"
+            success ".env file created"
+        else
+            warn ".env.example not found, skipping .env creation"
+        fi
+    else
+        info ".env file already exists"
+    fi
+
+    # Create data directory
+    mkdir -p "$PROJECT_ROOT/data"
+    success "Data directory ready"
+
+    success "MCP Gateway initialized successfully!"
+    info "Next steps:"
+    echo "  1. Review and update .env file if needed"
+    echo "  2. Run: mcp start"
+    echo "  3. Run: mcp ide setup"
+}
+
+# Command: start
+cmd_start() {
+    info "Starting MCP Gateway..."
+    cd "$PROJECT_ROOT"
+    make start
+}
+
+# Command: stop
+cmd_stop() {
+    info "Stopping MCP Gateway..."
+    cd "$PROJECT_ROOT"
+    make stop
+}
+
+# Command: status
+cmd_status() {
+    info "Checking gateway status..."
+    cd "$PROJECT_ROOT"
+
+    # Check if containers are running
+    if docker compose ps | grep -q "Up"; then
+        success "Gateway is running"
+        docker compose ps
+    else
+        warn "Gateway is not running"
+        echo "Run 'mcp start' to start the gateway"
+    fi
+}
+
+# Command: restart
+cmd_restart() {
+    info "Restarting MCP Gateway..."
+    cmd_stop
+    sleep 2
+    cmd_start
+}
+
+# Command: server list
+cmd_server_list() {
+    info "Listing virtual servers..."
+    cd "$PROJECT_ROOT"
+    make list-enabled
+}
+
+# Command: server enable
+cmd_server_enable() {
+    local server_name="$1"
+    if [ -z "$server_name" ]; then
+        error "Server name is required"
+        echo "Usage: mcp server enable <name>"
+        exit 1
+    fi
+
+    info "Enabling server: $server_name"
+    cd "$PROJECT_ROOT"
+    make enable-server SERVER="$server_name"
+}
+
+# Command: server disable
+cmd_server_disable() {
+    local server_name="$1"
+    if [ -z "$server_name" ]; then
+        error "Server name is required"
+        echo "Usage: mcp server disable <name>"
+        exit 1
+    fi
+
+    info "Disabling server: $server_name"
+    cd "$PROJECT_ROOT"
+    make disable-server SERVER="$server_name"
+}
+
+# Command: server info
+cmd_server_info() {
+    local server_name="$1"
+    if [ -z "$server_name" ]; then
+        error "Server name is required"
+        echo "Usage: mcp server info <name>"
+        exit 1
+    fi
+
+    info "Getting server info: $server_name"
+    cd "$PROJECT_ROOT"
+
+    # Use REST API to get server status
+    if command -v curl &> /dev/null; then
+        curl -s "$GATEWAY_URL/api/virtual-servers/$server_name" | jq '.' || echo "Server not found or API not available"
+    else
+        warn "curl not found, cannot fetch server info"
+        echo "Install curl or check server status in config/virtual-servers.txt"
+    fi
+}
+
+# Command: ide detect
+cmd_ide_detect() {
+    info "Detecting installed IDEs..."
+
+    local found_ides=()
+
+    # Check for Windsurf
+    if [ -d "$HOME/.windsurf" ] || [ -d "$HOME/Library/Application Support/Windsurf" ]; then
+        found_ides+=("windsurf")
+        success "Found: Windsurf"
+    fi
+
+    # Check for Cursor
+    if [ -d "$HOME/.cursor" ] || [ -d "$HOME/Library/Application Support/Cursor" ]; then
+        found_ides+=("cursor")
+        success "Found: Cursor"
+    fi
+
+    if [ ${#found_ides[@]} -eq 0 ]; then
+        warn "No IDEs detected"
+        echo "Supported IDEs: Windsurf, Cursor"
+    else
+        info "Detected ${#found_ides[@]} IDE(s)"
+    fi
+}
+
+# Command: ide config
+cmd_ide_config() {
+    info "Generating IDE configuration..."
+    cd "$PROJECT_ROOT"
+
+    # Interactive prompts
+    echo ""
+    echo "Select IDE:"
+    echo "  1) Windsurf"
+    echo "  2) Cursor"
+    read -rp "Choice [1]: " ide_choice
+    ide_choice="${ide_choice:-1}"
+
+    case "$ide_choice" in
+        1) ide="windsurf" ;;
+        2) ide="cursor" ;;
+        *) error "Invalid choice"; exit 1 ;;
+    esac
+
+    make "ide-$ide"
+}
+
+# Command: ide setup (wizard)
+cmd_ide_setup() {
+    info "Starting IDE setup wizard..."
+
+    # Detect IDEs
+    cmd_ide_detect
+
+    echo ""
+    read -rp "Which IDE would you like to configure? [windsurf/cursor]: " ide
+    ide="${ide:-windsurf}"
+
+    if [ "$ide" != "windsurf" ] && [ "$ide" != "cursor" ]; then
+        error "Invalid IDE. Choose 'windsurf' or 'cursor'"
+        exit 1
+    fi
+
+    # Generate config
+    cd "$PROJECT_ROOT"
+    make "ide-$ide"
+
+    success "IDE configuration generated!"
+    info "Next steps:"
+    echo "  1. Copy the configuration above"
+    echo "  2. Open your $ide settings"
+    echo "  3. Navigate to: Settings → MCP Servers"
+    echo "  4. Paste the configuration"
+    echo "  5. Restart your IDE"
+}
+
+# Command: wizard
+cmd_wizard() {
+    clear
+    cat <<EOF
+╔════════════════════════════════════════════════════════════╗
+║          MCP Gateway Interactive Setup Wizard              ║
+╚════════════════════════════════════════════════════════════╝
+
+This wizard will help you set up MCP Gateway in a few simple steps.
+
+EOF
+
+    # Step 1: Check if initialized
+    if [ ! -f "$PROJECT_ROOT/.env" ]; then
+        info "Step 1: Initialize project"
+        cmd_init
+        echo ""
+    else
+        success "Project already initialized"
+        echo ""
+    fi
+
+    # Step 2: Start gateway
+    info "Step 2: Start gateway"
+    read -rp "Start the gateway now? [Y/n]: " start_now
+    start_now="${start_now:-Y}"
+
+    if [[ "$start_now" =~ ^[Yy]$ ]]; then
+        cmd_start
+        echo ""
+        info "Waiting for gateway to be ready..."
+        sleep 5
+    fi
+
+    # Step 3: IDE setup
+    info "Step 3: Configure IDE"
+    read -rp "Configure an IDE now? [Y/n]: " config_ide
+    config_ide="${config_ide:-Y}"
+
+    if [[ "$config_ide" =~ ^[Yy]$ ]]; then
+        cmd_ide_setup
+    fi
+
+    echo ""
+    success "Setup complete!"
+    info "Your MCP Gateway is ready to use."
+    echo ""
+    echo "Useful commands:"
+    echo "  mcp status          - Check gateway status"
+    echo "  mcp server list     - List all servers"
+    echo "  mcp ide config      - Generate IDE config"
+    echo "  mcp help            - Show all commands"
+}
+
+# Main command router
+main() {
+    if [ $# -eq 0 ]; then
+        usage
+        exit 0
+    fi
+
+    case "$1" in
+        init)
+            cmd_init
+            ;;
+        start)
+            cmd_start
+            ;;
+        stop)
+            cmd_stop
+            ;;
+        status)
+            cmd_status
+            ;;
+        restart)
+            cmd_restart
+            ;;
+        server)
+            shift
+            case "${1:-}" in
+                list)
+                    cmd_server_list
+                    ;;
+                enable)
+                    shift
+                    cmd_server_enable "$@"
+                    ;;
+                disable)
+                    shift
+                    cmd_server_disable "$@"
+                    ;;
+                info)
+                    shift
+                    cmd_server_info "$@"
+                    ;;
+                *)
+                    error "Unknown server command: ${1:-}"
+                    echo "Usage: mcp server {list|enable|disable|info}"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        ide)
+            shift
+            case "${1:-}" in
+                setup)
+                    cmd_ide_setup
+                    ;;
+                config)
+                    cmd_ide_config
+                    ;;
+                detect)
+                    cmd_ide_detect
+                    ;;
+                *)
+                    error "Unknown ide command: ${1:-}"
+                    echo "Usage: mcp ide {setup|config|detect}"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        wizard)
+            cmd_wizard
+            ;;
+        help|--help|-h)
+            usage
+            ;;
+        *)
+            error "Unknown command: $1"
+            echo ""
+            usage
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

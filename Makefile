@@ -8,9 +8,17 @@ all: help ## Default target (shows help)
 clean: reset-db cleanup-duplicates ## Clean up database and duplicates
 
 help: ## Show this help message
-	@echo "MCP Gateway - Available Make targets:"
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2}'
+	@echo 'Usage: make [target]'
+	@echo ''
+	@echo 'TIP: Use the unified CLI tool for simpler commands:'
+	@echo '  ./scripts/mcp help'
+	@echo ''
+	@echo 'Available targets:'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+.PHONY: mcp
+mcp: ## Run unified MCP CLI tool (usage: make mcp ARGS="command")
+	@./scripts/mcp $(ARGS)
 
 # === Setup & Secrets ===
 generate-secrets: ## Generate JWT and encryption secrets for .env

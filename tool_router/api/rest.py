@@ -1,12 +1,12 @@
-"""REST API endpoints for server lifecycle management.
+"""REST API handlers for virtual server lifecycle management.
 
-This module provides HTTP endpoints that can be called from the Admin UI
-or any HTTP client to manage virtual server lifecycle.
+Provides Flask and FastAPI integration examples for the lifecycle API.
 """
 
-from __future__ import annotations
-
+import os
 from typing import Any
+
+from flask import jsonify, request
 
 from tool_router.api.lifecycle import (
     disable_server,
@@ -88,7 +88,6 @@ def register_flask_routes(app: Any) -> None:
         app = Flask(__name__)
         register_flask_routes(app)
     """
-    from flask import jsonify, request
 
     @app.route("/api/virtual-servers", methods=["GET"])
     def list_servers_endpoint():
@@ -122,21 +121,22 @@ def register_fastapi_routes(app: Any) -> None:
         register_fastapi_routes(app)
     """
     from fastapi import Body
+    from fastapi.responses import JSONResponse
 
     @app.get("/api/virtual-servers")
     async def list_servers_endpoint():
         result, status = handle_list_servers()
-        return result
+        return JSONResponse(content=result, status_code=status)
 
     @app.get("/api/virtual-servers/{server_name}")
     async def get_server_endpoint(server_name: str):
         result, status = handle_get_server(server_name)
-        return result
+        return JSONResponse(content=result, status_code=status)
 
     @app.patch("/api/virtual-servers/{server_name}")
     async def update_server_endpoint(server_name: str, data: dict[str, Any] = Body(...)):
         result, status = handle_update_server(server_name, data)
-        return result
+        return JSONResponse(content=result, status_code=status)
 
 
 # Standalone WSGI application for testing
@@ -160,7 +160,10 @@ def create_wsgi_app() -> Any:
         raise ImportError(msg) from None
 
     app = Flask(__name__)
-    CORS(app)  # Enable CORS for Admin UI access
+    # CORS configuration: restrict origins in production
+    # For development/testing, allows all origins. In production, set CORS_ORIGINS env var.
+    cors_origins = os.environ.get("CORS_ORIGINS", "*").split(",")
+    CORS(app, origins=cors_origins)
     register_flask_routes(app)
 
     return app
@@ -169,9 +172,15 @@ def create_wsgi_app() -> Any:
 if __name__ == "__main__":
     # Run standalone REST API server for testing
     app = create_wsgi_app()
-    print("Starting REST API server on http://localhost:5000")
+    # Bind to localhost for security; set FLASK_HOST env var to override
+    host = os.environ.get("FLASK_HOST", "127.0.0.1")
+    # Debug mode disabled by default; set FLASK_DEBUG=1 to enable in safe dev environments
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    print(f"Starting REST API server on http://{host}:5000")
     print("Endpoints:")
     print("  GET    /api/virtual-servers")
     print("  GET    /api/virtual-servers/{name}")
     print("  PATCH  /api/virtual-servers/{name}")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    if debug:
+        print("WARNING: Debug mode enabled - use only in safe development environments")
+    app.run(host=host, port=5000, debug=debug)

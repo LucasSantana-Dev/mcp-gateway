@@ -14,7 +14,18 @@ For production deployments, replace with your gateway URL.
 
 ## Authentication
 
-Currently, the API endpoints are accessible without authentication when running locally. For production deployments, ensure proper authentication is configured.
+Currently, the API endpoints are accessible without authentication when running locally. For production deployments, implement proper authentication:
+
+**Recommended Approaches:**
+- **API Keys**: Use environment-configured tokens (e.g., `API_KEY` in env vars, validate via middleware)
+- **OAuth2/OpenID Connect**: For user-based flows with identity providers
+- **Reverse Proxy/API Gateway**: Place service behind nginx/Traefik/Kong that enforces authentication
+
+**Security Best Practices:**
+- Store credentials in environment variables or secrets management systems (never hardcode)
+- Enable TLS/HTTPS in production (e.g., `ssl_certificate` in nginx, Let's Encrypt)
+- Rotate API keys regularly and audit access logs
+- Example: `Authorization: Bearer ${API_TOKEN}` header with token validation middleware
 
 ## Endpoints
 
@@ -308,6 +319,95 @@ In addition to REST endpoints, the same functionality is available as MCP tools 
 - `disable_server_tool(server_name)` - Disable a server
 
 These tools are automatically available when connecting to the tool-router MCP server.
+
+---
+
+## Authentication
+
+### Overview
+
+API endpoints require authentication to ensure secure access. The recommended approach is to use JSON Web Tokens (JWT) for authentication.
+
+### JWT Authentication
+
+To use JWT authentication, follow these steps:
+
+1. Obtain a JWT token by making a `POST` request to the `/auth` endpoint with your credentials.
+2. Include the obtained JWT token in the `Authorization` header of subsequent requests.
+
+**Example:**
+```bash
+curl -X POST http://localhost:4444/auth \
+  -H "Content-Type: application/json" \
+  -d '{"username": "your_username", "password": "your_password"}'
+```
+
+**Response:**
+```json
+{
+  "token": "your_jwt_token"
+}
+```
+
+**Subsequent Request:**
+```bash
+curl -X GET http://localhost:4444/api/virtual-servers \
+  -H "Authorization: Bearer your_jwt_token"
+```
+
+### Production Guidance
+
+In production environments, consider the following best practices:
+
+* Use a secure connection (HTTPS) to encrypt communication between clients and the API.
+* Implement rate limiting to prevent abuse and denial-of-service attacks.
+* Use a secure secret key for signing JWT tokens.
+* Store JWT tokens securely on the client-side, such as using a secure cookie or local storage.
+
+---
+
+## Troubleshooting
+
+### Connection Failures
+
+**Symptoms:** API returns 500 errors, timeouts, or "Service Unavailable"
+
+**Likely Causes:**
+- Gateway service not running or unreachable
+- Network connectivity issues
+- Service endpoint misconfigured
+
+**HTTP Status:** 500 (Internal Server Error), 503 (Service Unavailable)
+
+**Quick Resolution:** Check service status (`docker compose ps gateway`), verify network connectivity, retry request after confirming endpoints are accessible.
+
+### Permission Errors (virtual-servers.txt)
+
+**Symptoms:** API returns 403/400 errors with "Permission denied" or "Cannot write to file"
+
+**Likely Causes:**
+- Insufficient file permissions on `config/virtual-servers.txt`
+- Incorrect file ownership
+- Read-only filesystem
+
+**HTTP Status:** 403 (Forbidden), 400 (Bad Request)
+
+**Quick Resolution:** Check file permissions (`ls -la config/virtual-servers.txt`), fix with `chmod 644 config/virtual-servers.txt`, ensure correct ownership (`chown user:group config/virtual-servers.txt`).
+
+### Backup File Conflicts
+
+**Symptoms:** API returns errors mentioning `.bak` files or "File exists"
+
+**Likely Causes:**
+- Previous backup files not cleaned up
+- Concurrent operations creating conflicting backups
+- Disk space issues
+
+**HTTP Status:** 500 (Internal Server Error)
+
+**Quick Resolution:** Remove stale backup files (`rm config/virtual-servers.txt.bak*`), ensure sufficient disk space, retry operation. For safe recovery, restore from backup if needed (`cp config/virtual-servers.txt.bak config/virtual-servers.txt`).
+
+**Note:** All errors follow the Common Error Response Format with `error` and optional `detail` fields. Check response body for specific error messages.
 
 ---
 

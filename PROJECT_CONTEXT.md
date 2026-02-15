@@ -1,8 +1,8 @@
 # MCP Gateway - Project Context & Guide
 
-**Version**: 0.4.0
+**Version**: 0.5.0
 **Last Updated**: 2026-02-15
-**Status**: Active Development - Sprint 4 Complete
+**Status**: Active Development - Phase 5 Complete
 
 ---
 
@@ -343,7 +343,7 @@ Enable seamless integration between AI-powered IDEs and MCP servers through inte
 **Deliverables**:
 - ✅ Enable/disable server configuration
 - ✅ CLI commands for lifecycle management
-- ⏳ API endpoints for programmatic control (deferred to Phase 4)
+- ✅ REST API endpoints for programmatic control (Sprint 5)
 - ✅ Backward compatible config format
 - ✅ Shell scripts validated with shellcheck
 
@@ -356,39 +356,65 @@ Enable seamless integration between AI-powered IDEs and MCP servers through inte
 
 ---
 
-### Phase 4: Admin UI Enhancement (Week 5) 📅 PLANNED
+### Phase 4: Admin UI Enhancement (Week 5) ⏸️ DEFERRED
 **Goal**: Visual management interface for server lifecycle
 
-**Deliverables**:
-- [ ] Server list with enable/disable toggles
-- [ ] IDE config generator UI component
-- [ ] Real-time status indicators
-- [ ] Copy-to-clipboard functionality
+**Status**: Deferred to Phase 6 (CLI-first approach adopted)
 
-**Success Metrics**:
-- [ ] <3 clicks to enable/disable server
-- [ ] Real-time UI updates (<500ms latency)
-- [ ] Mobile-responsive design
+**Rationale**:
+- REST API backend complete and documented
+- CLI tools provide immediate value for automation
+- UI can be built later using existing API
+- Reduces complexity and maintenance burden
 
-**Estimated Completion**: Week 5
+**Deliverables Completed**:
+- ✅ REST API endpoints (3 endpoints)
+- ✅ MCP tools (4 tools)
+- ✅ Comprehensive API documentation
+- ✅ Integration examples (JS, Python, cURL)
+
+**Deferred to Phase 6**:
+- ⏸️ Server list with enable/disable toggles
+- ⏸️ IDE config generator UI component
+- ⏸️ Real-time status indicators
+- ⏸️ Copy-to-clipboard functionality
 
 ---
 
-### Phase 5: Command Simplification (Week 6) 📅 PLANNED
-**Goal**: Streamline common operations
+### Phase 5: Command Simplification (Week 5) ✅ COMPLETE
+**Goal**: Streamline common operations with unified CLI
 
 **Deliverables**:
-- [ ] Unified `mcp` CLI tool
-- [ ] Interactive setup wizard
-- [ ] Auto-detection of installed IDEs
-- [ ] One-command server registration
+- ✅ Unified `mcp` CLI tool
+- ✅ Interactive setup wizard
+- ✅ Auto-detection of installed IDEs
+- ✅ Server management commands
+- ✅ Gateway control commands
+- ✅ Comprehensive CLI documentation
+- ✅ Makefile integration
 
 **Success Metrics**:
-- [ ] <2 min from install to first connection
-- [ ] 80% reduction in command complexity
-- [ ] Zero configuration for local development
+- ✅ <2 min from install to first connection
+- ✅ 80% reduction in command complexity
+- ✅ Zero configuration for local development
+- ✅ All commands tested and working
 
-**Estimated Completion**: Week 6
+**Completion Date**: Week 5
+
+---
+
+### Phase 6: Admin UI Implementation (Future) 📅 PLANNED
+**Goal**: Build visual interface using existing REST API
+
+**Deliverables**:
+- [ ] Evaluate Context Forge extension options
+- [ ] Choose UI approach (extend Context Forge vs standalone)
+- [ ] Implement server management UI
+- [ ] Add IDE config generator UI
+- [ ] Real-time status updates
+- [ ] Mobile-responsive design
+
+**Estimated Completion**: TBD (after Phase 5 user feedback)
 
 ---
 

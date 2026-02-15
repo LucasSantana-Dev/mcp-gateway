@@ -34,8 +34,9 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     # Count total servers
     ((total_count++))
 
-    # Normalize enabled_flag: trim whitespace and convert to lowercase
-    enabled_flag=$(echo "$enabled_flag" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+    # Normalize enabled_flag: trim whitespace and convert to lowercase using parameter expansion
+    enabled_flag="${enabled_flag//[[:space:]]/}"  # Remove all whitespace
+    enabled_flag="${enabled_flag,,}"              # Convert to lowercase
 
     # Check enabled status (default is enabled if no flag, anything other than "false" is enabled)
     if [[ -z "$enabled_flag" ]] || [[ "$enabled_flag" != "false" ]]; then
