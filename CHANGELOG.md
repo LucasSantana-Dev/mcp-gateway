@@ -6,6 +6,19 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- **AI-Powered Tool Router with Ollama** - Enhanced tool-router with intelligent LLM-based tool selection
+  - **Hybrid scoring system**: Combines AI selection (70% weight) with keyword matching (30% weight) for optimal accuracy
+  - **Ollama integration**: Free, local LLM service using `llama3.2:3b` model (~2GB)
+  - **Automatic fallback**: Seamlessly falls back to keyword matching on timeout (2s), errors, or low confidence
+  - **Docker service**: Ollama container included in `docker-compose.yml` with health checks
+  - **Configurable**: Tune AI weight, timeout, model selection, and enable/disable via environment variables
+  - **Alternative models**: Support for `llama3.2:1b` (faster), `mistral:7b`, `llama3.1:8b` (more accurate)
+  - **Comprehensive metrics**: Track AI vs keyword selection rates, confidence scores, and fallback events
+  - **Full test coverage**: Unit tests for AI selector, prompt templates, and hybrid scoring
+  - **Documentation**: New `docs/operations/AI_ROUTER_GUIDE.md` with setup, tuning, and troubleshooting
+  - Configuration via `.env`: `ROUTER_AI_ENABLED`, `ROUTER_AI_MODEL`, `ROUTER_AI_ENDPOINT`, `ROUTER_AI_TIMEOUT_MS`, `ROUTER_AI_WEIGHT`
+  - Port override: `OLLAMA_PORT` (default: 11434)
+
 - **CodeQL Security Scanning** - Added GitHub CodeQL workflow for automated security analysis
   - Scans JavaScript/TypeScript and Python code
   - Runs on push, pull requests, and weekly schedule

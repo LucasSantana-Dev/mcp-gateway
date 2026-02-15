@@ -58,10 +58,59 @@ class GatewayConfig:
 
 
 @dataclass
+class AIRouterConfig:
+    """AI-powered tool selection configuration."""
+
+    enabled: bool = True
+    provider: str = "ollama"
+    model: str = "llama3.2:3b"
+    endpoint: str = "http://ollama:11434"
+    timeout_ms: int = 2000
+    weight: float = 0.7  # Weight for AI score in hybrid scoring (0.0-1.0)
+
+    @classmethod
+    def load_from_environment(cls) -> AIRouterConfig:
+        """Load AI router configuration from environment variables.
+
+        Returns:
+            AIRouterConfig with settings from environment or defaults.
+        """
+        enabled = os.getenv("ROUTER_AI_ENABLED", "true").lower() in ("true", "1", "yes")
+        provider = os.getenv("ROUTER_AI_PROVIDER", "ollama")
+        model = os.getenv("ROUTER_AI_MODEL", "llama3.2:3b")
+        endpoint = os.getenv("ROUTER_AI_ENDPOINT", "http://ollama:11434").rstrip("/")
+
+        try:
+            timeout_ms = int(os.getenv("ROUTER_AI_TIMEOUT_MS", "2000"))
+        except ValueError as e:
+            msg = f"ROUTER_AI_TIMEOUT_MS must be a valid integer, got: {os.getenv('ROUTER_AI_TIMEOUT_MS')}"
+            raise ValueError(msg) from e
+
+        try:
+            weight = float(os.getenv("ROUTER_AI_WEIGHT", "0.7"))
+            if not 0.0 <= weight <= 1.0:
+                msg = f"ROUTER_AI_WEIGHT must be between 0.0 and 1.0, got: {weight}"
+                raise ValueError(msg)
+        except ValueError as e:
+            msg = f"ROUTER_AI_WEIGHT must be a valid float between 0.0 and 1.0, got: {os.getenv('ROUTER_AI_WEIGHT')}"
+            raise ValueError(msg) from e
+
+        return cls(
+            enabled=enabled,
+            provider=provider,
+            model=model,
+            endpoint=endpoint,
+            timeout_ms=timeout_ms,
+            weight=weight,
+        )
+
+
+@dataclass
 class ToolRouterConfig:
     """Tool router application configuration."""
 
     gateway: GatewayConfig
+    ai: AIRouterConfig
     max_tools_search: int = 10
     default_top_n: int = 1
 
@@ -86,6 +135,7 @@ class ToolRouterConfig:
 
         return cls(
             gateway=GatewayConfig.load_from_environment(),
+            ai=AIRouterConfig.load_from_environment(),
             max_tools_search=max_tools_search,
             default_top_n=default_top_n,
         )

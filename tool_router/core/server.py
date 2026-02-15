@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from tool_router.ai.selector import AIToolSelector
 from tool_router.args.builder import build_arguments
+from tool_router.core.config import ToolRouterConfig
 from tool_router.gateway.client import call_tool, get_tools
 from tool_router.observability import get_logger, get_metrics
 from tool_router.observability.metrics import TimingContext
-from tool_router.scoring.matcher import select_top_matching_tools
+from tool_router.scoring.matcher import (
+    select_top_matching_tools,
+    select_top_matching_tools_with_ai,
+)
 
 
 try:
@@ -16,6 +21,31 @@ except ImportError:
 mcp = FastMCP("tool-router", json_response=True)
 logger = get_logger(__name__)
 metrics = get_metrics()
+
+# Initialize configuration and AI selector
+config = ToolRouterConfig.load_from_environment()
+ai_selector = None
+if config.ai.enabled:
+    try:
+        ai_selector = AIToolSelector(
+            endpoint=config.ai.endpoint,
+            model=config.ai.model,
+            timeout_ms=config.ai.timeout_ms,
+        )
+        if ai_selector.is_available():
+            logger.info(f"AI selector initialized with model: {config.ai.model}")
+            metrics.increment_counter("ai_selector.initialized")
+        else:
+            logger.warning(f"Ollama service not available at {config.ai.endpoint}, using keyword matching fallback")
+            metrics.increment_counter("ai_selector.unavailable")
+            ai_selector = None
+    except Exception as e:
+        logger.warning(f"Failed to initialize AI selector: {e}, using keyword matching fallback")
+        metrics.increment_counter("ai_selector.init_error")
+        ai_selector = None
+else:
+    logger.info("AI selector disabled, using keyword matching only")
+    metrics.increment_counter("ai_selector.disabled")
 
 
 @mcp.tool()
@@ -42,13 +72,55 @@ def execute_task(task: str, context: str = "") -> str:
             metrics.increment_counter("execute_task.no_tools")
             return "No tools registered in the gateway."
 
-        try:
-            with TimingContext("execute_task.pick_best_tools"):
-                best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
-        except Exception as selection_error:
-            logger.exception(f"Error picking tool: {type(selection_error).__name__}: {selection_error}")
-            metrics.increment_counter("execute_task.errors.pick_tools")
-            return f"Error picking tool: {type(selection_error).__name__}: {selection_error}"
+        # Try AI selection first if enabled, with fallback to keyword matching
+        best_matching_tools = []
+        selection_method = "keyword"
+
+        if ai_selector:
+            try:
+                with TimingContext("execute_task.ai_selection"):
+                    ai_result = ai_selector.select_tool(task, tools)
+
+                if ai_result and ai_result.get("confidence", 0.0) > 0.3:
+                    # AI selection successful with reasonable confidence
+                    ai_tool_name = ai_result["tool_name"]
+                    ai_confidence = ai_result["confidence"]
+                    ai_reasoning = ai_result.get("reasoning", "")
+
+                    logger.info(f"AI selected: {ai_tool_name} (confidence: {ai_confidence:.2f}) - {ai_reasoning}")
+                    metrics.increment_counter("execute_task.ai_selection.success")
+                    metrics.record_gauge("execute_task.ai_confidence", ai_confidence)
+
+                    # Use hybrid scoring
+                    with TimingContext("execute_task.hybrid_scoring"):
+                        best_matching_tools = select_top_matching_tools_with_ai(
+                            tools=tools,
+                            task=task,
+                            context=context,
+                            ai_selected_tool=ai_tool_name,
+                            ai_confidence=ai_confidence,
+                            ai_weight=config.ai.weight,
+                            top_n=1,
+                        )
+                    selection_method = "hybrid_ai"
+                else:
+                    logger.info("AI selection confidence too low, falling back to keyword matching")
+                    metrics.increment_counter("execute_task.ai_selection.low_confidence")
+
+            except Exception as ai_error:
+                logger.warning(f"AI selection failed: {ai_error}, falling back to keyword matching")
+                metrics.increment_counter("execute_task.ai_selection.error")
+
+        # Fallback to keyword matching if AI not used or failed
+        if not best_matching_tools:
+            try:
+                with TimingContext("execute_task.keyword_selection"):
+                    best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
+                metrics.increment_counter("execute_task.keyword_selection")
+            except Exception as selection_error:
+                logger.exception(f"Error picking tool: {type(selection_error).__name__}: {selection_error}")
+                metrics.increment_counter("execute_task.errors.pick_tools")
+                return f"Error picking tool: {type(selection_error).__name__}: {selection_error}"
 
         if not best_matching_tools:
             logger.warning("No matching tool found for task")
@@ -62,8 +134,9 @@ def execute_task(task: str, context: str = "") -> str:
             metrics.increment_counter("execute_task.errors.no_name")
             return "Chosen tool has no name."
 
-        logger.info(f"Selected tool: {name}")
+        logger.info(f"Selected tool: {name} (method: {selection_method})")
         metrics.increment_counter(f"execute_task.tool_selected.{name}")
+        metrics.increment_counter(f"execute_task.selection_method.{selection_method}")
 
         try:
             with TimingContext("execute_task.build_arguments"):
