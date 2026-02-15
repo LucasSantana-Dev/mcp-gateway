@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mcp-gateway.dev/schemas/virtual-servers.json",
+  "title": "MCP Gateway Virtual Servers Configuration",
+  "description": "Schema for virtual server configurations in MCP Gateway",
+  "type": "object",
+  "required": ["version", "categories"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "description": "Configuration version",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Overall configuration description"
+    },
+    "categories": {
+      "type": "object",
+      "description": "Server categories",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "$ref": "#/definitions/category"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "category": {
+      "type": "object",
+      "required": ["name", "servers"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Category display name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Category description"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Category icon (emoji)"
+        },
+        "servers": {
+          "type": "array",
+          "description": "Servers in this category",
+          "items": {
+            "$ref": "#/definitions/server"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "server": {
+      "type": "object",
+      "required": ["name", "gateways"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Server name (must be unique, lowercase with hyphens)",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Server description"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Server icon (emoji)"
+        },
+        "gateways": {
+          "type": "array",
+          "description": "List of gateway names to include in this server",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9-]*$"
+          },
+          "minItems": 1,
+          "maxItems": 60
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this server is enabled",
+          "default": true
+        },
+        "requiresAuth": {
+          "type": "boolean",
+          "description": "Whether this server requires JWT authentication",
+          "default": false
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorization and filtering",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "uniqueItems": true
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Additional metadata",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

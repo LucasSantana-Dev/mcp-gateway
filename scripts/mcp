@@ -484,11 +484,98 @@ cmd_ide_setup() {
         exit 1
     fi
 
-    # List available servers
+    # List available servers with enhanced formatting
     echo ""
-    info "Available virtual servers:"
-    if [ -f "$PROJECT_ROOT/config/virtual-servers.txt" ]; then
-        grep -v '^#' "$PROJECT_ROOT/config/virtual-servers.txt" | grep -v '^[[:space:]]*$' | awk '{print "  - " $1}'
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 Available Virtual Servers"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    # Try JSON first, fall back to TXT
+    if [ -f "$PROJECT_ROOT/config/virtual-servers.json" ]; then
+        # Parse JSON and display servers with icons and categories
+        if command -v jq &> /dev/null; then
+            # Use jq for proper JSON parsing
+            jq -r '
+                .categories | to_entries[] |
+                "\(.value.icon) \(.value.name):",
+                (.value.servers[] |
+                    if .enabled then
+                        "  \(.icon) \(.name)|\(.gateways | length)|\(.description // "")"
+                    else empty end
+                )
+            ' "$PROJECT_ROOT/config/virtual-servers.json" | while IFS= read -r line; do
+                if [[ "$line" =~ ^[[:space:]]*[🔧🚀] ]]; then
+                    # Category header
+                    echo "$line"
+                else
+                    # Server entry
+                    IFS='|' read -r name_icon count desc <<< "$line"
+                    # Color code based on category
+                    if [[ "$name_icon" =~ (⭐|🔀|🔍|🌐|📝|💾|🎯) ]]; then
+                        # Legacy - green
+                        printf "%s \033[1;32m%-30s\033[0m \033[2m(%s tools)\033[0m\n" \
+                            "$(echo "$name_icon" | awk '{print $1}')" \
+                            "$(echo "$name_icon" | awk '{$1=""; print substr($0,2)}')" \
+                            "$count"
+                    else
+                        # Optimized - cyan
+                        printf "%s \033[1;36m%-30s\033[0m \033[2m(%s tools)\033[0m\n" \
+                            "$(echo "$name_icon" | awk '{print $1}')" \
+                            "$(echo "$name_icon" | awk '{$1=""; print substr($0,2)}')" \
+                            "$count"
+                    fi
+                fi
+            done
+        else
+            # Fallback: simple parsing without jq
+            warn "jq not found, using basic JSON parsing"
+            grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$PROJECT_ROOT/config/virtual-servers.json" | \
+                cut -d'"' -f4 | while read -r name; do
+                printf "  • \033[1;36m%-30s\033[0m\n" "$name"
+            done
+        fi
+    elif [ -f "$PROJECT_ROOT/config/virtual-servers.txt" ]; then
+        # Legacy TXT format support
+        warn "Using legacy .txt format. Consider migrating to JSON."
+        echo "🔧 Legacy Profiles:"
+        grep -v '^#' "$PROJECT_ROOT/config/virtual-servers.txt" | grep -v '^[[:space:]]*$' | head -7 | while IFS='|' read -r name tools rest; do
+            icon="  •"
+            case "$name" in
+                *router*) icon="  🔀" ;;
+                *default*) icon="  ⭐" ;;
+                *search*) icon="  🔍" ;;
+                *browser*) icon="  🌐" ;;
+                *git*) icon="  📝" ;;
+                database*) icon="  💾" ;;
+                fullstack*) icon="  🎯" ;;
+            esac
+            tool_count=$(echo "$tools" | tr ',' '\n' | wc -l | tr -d ' ')
+            printf "%s \033[1;32m%-30s\033[0m \033[2m(%s tools)\033[0m\n" "$icon" "$name" "$tool_count"
+        done
+
+        echo ""
+        echo "🚀 Optimized Stacks:"
+        grep -v '^#' "$PROJECT_ROOT/config/virtual-servers.txt" | grep -v '^[[:space:]]*$' | tail -n +8 | while IFS='|' read -r name tools rest; do
+            icon="  •"
+            case "$name" in
+                nodejs*) icon="  📗" ;;
+                react*) icon="  ⚛️ " ;;
+                mobile*) icon="  📱" ;;
+                database*) icon="  💾" ;;
+                java*) icon="  ☕" ;;
+                python*) icon="  🐍" ;;
+                aws*) icon="  ☁️ " ;;
+                testing*) icon="  🧪" ;;
+                code-quality*) icon="  ✨" ;;
+                fullstack*) icon="  🎯" ;;
+                monorepo*) icon="  📦" ;;
+                devops*) icon="  🔧" ;;
+                *minimal*) icon="  ⚡" ;;
+            esac
+            tool_count=$(echo "$tools" | tr ',' '\n' | wc -l | tr -d ' ')
+            printf "%s \033[1;36m%-30s\033[0m \033[2m(%s tools)\033[0m\n" "$icon" "$name" "$tool_count"
+        done
     else
         warn "No virtual servers configured yet"
         echo "  Run './scripts/gateway/register.sh' first"
@@ -496,8 +583,10 @@ cmd_ide_setup() {
     fi
 
     echo ""
-    read -rp "Which server would you like to connect to? [gateway]: " server
-    server="${server:-gateway}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    read -rp "Which server would you like to connect to? [router]: " server
+    server="${server:-router}"
 
     # Generate config
     cd "$PROJECT_ROOT"
