@@ -34,8 +34,11 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     # Count total servers
     ((total_count++))
 
-    # Check enabled status (default is enabled if no flag)
-    if [[ -z "$enabled_flag" ]] || [[ "$enabled_flag" == "true" ]]; then
+    # Normalize enabled_flag: trim whitespace and convert to lowercase
+    enabled_flag=$(echo "$enabled_flag" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+
+    # Check enabled status (default is enabled if no flag, anything other than "false" is enabled)
+    if [[ -z "$enabled_flag" ]] || [[ "$enabled_flag" != "false" ]]; then
         echo "✓ $name"
         ((enabled_count++))
     else

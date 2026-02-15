@@ -5,6 +5,12 @@ import json
 from tool_router.ai.selector import AIToolSelector
 from tool_router.api.health import get_ai_router_health
 from tool_router.api.ide_config import generate_ide_config
+from tool_router.api.lifecycle import (
+    disable_server,
+    enable_server,
+    get_server_status,
+    list_virtual_servers,
+)
 from tool_router.api.metrics import get_ai_router_metrics
 from tool_router.args.builder import build_arguments
 from tool_router.core.config import ToolRouterConfig
@@ -225,39 +231,102 @@ def get_ai_router_health_tool() -> str:
 def generate_ide_config_tool(
     ide: str,
     server_name: str,
-    server_uuid: str,
-    gateway_url: str = "http://localhost:4444",
+    server_uuid: str = "",
+    gateway_url: str = "",
+    jwt_token: str = "",
 ) -> str:
-    """Generate IDE configuration for MCP Gateway connection.
+    """Generate IDE configuration for Windsurf or Cursor.
 
     Args:
-        ide: Target IDE (windsurf or cursor)
-        server_name: Name for the MCP server entry
-        server_uuid: UUID of the virtual server
-        gateway_url: Gateway base URL (default: http://localhost:4444)
+        ide: IDE name ('windsurf' or 'cursor')
+        server_name: Virtual server name
+        server_uuid: Server UUID (optional, will auto-detect if empty)
+        gateway_url: Gateway URL (optional, defaults to GATEWAY_URL env var)
+        jwt_token: JWT token for authentication (optional, for remote access)
 
     Returns:
-        JSON configuration snippet for the IDE's mcp.json file
-
-    Example:
-        generate_ide_config_tool("windsurf", "my-server", "abc-123")
+        JSON configuration snippet ready to paste into mcp.json
     """
     try:
-        if ide not in ("windsurf", "cursor"):
-            return json.dumps(
-                {"error": f"Invalid IDE '{ide}'. Must be 'windsurf' or 'cursor'"},
-                indent=2,
-            )
-
-        config_data = generate_ide_config(
-            ide=ide,  # type: ignore[arg-type]
+        result = generate_ide_config(
+            ide=ide,
             server_name=server_name,
             server_uuid=server_uuid,
             gateway_url=gateway_url,
+            jwt_token=jwt_token,
         )
-        return json.dumps(config_data, indent=2)
+        return json.dumps(result, indent=2)
     except Exception as e:
         logger.exception("Failed to generate IDE config")
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+def list_servers_tool() -> str:
+    """List all virtual servers with their enabled/disabled status.
+
+    Returns:
+        JSON with servers list and summary statistics.
+    """
+    try:
+        result = list_virtual_servers()
+        return json.dumps(result, indent=2)
+    except (ValueError, RuntimeError) as e:
+        logger.exception("Failed to list virtual servers: %s", e)
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+def get_server_status_tool(server_name: str) -> str:
+    """Get status of a specific virtual server.
+
+    Args:
+        server_name: Name of the server to check
+
+    Returns:
+        JSON with server details (name, gateways, enabled status).
+    """
+    try:
+        result = get_server_status(server_name)
+        return json.dumps(result, indent=2)
+    except (ValueError, RuntimeError) as e:
+        logger.exception("Failed to get server status: %s", e)
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+def enable_server_tool(server_name: str) -> str:
+    """Enable a virtual server.
+
+    Args:
+        server_name: Name of the server to enable
+
+    Returns:
+        JSON with success status and message.
+    """
+    try:
+        result = enable_server(server_name)
+        return json.dumps(result, indent=2)
+    except (ValueError, RuntimeError) as e:
+        logger.exception("Failed to enable server: %s", e)
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+def disable_server_tool(server_name: str) -> str:
+    """Disable a virtual server.
+
+    Args:
+        server_name: Name of the server to disable
+
+    Returns:
+        JSON with success status and message.
+    """
+    try:
+        result = disable_server(server_name)
+        return json.dumps(result, indent=2)
+    except (ValueError, RuntimeError) as e:
+        logger.exception("Failed to disable server: %s", e)
         return json.dumps({"error": str(e)}, indent=2)
 
 

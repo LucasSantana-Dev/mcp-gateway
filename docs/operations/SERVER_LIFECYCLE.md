@@ -117,7 +117,7 @@ make register
 ### Restore Default Configuration
 
 ```bash
-# Enable all servers
+# Enable all servers (restores defaults - enables every server regardless of current state)
 for server in $(grep -v '^#' config/virtual-servers.txt | cut -d'|' -f1); do
     make enable-server SERVER=$server
 done
@@ -282,5 +282,5 @@ curl /api/servers?enabled=true
 
 ---
 
-**Last Updated**: 2025-02-15
+**Last Updated**: 2026-02-15
 **Version**: 0.4.0

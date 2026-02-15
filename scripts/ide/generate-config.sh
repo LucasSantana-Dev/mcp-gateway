@@ -85,7 +85,7 @@ if command -v curl &> /dev/null; then
     if [[ -n "$RESPONSE" ]]; then
         # Try jq first for robust JSON parsing
         if command -v jq &> /dev/null; then
-            SERVER_UUID=$(echo "$RESPONSE" | jq -r ".[] | select(.name==\"${SERVER_NAME}\") | .uuid" 2>/dev/null || echo "")
+            SERVER_UUID=$(echo "$RESPONSE" | jq --arg SERVER_NAME "$SERVER_NAME" -r '.[] | select(.name==$SERVER_NAME) | .uuid' 2>/dev/null || echo "")
         else
             # Fall back to Python for JSON parsing
             SERVER_UUID=$(python3 -c "

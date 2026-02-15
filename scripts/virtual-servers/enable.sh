@@ -3,6 +3,14 @@
 # Usage: ./enable.sh <server-name>
 set -euo pipefail
 
+# Cleanup function for temporary files
+cleanup() {
+    if [[ -n "${temp_file:-}" ]] && [[ -f "$temp_file" ]]; then
+        rm -f "$temp_file"
+    fi
+}
+trap cleanup EXIT INT TERM
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_DIR="${CONFIG_DIR:-$REPO_ROOT/config}"
@@ -24,8 +32,8 @@ if [[ ! -f "$VIRTUAL_SERVERS_FILE" ]]; then
     exit 1
 fi
 
-# Check if server exists
-if ! grep -q "^${SERVER_NAME}|" "$VIRTUAL_SERVERS_FILE" && ! grep -q "^${SERVER_NAME} " "$VIRTUAL_SERVERS_FILE"; then
+# Check if server exists (using fixed-string matching to avoid regex injection)
+if ! grep -F -q "${SERVER_NAME}|" "$VIRTUAL_SERVERS_FILE" && ! grep -F -q "${SERVER_NAME} " "$VIRTUAL_SERVERS_FILE"; then
     echo "Error: Server '$SERVER_NAME' not found in $VIRTUAL_SERVERS_FILE" >&2
     exit 1
 fi
