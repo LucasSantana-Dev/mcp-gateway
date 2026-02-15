@@ -260,11 +260,13 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ### 1. Set Appropriate Log Levels
 
 **Development:**
+
 ```python
 setup_logging(level="DEBUG", structured=False)
 ```
 
 **Production:**
+
 ```python
 setup_logging(level="INFO", structured=True)
 ```
@@ -286,6 +288,7 @@ setup_logging(level="INFO", structured=True)
 ### 3. Use Health Checks
 
 **Kubernetes Probes:**
+
 ```yaml
 livenessProbe:
   exec:
@@ -319,6 +322,7 @@ readinessProbe:
 ### High Latency
 
 **Check metrics:**
+
 ```python
 metrics = get_metrics()
 stats = metrics.get_stats("execute_task.total_duration")
@@ -334,6 +338,7 @@ print(f"Average latency: {stats.avg_ms}ms")
 ### Frequent Errors
 
 **Check error counters:**
+
 ```python
 metrics = get_metrics()
 errors = {
@@ -352,6 +357,7 @@ print(errors)
 ### Service Degradation
 
 **Run health check:**
+
 ```python
 health = HealthCheck()
 result = health.check_all()

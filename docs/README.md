@@ -5,6 +5,7 @@ Complete documentation for the MCP Gateway (Context Forge) project.
 ## 📚 Documentation Structure
 
 ### Getting Started
+
 Start here if you're new to the project.
 
 - **[Quick Start Guide](../README.md#quick-start)** - Get up and running in 5 minutes
@@ -13,6 +14,7 @@ Start here if you're new to the project.
 - **[Environment Configuration](setup/ENVIRONMENT_CONFIGURATION.md)** - Configure .env and environment variables
 
 ### Core Concepts
+
 Understand the architecture and key concepts.
 
 - **[Architecture Overview](architecture/OVERVIEW.md)** - System architecture and components
@@ -20,6 +22,7 @@ Understand the architecture and key concepts.
 - **[Virtual Servers](architecture/VIRTUAL_SERVERS.md)** - Managing tool collections
 
 ### Configuration & Deployment
+
 Configure and deploy the gateway.
 
 - **[MCP Stack Configurations](configuration/MCP_STACK_CONFIGURATIONS.md)** - Stack-specific setups
@@ -27,6 +30,7 @@ Configure and deploy the gateway.
 - **[Admin UI Manual Registration](configuration/ADMIN_UI_MANUAL_REGISTRATION.md)** - Manual gateway registration
 
 ### Development
+
 Contributing and developing the project.
 
 - **[Development Guide](development/DEVELOPMENT.md)** - Local development setup
