@@ -130,8 +130,19 @@ class TestToolRouterConfig:
 
     def test_direct_instantiation(self) -> None:
         """Test direct instantiation with GatewayConfig."""
+        from tool_router.core.config import AIRouterConfig
+
         gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
-        config = ToolRouterConfig(gateway=gateway_config, max_tools_search=15, default_top_n=2)
+        ai_config = AIRouterConfig(
+            enabled=False,
+            provider="ollama",
+            model="llama3.2:3b",
+            endpoint="http://ollama:11434",
+            timeout_ms=5000,
+            weight=0.7,
+            min_confidence=0.3,
+        )
+        config = ToolRouterConfig(gateway=gateway_config, ai=ai_config, max_tools_search=15, default_top_n=2)
 
         assert config.gateway == gateway_config
         assert config.max_tools_search == 15
