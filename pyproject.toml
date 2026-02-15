@@ -146,10 +146,23 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "S106",    # Allow hardcoded test tokens/passwords in tests
     "PLR2004", # Allow magic values in tests
 ]
+"tool_router/api/tests/test_rest.py" = [
+    "TRY003",  # Allow long exception messages for validation
+    "EM101",   # Allow string literals in exceptions for validation
+    "EM102",   # Allow f-strings in exceptions for validation
+]
 "tool_router/api/ide_config.py" = [
     "TRY003",  # Allow long exception messages for validation
     "EM101",   # Allow string literals in exceptions for validation
     "EM102",   # Allow f-strings in exceptions for validation
+]
+"tool_router/api/rest.py" = [
+    "TRY300",  # Allow return in try block for REST handlers
+    "BLE001",  # Allow catching Exception for REST error handling
+    "ANN202",  # Allow missing return annotations in nested functions
+    "T201",    # Allow print in __main__ for standalone server
+    "S104",    # Allow 0.0.0.0 binding for development server
+    "B008",    # Allow Body(...) in FastAPI defaults
 ]
 "tool_router/api/tests/**/*.py" = [
     "S101",    # Allow assert in tests
