@@ -9,10 +9,18 @@ All notable changes to this project are documented here.
 - **Developer Experience Enhancements** - Intuitive configuration and easy usage
   - Shell completions for bash, zsh, and fish
 
+### Changed
+
+- **Virtual Server Configuration**: Migrated from `.txt` to structured JSON format
+  - New file: `config/virtual-servers.json` with rich metadata
+  - JSON Schema validation: `config/virtual-servers.schema.json`
+  - Removed legacy `config/virtual-servers.txt`
+  - Server names now IDE-agnostic (removed `cursor-` prefix)
+
 ### Fixed
 
 - **Ollama Health Check**: Changed from `curl` to `ollama list` command (curl not available in container)
-- **IDE Setup Wizard**: Added server selection prompt to fix missing SERVER parameter error (`docs/cli/MCP_CLI.md`)
+- **IDE Setup Wizard**: Added server selection prompt to fix missing SERVER parameter error
 
 - **Phase 4: Admin UI Enhancement** - Approach revised to CLI-first strategy
   - REST API backend complete (Sprint 5)
