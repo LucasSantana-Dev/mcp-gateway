@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import threading
 
 from tool_router.ai.selector import AIToolSelector
 from tool_router.api.health import get_ai_router_health
@@ -24,9 +25,9 @@ from tool_router.scoring.matcher import (
 
 
 try:
-    from mcp.server.fastmcp import FastMCP
+    from fastmcp import FastMCP
 except ImportError:
-    msg = "Install the MCP SDK: pip install mcp"
+    msg = "Install FastMCP: pip install fastmcp"
     raise ImportError(msg) from None
 
 mcp = FastMCP("tool-router", json_response=True)
@@ -34,15 +35,38 @@ logger = get_logger(__name__)
 metrics = get_metrics()
 
 # Configuration and AI selector will be initialized in main()
-config = None
-ai_selector = None
+# Protected by _config_lock for thread-safe late binding
+config: ToolRouterConfig | None = None
+ai_selector: AIToolSelector | None = None
+_config_lock = threading.Lock()
 
 
 @mcp.tool()
 def execute_task(task: str, context: str = "") -> str:
-    """Run the best matching gateway tool for the given task. Describe what you want (e.g. 'search the web for X', 'list files in /tmp'). Optional context can narrow the choice."""
-    if config is None:
-        return "Service not initialized. Please wait for startup to complete."
+    """Run the best matching gateway tool for the given task.
+
+    Selects and executes the most appropriate tool from the gateway based on the task
+    description. Uses AI-powered selection when available, falling back to keyword matching.
+
+    Args:
+        task: Description of what you want to accomplish (e.g., 'search the web for X',
+            'list files in /tmp'). Maximum 400 characters recommended.
+        context: Optional additional context to narrow the tool selection. Can include
+            domain-specific details or constraints.
+
+    Returns:
+        JSON string containing the tool execution result, or an error message if the
+        task cannot be completed.
+
+    Raises:
+        No exceptions are raised; all errors are caught and returned as error messages
+        in the response string.
+    """
+    with _config_lock:
+        if config is None:
+            return "Service not initialized. Please wait for startup to complete."
+        local_config = config
+        local_ai_selector = ai_selector
 
     logger.info(f"Executing task: {task[:100]}")
     metrics.increment_counter("execute_task.calls")
@@ -69,12 +93,12 @@ def execute_task(task: str, context: str = "") -> str:
         best_matching_tools = []
         selection_method = "keyword"
 
-        if ai_selector:
+        if local_ai_selector:
             try:
                 with TimingContext("execute_task.ai_selection"):
-                    ai_result = ai_selector.select_tool(task, tools)
+                    ai_result = local_ai_selector.select_tool(task, tools)
 
-                if ai_result and ai_result.get("confidence", 0.0) > config.ai.min_confidence:
+                if ai_result and ai_result.get("confidence", 0.0) > local_config.ai.min_confidence:
                     # AI selection successful with reasonable confidence
                     ai_tool_name = ai_result["tool_name"]
                     ai_confidence = ai_result["confidence"]
@@ -335,34 +359,40 @@ def main() -> None:
 
     # Initialize configuration and AI selector at startup
     try:
-        config = ToolRouterConfig.load_from_environment()
+        loaded_config = ToolRouterConfig.load_from_environment()
     except Exception as e:
         logger.exception("Failed to load configuration: %s", e)
         raise
 
-    if config.ai.enabled:
+    loaded_ai_selector: AIToolSelector | None = None
+    if loaded_config.ai.enabled:
         try:
-            ai_selector = AIToolSelector(
-                endpoint=config.ai.endpoint,
-                model=config.ai.model,
-                timeout_ms=config.ai.timeout_ms,
+            loaded_ai_selector = AIToolSelector(
+                endpoint=loaded_config.ai.endpoint,
+                model=loaded_config.ai.model,
+                timeout_ms=loaded_config.ai.timeout_ms,
             )
-            if ai_selector.is_available():
-                logger.info("AI selector initialized with model: %s", config.ai.model)
+            if loaded_ai_selector.is_available():
+                logger.info("AI selector initialized with model: %s", loaded_config.ai.model)
                 metrics.increment_counter("ai_selector.initialized")
             else:
                 logger.warning(
-                    "Ollama service not available at %s, using keyword matching fallback", config.ai.endpoint
+                    "Ollama service not available at %s, using keyword matching fallback", loaded_config.ai.endpoint
                 )
                 metrics.increment_counter("ai_selector.unavailable")
-                ai_selector = None
+                loaded_ai_selector = None
         except Exception as e:
             logger.warning("Failed to initialize AI selector: %s, using keyword matching fallback", e)
             metrics.increment_counter("ai_selector.init_error")
-            ai_selector = None
+            loaded_ai_selector = None
     else:
         logger.info("AI selector disabled, using keyword matching only")
         metrics.increment_counter("ai_selector.disabled")
+
+    # Assign to globals with lock protection
+    with _config_lock:
+        config = loaded_config
+        ai_selector = loaded_ai_selector
 
     mcp.run(transport="stdio")
 

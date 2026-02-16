@@ -54,10 +54,26 @@ ignore = [
     "EM",      # Error message rules (style)
     "PTH",     # Pathlib rules (open() acceptable)
     "S101",    # Assert usage (pytest uses assert)
-    "S106",    # Hardcoded-password (false positives in tests)
-    "S310",    # URL open audit (intentional for HTTP requests)
+    # Note: S106 and S310 moved to per-file ignores for targeted suppression
     # Note: Critical security checks (S105, S107, S608, etc.) remain active
 ]
+
+Per-file ignores added:
+- `**/tests/**/*.py`: S106 (hardcoded passwords in test fixtures)
+- `tool_router/gateway/client.py`: S310 (urllib HTTP requests with SSRF protections required)
+- `scripts/**/*.py`: S310 (intentional urllib usage in scripts)
+
+**SSRF Protection Required for `tool_router/gateway/client.py`:**
+Before any urllib requests constructed from GATEWAY_URL:
+1. Enforce scheme allowlist (only http/https)
+2. Parse URL using urllib.parse to extract host and port
+3. Resolve and reject private/reserved/loopback IPs:
+   - Block 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8
+   - Block RFC1918 ranges and IPv6 equivalents
+   - Disallow localhost names
+4. Implement redirect limit via custom urllib RedirectHandler
+
+Alternatively, replace urllib with requests library and use session config to enforce these checks and max redirects
 ```
 
 ### Final State

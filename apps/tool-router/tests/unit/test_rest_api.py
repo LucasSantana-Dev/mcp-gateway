@@ -73,31 +73,33 @@ class TestHandleUpdateServer:
     def test_update_server_enable(self, mocker):
         """Test enabling a server."""
         mock_result = {"success": True, "message": "Enabled"}
-        mocker.patch("tool_router.api.rest.enable_server", return_value=mock_result)
+        mock_enable = mocker.patch("tool_router.api.rest.enable_server", return_value=mock_result)
 
         result, status = handle_update_server("server1", {"enabled": True})
 
         assert status == 200
         assert result["success"] is True
+        mock_enable.assert_called_once_with("server1")
 
     def test_update_server_disable(self, mocker):
         """Test disabling a server."""
         mock_result = {"success": True, "message": "Disabled"}
-        mocker.patch("tool_router.api.rest.disable_server", return_value=mock_result)
+        mock_disable = mocker.patch("tool_router.api.rest.disable_server", return_value=mock_result)
 
         result, status = handle_update_server("server1", {"enabled": False})
 
         assert status == 200
         assert result["success"] is True
+        mock_disable.assert_called_once_with("server1")
 
-    def test_update_server_missing_enabled(self, mocker):
+    def test_update_server_missing_enabled(self):
         """Test missing enabled field."""
         result, status = handle_update_server("server1", {})
 
         assert status == 400
         assert "enabled" in result["error"]
 
-    def test_update_server_invalid_enabled_type(self, mocker):
+    def test_update_server_invalid_enabled_type(self):
         """Test invalid enabled type."""
         result, status = handle_update_server("server1", {"enabled": "yes"})
 
@@ -105,11 +107,21 @@ class TestHandleUpdateServer:
         assert "boolean" in result["error"]
 
     def test_update_server_not_found(self, mocker):
-        """Test updating non-existent server."""
+        """Test enabling non-existent server."""
         mock_result = {"success": False, "error": "Not found"}
         mocker.patch("tool_router.api.rest.enable_server", return_value=mock_result)
 
         result, status = handle_update_server("nonexistent", {"enabled": True})
+
+        assert status == 404
+        assert result["success"] is False
+
+    def test_update_server_disable_not_found(self, mocker):
+        """Test disabling non-existent server."""
+        mock_result = {"success": False, "error": "Not found"}
+        mocker.patch("tool_router.api.rest.disable_server", return_value=mock_result)
+
+        result, status = handle_update_server("nonexistent", {"enabled": False})
 
         assert status == 404
         assert result["success"] is False

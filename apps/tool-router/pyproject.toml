@@ -77,7 +77,6 @@ ignore = [
     "ANN401",  # Dynamically typed expressions (Any) are disallowed
     "S101",    # Use of assert detected (pytest uses assert)
     "PLR2004", # Magic value used in comparison
-    "S310",    # Audit URL open (urllib is used intentionally for HTTP requests)
     "B904",    # raise from err (not always needed for simple error wrapping)
     "G004",    # Logging f-strings (acceptable for structured logging)
     "TRY401",  # Redundant exception in logging.exception (intentional for clarity)
@@ -92,8 +91,22 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]  # Allow unused imports in __init__.py
+"**/tests/**/*.py" = [
+    "S101",    # Allow assert in tests
+    "S106",    # Allow hardcoded passwords in test fixtures (e.g., JWTs)
+    "ANN",     # Don't require type hints in tests
+    "PLR2004", # Allow magic values in tests
+    "ARG",     # Allow unused arguments in test fixtures
+    "SIM117",  # Allow nested with statements in tests
+    "PT011",   # Allow broad exception types in pytest.raises
+    "B017",    # Allow asserting on Exception in tests
+    "PLC0415", # Allow imports inside test functions
+]
+"src/tool_router/gateway/client.py" = ["S310"]  # Intentional urllib HTTP requests in gateway client
+"scripts/**/*.py" = ["S310"]  # Intentional urllib usage in scripts
 "tool_router/tests/**/*.py" = [
     "S101",    # Allow assert in tests
+    "S106",    # Allow hardcoded passwords in test fixtures
     "ANN",     # Don't require type hints in tests
     "PLR2004", # Allow magic values in tests
     "ARG",     # Allow unused arguments in test fixtures

@@ -11,7 +11,7 @@ COPY apps/tool-router/pyproject.toml apps/tool-router/
 COPY apps/tool-router/src apps/tool-router/src
 
 # Install package
-RUN pip install apps/tool-router
+RUN pip install --no-cache-dir apps/tool-router
 
 ENV PYTHONPATH=/app
 

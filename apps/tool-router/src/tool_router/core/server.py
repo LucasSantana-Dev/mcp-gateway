@@ -24,9 +24,9 @@ from tool_router.scoring.matcher import (
 
 
 try:
-    from mcp.server.fastmcp import FastMCP
+    from fastmcp import FastMCP
 except ImportError:
-    msg = "Install the MCP SDK: pip install mcp"
+    msg = "Install FastMCP: pip install fastmcp"
     raise ImportError(msg) from None
 
 mcp = FastMCP("tool-router", json_response=True)

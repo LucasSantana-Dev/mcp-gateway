@@ -10,7 +10,7 @@ from tool_router.core.features import FeatureFlags
 class TestFeatureTogglesIntegration:
     """Integration tests for feature toggle system."""
 
-    def test_feature_toggle_lifecycle(self, tmp_path, mocker):
+    def test_feature_toggle_lifecycle(self, tmp_path):
         """Test complete feature toggle lifecycle."""
         config_file = tmp_path / "features.yaml"
         config_file.write_text("""
@@ -44,7 +44,7 @@ features:
         new_flags._load_from_yaml()
         assert new_flags.is_enabled("ai_routing") is True
 
-    def test_feature_requires_restart_flag(self, tmp_path, mocker):
+    def test_feature_requires_restart_flag(self, tmp_path):
         """Test requires_restart flag is preserved."""
         config_file = tmp_path / "features.yaml"
         config_file.write_text("""

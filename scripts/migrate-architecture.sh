@@ -39,11 +39,45 @@ backup_project() {
     mkdir -p "${BACKUP_DIR}"
 
     # Backup critical directories
-    [ -d "${PROJECT_ROOT}/tool_router" ] && cp -r "${PROJECT_ROOT}/tool_router" "${BACKUP_DIR}/" || log_warning "tool_router not found, skipping"
-    [ -d "${PROJECT_ROOT}/web-admin" ] && cp -r "${PROJECT_ROOT}/web-admin" "${BACKUP_DIR}/" || log_warning "web-admin not found, skipping"
-    [ -d "${PROJECT_ROOT}/src" ] && cp -r "${PROJECT_ROOT}/src" "${BACKUP_DIR}/" || log_warning "src not found, skipping"
-    [ -d "${PROJECT_ROOT}/config" ] && cp -r "${PROJECT_ROOT}/config" "${BACKUP_DIR}/" || log_warning "config not found, skipping"
-    [ -d "${PROJECT_ROOT}/scripts" ] && cp -r "${PROJECT_ROOT}/scripts" "${BACKUP_DIR}/" || log_warning "scripts not found, skipping"
+    if [ -d "${PROJECT_ROOT}/tool_router" ]; then
+        if ! cp -r "${PROJECT_ROOT}/tool_router" "${BACKUP_DIR}/"; then
+            log_error "Failed to copy tool_router: $?"
+        fi
+    else
+        log_warning "tool_router not found, skipping"
+    fi
+
+    if [ -d "${PROJECT_ROOT}/web-admin" ]; then
+        if ! cp -r "${PROJECT_ROOT}/web-admin" "${BACKUP_DIR}/"; then
+            log_error "Failed to copy web-admin: $?"
+        fi
+    else
+        log_warning "web-admin not found, skipping"
+    fi
+
+    if [ -d "${PROJECT_ROOT}/src" ]; then
+        if ! cp -r "${PROJECT_ROOT}/src" "${BACKUP_DIR}/"; then
+            log_error "Failed to copy src: $?"
+        fi
+    else
+        log_warning "src not found, skipping"
+    fi
+
+    if [ -d "${PROJECT_ROOT}/config" ]; then
+        if ! cp -r "${PROJECT_ROOT}/config" "${BACKUP_DIR}/"; then
+            log_error "Failed to copy config: $?"
+        fi
+    else
+        log_warning "config not found, skipping"
+    fi
+
+    if [ -d "${PROJECT_ROOT}/scripts" ]; then
+        if ! cp -r "${PROJECT_ROOT}/scripts" "${BACKUP_DIR}/"; then
+            log_error "Failed to copy scripts: $?"
+        fi
+    else
+        log_warning "scripts not found, skipping"
+    fi
 
     # Backup config files
     [ -f "${PROJECT_ROOT}/pyproject.toml" ] && cp "${PROJECT_ROOT}/pyproject.toml" "${BACKUP_DIR}/" || log_warning "pyproject.toml not found, skipping"
@@ -257,8 +291,21 @@ phase7_move_mcp_client() {
         fi
 
         # Copy relevant config files
-        [ -f "tsconfig.json" ] && cp tsconfig.json apps/mcp-client/ || log_warning "tsconfig.json not found"
-        [ -f "package.json" ] && cp package.json apps/mcp-client/ || log_warning "package.json not found"
+        if [ -f "tsconfig.json" ]; then
+            if ! cp tsconfig.json apps/mcp-client/; then
+                log_warning "Failed to copy tsconfig.json to apps/mcp-client/"
+            fi
+        else
+            log_warning "tsconfig.json not found"
+        fi
+
+        if [ -f "package.json" ]; then
+            if ! cp package.json apps/mcp-client/; then
+                log_warning "Failed to copy package.json to apps/mcp-client/"
+            fi
+        else
+            log_warning "package.json not found"
+        fi
 
         log_success "mcp-client moved successfully"
     fi
