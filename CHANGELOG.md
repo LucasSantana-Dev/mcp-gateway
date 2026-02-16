@@ -5,6 +5,8 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+
+
 - **Configuration Format Migration**: Migrated all `.txt` config files to structured YAML format
   - Converted `gateways.txt`, `prompts.txt`, `resources.txt` to YAML with rich metadata
   - Environment-specific configurations (development, production, test)
