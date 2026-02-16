@@ -8,10 +8,16 @@ Self-hosted MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-con
 
 **License:** [MIT](LICENSE)
 
+> **Note**: v0.7.0 introduces a monorepo structure with improved configuration management. See [MIGRATION_SUMMARY.md](MIGRATION_SUMMARY.md) and [SESSION_SUMMARY.md](SESSION_SUMMARY.md) for migration details.
+
 ## Prerequisites
 
 - Docker
 - Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
+- **`gum`** - Required for interactive CLI menus (install: `brew install gum` on macOS, see [gum installation](https://github.com/charmbracelet/gum#installation) for other platforms)
+- **`jq`** - Required for JSON parsing (install: `brew install jq` on macOS, `apt-get install jq` on Linux)
+- **`yq`** - Required for YAML configuration parsing (install: `brew install yq` on macOS, `snap install yq` on Linux)
+- **`figlet`** (optional) - For enhanced ASCII art banners (install: `brew install figlet` on macOS, `apt-get install figlet` on Linux)
 
 **Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#dev-container-optional).
 

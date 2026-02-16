@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Gateway Configuration",
+  "description": "Schema for MCP Gateway configuration in YAML format",
+  "type": "object",
+  "properties": {
+    "local_gateways": {
+      "type": "array",
+      "description": "Local gateways running in Docker network",
+      "items": {
+        "$ref": "#/definitions/gateway"
+      }
+    },
+    "remote_gateways": {
+      "type": "array",
+      "description": "Remote gateways accessible via internet",
+      "items": {
+        "$ref": "#/definitions/gateway"
+      }
+    }
+  },
+  "definitions": {
+    "gateway": {
+      "type": "object",
+      "required": ["name", "url", "transport", "enabled"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique gateway name",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "url": {
+          "type": "string",
+          "description": "Gateway URL",
+          "format": "uri"
+        },
+        "transport": {
+          "type": "string",
+          "description": "Transport protocol",
+          "enum": ["SSE", "STREAMABLEHTTP"]
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether gateway is enabled"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description"
+        },
+        "auth_required": {
+          "type": "boolean",
+          "description": "Whether authentication is required"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or setup instructions"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorization",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

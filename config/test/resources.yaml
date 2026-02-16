@@ -1,0 +1,119 @@
+# Resources Configuration
+# Defines external resources that can be registered with the system
+# Resources provide documentation, references, and external content
+
+resources:
+  - name: context-forge-docs
+    uri: https://ibm.github.io/mcp-context-forge/
+    description: Context Forge documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - mcp
+      - context-forge
+      - ibm
+    enabled: true
+
+  - name: mcp-specification
+    uri: https://spec.modelcontextprotocol.io/
+    description: Model Context Protocol specification
+    mime_type: text/html
+    category: specification
+    tags:
+      - mcp
+      - specification
+      - protocol
+    enabled: true
+
+  - name: fastmcp-docs
+    uri: https://github.com/jlowin/fastmcp
+    description: FastMCP Python framework documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - python
+      - fastmcp
+      - framework
+    enabled: true
+
+  - name: ollama-docs
+    uri: https://ollama.ai/docs
+    description: Ollama local LLM documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - llm
+      - ollama
+      - ai
+    enabled: true
+
+  - name: docker-compose-reference
+    uri: https://docs.docker.com/compose/
+    description: Docker Compose documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - docker
+      - compose
+      - containers
+    enabled: true
+
+  - name: pytest-docs
+    uri: https://docs.pytest.org/
+    description: Pytest testing framework documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - python
+      - testing
+      - pytest
+    enabled: true
+
+  - name: flask-docs
+    uri: https://flask.palletsprojects.com/
+    description: Flask web framework documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - python
+      - flask
+      - web-framework
+    enabled: true
+
+  - name: nextjs-docs
+    uri: https://nextjs.org/docs
+    description: Next.js React framework documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - react
+      - nextjs
+      - frontend
+    enabled: true
+
+  - name: tailwindcss-docs
+    uri: https://tailwindcss.com/docs
+    description: Tailwind CSS documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - css
+      - tailwind
+      - styling
+    enabled: true
+
+  - name: shadcn-ui-docs
+    uri: https://ui.shadcn.com/docs
+    description: shadcn/ui component library documentation
+    mime_type: text/html
+    category: documentation
+    tags:
+      - react
+      - components
+      - ui
+    enabled: true
+# Configuration Notes:
+# - Set REGISTER_RESOURCES=true to auto-register on startup
+# - Resources can be documentation, APIs, or any external content
+# - mime_type helps with content type detection
+# - Tags enable better categorization and search

@@ -48,13 +48,33 @@ error() {
     echo -e "${RED}✗${NC} $*" >&2
 }
 
+# Display banner with figlet (fallback to simple text)
+banner() {
+    local text="$1"
+    local color="${2:-$BLUE}"
+
+    if command -v figlet &> /dev/null; then
+        echo -e "${color}"
+        figlet -f slant "$text"
+        echo -e "${NC}"
+    else
+        # Fallback to simple banner
+        echo ""
+        printf "%b\n" "${color}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        printf "%b\n" "${color}  $text${NC}"
+        printf "%b\n" "${color}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+    fi
+}
+
 warn() {
     echo -e "${YELLOW}⚠${NC} $*"
 }
 
 usage() {
+    banner "MCP Gateway" "$BLUE"
     cat <<EOF
-MCP Gateway Unified CLI Tool
+Unified CLI Tool
 
 Usage: mcp <command> [options]
 
@@ -138,7 +158,8 @@ cmd_init() {
 
 # Command: start
 cmd_start() {
-    info "Starting MCP Gateway..."
+    banner "Starting" "$GREEN"
+    info "Initializing MCP Gateway..."
     cd "$PROJECT_ROOT"
     make start
 }
@@ -197,7 +218,8 @@ cmd_logs() {
 
 # Command: doctor
 cmd_doctor() {
-    info "Running MCP Gateway health checks..."
+    banner "Health Check" "$YELLOW"
+    info "Running diagnostics..."
     echo ""
 
     local issues=0
@@ -470,6 +492,7 @@ cmd_ide_config() {
 
 # Command: ide setup (wizard)
 cmd_ide_setup() {
+    banner "IDE Setup" "$GREEN"
     info "Starting IDE setup wizard..."
 
     # Detect IDEs
@@ -479,119 +502,149 @@ cmd_ide_setup() {
     read -rp "Which IDE would you like to configure? [windsurf/cursor]: " ide
     ide="${ide:-windsurf}"
 
-    if [ "$ide" != "windsurf" ] && [ "$ide" != "cursor" ]; then
-        error "Invalid IDE. Choose 'windsurf' or 'cursor'"
+    # Check for gum (optional for enhanced menus)
+    local has_gum=false
+    if command -v gum &> /dev/null; then
+        # Check if gum supports --preview flag
+        if gum choose --help 2>&1 | grep -Fq "--preview"; then
+            has_gum=true
+        fi
+    fi
+
+    # Check for jq (required for JSON parsing)
+    if ! command -v jq &> /dev/null; then
+        error "jq is required for parsing server configuration"
+        echo ""
+        echo "Install jq:"
+        echo "  macOS:   brew install jq"
+        echo "  Linux:   apt-get install jq / yum install jq"
+        echo ""
         exit 1
     fi
 
-    # List available servers with enhanced formatting
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📦 Available Virtual Servers"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-
-    # Try JSON first, fall back to TXT
-    if [ -f "$PROJECT_ROOT/config/virtual-servers.json" ]; then
-        # Parse JSON and display servers with icons and categories
-        if command -v jq &> /dev/null; then
-            # Use jq for proper JSON parsing
-            jq -r '
-                .categories | to_entries[] |
-                "\(.value.icon) \(.value.name):",
-                (.value.servers[] |
-                    if .enabled then
-                        "  \(.icon) \(.name)|\(.gateways | length)|\(.description // "")"
-                    else empty end
-                )
-            ' "$PROJECT_ROOT/config/virtual-servers.json" | while IFS= read -r line; do
-                if [[ "$line" =~ ^[[:space:]]*[🔧🚀] ]]; then
-                    # Category header
-                    echo "$line"
-                else
-                    # Server entry
-                    IFS='|' read -r name_icon count desc <<< "$line"
-                    # Color code based on category
-                    if [[ "$name_icon" =~ (⭐|🔀|🔍|🌐|📝|💾|🎯) ]]; then
-                        # Legacy - green
-                        printf "%s \033[1;32m%-30s\033[0m \033[2m(%s tools)\033[0m\n" \
-                            "$(echo "$name_icon" | awk '{print $1}')" \
-                            "$(echo "$name_icon" | awk '{$1=""; print substr($0,2)}')" \
-                            "$count"
-                    else
-                        # Optimized - cyan
-                        printf "%s \033[1;36m%-30s\033[0m \033[2m(%s tools)\033[0m\n" \
-                            "$(echo "$name_icon" | awk '{print $1}')" \
-                            "$(echo "$name_icon" | awk '{$1=""; print substr($0,2)}')" \
-                            "$count"
-                    fi
-                fi
-            done
-        else
-            # Fallback: simple parsing without jq
-            warn "jq not found, using basic JSON parsing"
-            grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$PROJECT_ROOT/config/virtual-servers.json" | \
-                cut -d'"' -f4 | while read -r name; do
-                printf "  • \033[1;36m%-30s\033[0m\n" "$name"
-            done
-        fi
-    elif [ -f "$PROJECT_ROOT/config/virtual-servers.txt" ]; then
-        # Legacy TXT format support
-        warn "Using legacy .txt format. Consider migrating to JSON."
-        echo "🔧 Legacy Profiles:"
-        grep -v '^#' "$PROJECT_ROOT/config/virtual-servers.txt" | grep -v '^[[:space:]]*$' | head -7 | while IFS='|' read -r name tools rest; do
-            icon="  •"
-            case "$name" in
-                *router*) icon="  🔀" ;;
-                *default*) icon="  ⭐" ;;
-                *search*) icon="  🔍" ;;
-                *browser*) icon="  🌐" ;;
-                *git*) icon="  📝" ;;
-                database*) icon="  💾" ;;
-                fullstack*) icon="  🎯" ;;
-            esac
-            tool_count=$(echo "$tools" | tr ',' '\n' | wc -l | tr -d ' ')
-            printf "%s \033[1;32m%-30s\033[0m \033[2m(%s tools)\033[0m\n" "$icon" "$name" "$tool_count"
-        done
-
-        echo ""
-        echo "🚀 Optimized Stacks:"
-        grep -v '^#' "$PROJECT_ROOT/config/virtual-servers.txt" | grep -v '^[[:space:]]*$' | tail -n +8 | while IFS='|' read -r name tools rest; do
-            icon="  •"
-            case "$name" in
-                nodejs*) icon="  📗" ;;
-                react*) icon="  ⚛️ " ;;
-                mobile*) icon="  📱" ;;
-                database*) icon="  💾" ;;
-                java*) icon="  ☕" ;;
-                python*) icon="  🐍" ;;
-                aws*) icon="  ☁️ " ;;
-                testing*) icon="  🧪" ;;
-                code-quality*) icon="  ✨" ;;
-                fullstack*) icon="  🎯" ;;
-                monorepo*) icon="  📦" ;;
-                devops*) icon="  🔧" ;;
-                *minimal*) icon="  ⚡" ;;
-            esac
-            tool_count=$(echo "$tools" | tr ',' '\n' | wc -l | tr -d ' ')
-            printf "%s \033[1;36m%-30s\033[0m \033[2m(%s tools)\033[0m\n" "$icon" "$name" "$tool_count"
-        done
-    else
+    # Check for virtual servers config
+    if [ ! -f "$PROJECT_ROOT/config/virtual-servers.json" ]; then
         warn "No virtual servers configured yet"
         echo "  Run './scripts/gateway/register.sh' first"
         exit 1
     fi
 
+    # Build menu options from JSON
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    info "Loading virtual servers..."
+
+    # Build server list from JSON
+    local servers=()
+    local server_names=()
+
+    while IFS=$'\t' read -r name description icon auth tools; do
+        server_names+=("$name")
+        local display="$icon $name - $description [$tools tools]"
+        if [ "$auth" = "true" ]; then
+            display="$display "
+        fi
+        servers+=("$display")
+    done < <(jq -r '.categories | to_entries[] | .value.servers[] |
+        if .enabled then
+            "\(.name)\t\(.description)\t\(.icon)\t\(.requiresAuth)\t\(.gateways | length)"
+        else empty end
+    ' "$PROJECT_ROOT/config/virtual-servers.json")
+
+    if [ ${#servers[@]} -eq 0 ]; then
+        warn "No enabled virtual servers found"
+        exit 1
+    fi
+
+    # Use gum if available and supports preview, otherwise use bash select
+    local selected=""
+    if [ "$has_gum" = true ]; then
+        # Enhanced menu with gum
+        menu_file=$(mktemp)
+        preview_script=$(mktemp)
+
+        printf '%s\n' "${servers[@]}" > "$menu_file"
+
+        cat > "$preview_script" << 'PREVIEW_EOF'
+#!/usr/bin/env bash
+server_line="$1"
+server_name=$(echo "$server_line" | awk '{print $2}')
+config_file="$2"
+
+jq -r --arg name "$server_name" '
+    .categories | to_entries[] | .value.servers[] |
+    select(.name == $name) |
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+    "\(.icon)  \(.description)\n" +
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
+    "Tools: \(.gateways | length)\n" +
+    "Authentication: " + (if .requiresAuth then "Required 🔒" else "Not required" end) + "\n" +
+    (if .tags then "Tags: \(.tags | join(", "))\n" else "" end) +
+    "\nIncluded Tools:\n" +
+    (.gateways | map("  • " + .) | join("\n"))
+' "$config_file"
+PREVIEW_EOF
+        chmod +x "$preview_script"
+
+        echo ""
+        selected=$(gum choose --header="📦 Select Virtual Server" \
+            --cursor="→ " \
+            --height=15 \
+            --cursor.foreground="212" \
+            --preview="$preview_script {} $PROJECT_ROOT/config/virtual-servers.json" \
+            < "$menu_file" || true)
+
+        rm -f "$menu_file" "$preview_script"
+    else
+        # Fallback to bash built-in select
+        echo ""
+        echo "📦 Select Virtual Server:"
+        echo ""
+
+        PS3="Enter number (1-${#servers[@]}): "
+        select opt in "${servers[@]}"; do
+            if [ -n "$opt" ]; then
+                selected="$opt"
+                break
+            else
+                warn "Invalid selection. Please try again."
+            fi
+        done
+    fi
+
+    # Check if user cancelled
+    if [ -z "$selected" ]; then
+        warn "No server selected"
+        exit 0
+    fi
+
     echo ""
-    read -rp "Which server would you like to connect to? [router]: " server
-    server="${server:-router}"
+
+    # Extract server name from selection
+    server=$(echo "$selected" | awk '{print $2}')
+
+    # Check if server requires authentication
+    requires_auth=$(jq -r --arg name "$server" '
+        .categories | to_entries[] | .value.servers[] |
+        select(.name == $name) | .requiresAuth // false
+    ' "$PROJECT_ROOT/config/virtual-servers.json")
+
+    # Ensure JWT if needed
+    if [ "$requires_auth" = "true" ]; then
+        echo ""
+        source "$SCRIPT_DIR/utils/ensure-jwt.sh"
+        ensure_jwt "$server" "$requires_auth" || exit 1
+    fi
 
     # Generate config
     cd "$PROJECT_ROOT"
     info "Generating $ide configuration for server: $server"
-    make "ide-$ide" SERVER="$server"
+
+    # Pass JWT token if available
+    if [ -n "${GATEWAY_JWT:-}" ]; then
+        make "ide-$ide" SERVER="$server" JWT_TOKEN="$GATEWAY_JWT"
+    else
+        make "ide-$ide" SERVER="$server"
+    fi
 
     success "IDE configuration generated!"
     info "Next steps:"
@@ -605,14 +658,28 @@ cmd_ide_setup() {
 # Command: wizard
 cmd_wizard() {
     clear
-    cat <<EOF
-╔════════════════════════════════════════════════════════════╗
-║          MCP Gateway Interactive Setup Wizard              ║
-╚════════════════════════════════════════════════════════════╝
 
-This wizard will help you set up MCP Gateway in a few simple steps.
+    # Get terminal width (default to 80 if unable to detect)
+    local term_width=${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}
 
-EOF
+    # Calculate appropriate line length (min 40, max 80)
+    local line_width=$term_width
+    if [ "$line_width" -gt 80 ]; then
+        line_width=80
+    elif [ "$line_width" -lt 40 ]; then
+        line_width=40
+    fi
+
+    # Generate separator line
+    local separator=$(printf '━%.0s' $(seq 1 "$line_width"))
+
+    echo ""
+    echo "$separator"
+    echo "  MCP Gateway - Interactive Setup Wizard"
+    echo "$separator"
+    echo ""
+    echo "This wizard will help you set up MCP Gateway in a few simple steps."
+    echo ""
 
     # Step 1: Check if initialized
     if [ ! -f "$PROJECT_ROOT/.env" ]; then

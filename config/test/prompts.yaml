@@ -1,0 +1,152 @@
+# Prompt Templates Configuration
+# Defines reusable prompt templates with variable substitution
+# Use {{variable_name}} for template variables
+
+prompts:
+  - name: task-breakdown
+    description: Break a goal into ordered steps with deliverables
+    template: |
+      Goal: {{goal}}
+
+      Break into ordered steps. For each step: short title, deliverable, and any dependencies.
+    arguments:
+      - name: goal
+        description: The goal or objective to break down
+        required: true
+        type: string
+    category: planning
+    tags:
+      - task-management
+      - planning
+      - project-management
+
+  - name: code-review
+    description: Review code for best practices and suggest improvements
+    template: |
+      Review the following code and suggest improvements:
+
+      {{code}}
+    arguments:
+      - name: code
+        description: The code to review
+        required: true
+        type: string
+    category: development
+    tags:
+      - code-quality
+      - review
+      - best-practices
+
+  - name: bug-analysis
+    description: Analyze a bug report and suggest debugging steps
+    template: |
+      Bug Report:
+      {{bug_description}}
+
+      Error Message:
+      {{error_message}}
+
+      Steps to Reproduce:
+      {{steps}}
+
+      Analyze this bug and provide:
+      1. Likely root cause
+      2. Debugging steps
+      3. Potential fixes
+    arguments:
+      - name: bug_description
+        description: Description of the bug
+        required: true
+        type: string
+      - name: error_message
+        description: Error message or stack trace
+        required: false
+        type: string
+      - name: steps
+        description: Steps to reproduce the bug
+        required: false
+        type: string
+    category: debugging
+    tags:
+      - debugging
+      - troubleshooting
+      - error-analysis
+
+  - name: api-design
+    description: Design a RESTful API endpoint
+    template: |
+      Design a RESTful API endpoint for: {{feature}}
+
+      Requirements:
+      {{requirements}}
+
+      Provide:
+      1. HTTP method and path
+      2. Request/response schemas
+      3. Status codes
+      4. Error handling
+      5. Authentication requirements
+    arguments:
+      - name: feature
+        description: The feature or functionality
+        required: true
+        type: string
+      - name: requirements
+        description: Specific requirements or constraints
+        required: false
+        type: string
+    category: architecture
+    tags:
+      - api-design
+      - rest
+      - architecture
+
+  - name: test-generation
+    description: Generate test cases for a function or feature
+    template: |
+      Generate comprehensive test cases for:
+      {{code_or_feature}}
+
+      Include:
+      1. Unit tests (happy path)
+      2. Edge cases
+      3. Error conditions
+      4. Integration scenarios
+    arguments:
+      - name: code_or_feature
+        description: Code snippet or feature description
+        required: true
+        type: string
+    category: testing
+    tags:
+      - testing
+      - test-generation
+      - quality-assurance
+
+  - name: documentation
+    description: Generate documentation for code or API
+    template: |
+      Generate comprehensive documentation for:
+      {{code_or_api}}
+
+      Include:
+      1. Overview and purpose
+      2. Parameters/arguments
+      3. Return values
+      4. Examples
+      5. Error handling
+    arguments:
+      - name: code_or_api
+        description: Code or API to document
+        required: true
+        type: string
+    category: documentation
+    tags:
+      - documentation
+      - api-docs
+      - code-docs
+# Configuration Notes:
+# - Use {{variable}} syntax for template variables
+# - Set REGISTER_PROMPTS=true to auto-register on startup
+# - Templates support multi-line strings with YAML pipe (|) syntax
+# - Arguments define expected variables for validation

@@ -1,0 +1,7 @@
+# Runtime deps for tool_router and Docker build. See pyproject.toml for optional dev deps.
+mcp
+fastmcp
+requests
+flask
+pyyaml
+mcp-contextforge-gateway

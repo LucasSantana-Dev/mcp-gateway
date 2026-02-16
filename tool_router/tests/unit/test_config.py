@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from tool_router.core.config import GatewayConfig, ToolRouterConfig
+from tool_router.core.config import AIRouterConfig, GatewayConfig, ToolRouterConfig
 
 
 class TestGatewayConfig:
@@ -147,3 +147,124 @@ class TestToolRouterConfig:
         assert config.gateway == gateway_config
         assert config.max_tools_search == 15
         assert config.default_top_n == 2
+
+
+class TestGatewayConfigValidation:
+    """Test GatewayConfig validation and error handling."""
+
+    def test_invalid_timeout_ms(self, monkeypatch):
+        """Test invalid timeout_ms value."""
+        monkeypatch.setenv("GATEWAY_JWT", "token")
+        monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "invalid")
+        with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
+            GatewayConfig.load_from_environment()
+
+    def test_invalid_max_retries(self, monkeypatch):
+        """Test invalid max_retries value."""
+        monkeypatch.setenv("GATEWAY_JWT", "token")
+        monkeypatch.setenv("GATEWAY_MAX_RETRIES", "not_a_number")
+        with pytest.raises(ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"):
+            GatewayConfig.load_from_environment()
+
+    def test_invalid_retry_delay_ms(self, monkeypatch):
+        """Test invalid retry_delay_ms value."""
+        monkeypatch.setenv("GATEWAY_JWT", "token")
+        monkeypatch.setenv("GATEWAY_RETRY_DELAY_MS", "abc")
+        with pytest.raises(ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"):
+            GatewayConfig.load_from_environment()
+
+
+class TestAIRouterConfigValidation:
+    """Test AIRouterConfig validation and error handling."""
+
+    def test_invalid_timeout_ms(self, monkeypatch):
+        """Test invalid timeout_ms value."""
+        monkeypatch.setenv("ROUTER_AI_TIMEOUT_MS", "invalid")
+        with pytest.raises(ValueError, match="ROUTER_AI_TIMEOUT_MS must be a valid integer"):
+            AIRouterConfig.load_from_environment()
+
+    def test_invalid_weight(self, monkeypatch):
+        """Test invalid weight value."""
+        monkeypatch.setenv("ROUTER_AI_WEIGHT", "not_float")
+        with pytest.raises(ValueError, match="ROUTER_AI_WEIGHT must be a valid float"):
+            AIRouterConfig.load_from_environment()
+
+    def test_invalid_min_confidence(self, monkeypatch):
+        """Test invalid min_confidence value."""
+        monkeypatch.setenv("ROUTER_AI_MIN_CONFIDENCE", "abc")
+        with pytest.raises(ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be a valid float"):
+            AIRouterConfig.load_from_environment()
+
+    def test_weight_out_of_range_high(self, monkeypatch):
+        """Test weight value above 1.0."""
+        monkeypatch.setenv("ROUTER_AI_WEIGHT", "1.5")
+        with pytest.raises(ValueError, match="ROUTER_AI_WEIGHT must be between 0.0 and 1.0"):
+            AIRouterConfig.load_from_environment()
+
+    def test_weight_out_of_range_low(self, monkeypatch):
+        """Test weight value below 0.0."""
+        monkeypatch.setenv("ROUTER_AI_WEIGHT", "-0.5")
+        with pytest.raises(ValueError, match="ROUTER_AI_WEIGHT must be between 0.0 and 1.0"):
+            AIRouterConfig.load_from_environment()
+
+    def test_min_confidence_out_of_range_high(self, monkeypatch):
+        """Test min_confidence value above 1.0."""
+        monkeypatch.setenv("ROUTER_AI_MIN_CONFIDENCE", "2.0")
+        with pytest.raises(ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be between 0.0 and 1.0"):
+            AIRouterConfig.load_from_environment()
+
+    def test_min_confidence_out_of_range_low(self, monkeypatch):
+        """Test min_confidence value below 0.0."""
+        monkeypatch.setenv("ROUTER_AI_MIN_CONFIDENCE", "-1.0")
+        with pytest.raises(ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be between 0.0 and 1.0"):
+            AIRouterConfig.load_from_environment()
+
+    def test_complete_env_loading(self, monkeypatch):
+        """Test loading all AI router environment variables."""
+        monkeypatch.setenv("ROUTER_AI_ENABLED", "true")
+        monkeypatch.setenv("ROUTER_AI_PROVIDER", "openai")
+        monkeypatch.setenv("ROUTER_AI_MODEL", "gpt-4")
+        monkeypatch.setenv("ROUTER_AI_ENDPOINT", "http://api.openai.com")
+        monkeypatch.setenv("ROUTER_AI_TIMEOUT_MS", "10000")
+        monkeypatch.setenv("ROUTER_AI_WEIGHT", "0.8")
+        monkeypatch.setenv("ROUTER_AI_MIN_CONFIDENCE", "0.5")
+
+        config = AIRouterConfig.load_from_environment()
+        assert config.enabled is True
+        assert config.provider == "openai"
+        assert config.model == "gpt-4"
+        assert config.endpoint == "http://api.openai.com"
+        assert config.timeout_ms == 10000
+        assert config.weight == 0.8
+        assert config.min_confidence == 0.5
+
+    def test_disabled_via_env(self, monkeypatch):
+        """Test disabling AI router via environment."""
+        monkeypatch.setenv("ROUTER_AI_ENABLED", "false")
+        config = AIRouterConfig.load_from_environment()
+        assert config.enabled is False
+
+    def test_endpoint_trailing_slash_stripped(self, monkeypatch):
+        """Test that trailing slashes are removed from endpoint."""
+        monkeypatch.setenv("ROUTER_AI_ENDPOINT", "http://ollama:11434/")
+        config = AIRouterConfig.load_from_environment()
+        assert config.endpoint == "http://ollama:11434"
+        assert not config.endpoint.endswith("/")
+
+
+class TestToolRouterConfigValidation:
+    """Test ToolRouterConfig validation and error handling."""
+
+    def test_invalid_max_tools_search(self, monkeypatch):
+        """Test invalid max_tools_search value."""
+        monkeypatch.setenv("GATEWAY_JWT", "token")
+        monkeypatch.setenv("MAX_TOOLS_SEARCH", "invalid")
+        with pytest.raises(ValueError, match="MAX_TOOLS_SEARCH must be a valid integer"):
+            ToolRouterConfig.load_from_environment()
+
+    def test_invalid_default_top_n(self, monkeypatch):
+        """Test invalid default_top_n value."""
+        monkeypatch.setenv("GATEWAY_JWT", "token")
+        monkeypatch.setenv("DEFAULT_TOP_N", "not_number")
+        with pytest.raises(ValueError, match="DEFAULT_TOP_N must be a valid integer"):
+            ToolRouterConfig.load_from_environment()

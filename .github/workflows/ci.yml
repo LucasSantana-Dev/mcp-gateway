@@ -78,6 +78,26 @@ jobs:
       - name: npm audit
         run: npm audit --audit-level=high
 
+  test-python:
+    name: Test Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -e apps/tool-router
+          pip install pytest pytest-cov
+
+      - name: Run tests with coverage
+        working-directory: apps/tool-router
+        run: pytest tests/ -v --cov=src/tool_router --cov-report=term-missing
+
   test:
     name: Test
     runs-on: ubuntu-latest

@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Prompts Configuration",
+  "description": "Schema for MCP prompt templates in YAML format",
+  "type": "object",
+  "properties": {
+    "prompts": {
+      "type": "array",
+      "description": "Prompt templates",
+      "items": {
+        "$ref": "#/definitions/prompt"
+      }
+    }
+  },
+  "required": ["prompts"],
+  "definitions": {
+    "prompt": {
+      "type": "object",
+      "required": ["name", "description", "template"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique prompt name",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description"
+        },
+        "template": {
+          "type": "string",
+          "description": "Prompt template with {{variable}} placeholders"
+        },
+        "arguments": {
+          "type": "array",
+          "description": "Template arguments",
+          "items": {
+            "$ref": "#/definitions/argument"
+          }
+        },
+        "category": {
+          "type": "string",
+          "description": "Prompt category",
+          "enum": [
+            "planning",
+            "development",
+            "debugging",
+            "architecture",
+            "testing",
+            "documentation",
+            "security",
+            "performance"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorization",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "argument": {
+      "type": "object",
+      "required": ["name", "description", "required", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Argument name (matches {{name}} in template)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Argument description"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether argument is required"
+        },
+        "type": {
+          "type": "string",
+          "description": "Argument data type",
+          "enum": ["string", "number", "boolean", "array", "object"]
+        },
+        "default": {
+          "description": "Default value if not provided"
+        }
+      }
+    }
+  }
+}

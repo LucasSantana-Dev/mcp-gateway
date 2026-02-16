@@ -90,7 +90,7 @@ lint: lint-python lint-typescript shellcheck ## Run all linters (Python, TypeScr
 
 lint-python: ## Lint Python code with Ruff
 	@echo "==> Linting Python code..."
-	ruff check tool_router/
+	ruff check apps/tool-router/src/ apps/tool-router/tests/ tool_router/
 
 lint-typescript: ## Lint TypeScript code with ESLint
 	@echo "==> Linting TypeScript code..."
@@ -114,7 +114,7 @@ format: format-python format-typescript ## Format all code (Python, TypeScript)
 
 format-python: ## Format Python code with Ruff
 	@echo "==> Formatting Python code..."
-	ruff format tool_router/
+	ruff format apps/tool-router/src/ apps/tool-router/tests/ tool_router/
 
 format-typescript: ## Format TypeScript code with Prettier
 	@echo "==> Formatting TypeScript code..."
@@ -124,11 +124,11 @@ format-typescript: ## Format TypeScript code with Prettier
 # === Testing ===
 test: ## Run Python tests with pytest
 	@echo "==> Running Python tests..."
-	pytest tool_router/ -v
+	cd apps/tool-router && pytest tests/ -v
 
 test-coverage: ## Run tests with coverage report
 	@echo "==> Running tests with coverage..."
-	pytest tool_router/ -v --cov=tool_router --cov-report=term-missing --cov-report=html
+	cd apps/tool-router && pytest tests/ -v --cov=src/tool_router --cov-report=term-missing --cov-report=html
 
 # === Dependencies ===
 deps-check: ## Check for outdated npm dependencies
@@ -153,19 +153,23 @@ pre-commit-update: ## Update pre-commit hook versions
 	pre-commit autoupdate
 
 # === IDE Configuration ===
-ide-config: ## Generate IDE config (IDE=windsurf|cursor SERVER=name [TOKEN=jwt])
+ide-config: ## Generate IDE config (IDE=windsurf|cursor SERVER=name [JWT_TOKEN=jwt])
 	@if [ -z "$(IDE)" ] || [ -z "$(SERVER)" ]; then \
-		echo "Usage: make ide-config IDE=windsurf|cursor SERVER=server-name [TOKEN=jwt]"; \
+		echo "Usage: make ide-config IDE=windsurf|cursor SERVER=server-name [JWT_TOKEN=jwt]"; \
 		echo "Example: make ide-config IDE=windsurf SERVER=cursor-router"; \
 		exit 1; \
 	fi; \
-	./scripts/ide/generate-config.sh --ide=$(IDE) --server=$(SERVER) $(if $(TOKEN),--token=$(TOKEN))
+	if [ "$(IDE)" = "windsurf" ]; then \
+		bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=windsurf --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN)); \
+	elif [ "$(IDE)" = "cursor" ]; then \
+		bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=cursor --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN)); \
+	fi
 
-ide-windsurf: ## Generate Windsurf config (SERVER=name [TOKEN=jwt])
-	@$(MAKE) ide-config IDE=windsurf SERVER=$(SERVER) $(if $(TOKEN),TOKEN=$(TOKEN))
+ide-windsurf: ## Generate Windsurf IDE configuration
+	@bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=windsurf --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN))
 
-ide-cursor: ## Generate Cursor config (SERVER=name [TOKEN=jwt])
-	@$(MAKE) ide-config IDE=cursor SERVER=$(SERVER) $(if $(TOKEN),TOKEN=$(TOKEN))
+ide-cursor: ## Generate Cursor IDE configuration
+	@bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=cursor --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN))
 
 # === Server Lifecycle Management ===
 enable-server: ## Enable a virtual server (SERVER=name)

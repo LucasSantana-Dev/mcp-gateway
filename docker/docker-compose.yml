@@ -213,8 +213,8 @@ services:
       - "${MONGODB_PORT:-8032}:8032"
   tool-router:
     build:
-      context: .
-      dockerfile: Dockerfile.tool-router
+      context: ..
+      dockerfile: apps/tool-router/Dockerfile
     image: mcp-gateway-tool-router:latest
     restart: unless-stopped
     env_file: .env

@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Resources Configuration",
+  "description": "Schema for MCP resources in YAML format",
+  "type": "object",
+  "properties": {
+    "resources": {
+      "type": "array",
+      "description": "External resources",
+      "items": {
+        "$ref": "#/definitions/resource"
+      }
+    }
+  },
+  "required": ["resources"],
+  "definitions": {
+    "resource": {
+      "type": "object",
+      "required": ["name", "uri", "description", "mime_type", "enabled"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique resource name",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "uri": {
+          "type": "string",
+          "description": "Resource URI",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description"
+        },
+        "mime_type": {
+          "type": "string",
+          "description": "MIME type of the resource",
+          "pattern": "^[a-z]+/[a-z0-9+.-]+$"
+        },
+        "category": {
+          "type": "string",
+          "description": "Resource category",
+          "enum": ["documentation", "specification", "api", "tutorial", "reference"]
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorization",
+          "items": {
+            "type": "string"
+          }
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether resource is enabled"
+        }
+      }
+    }
+  }
+}

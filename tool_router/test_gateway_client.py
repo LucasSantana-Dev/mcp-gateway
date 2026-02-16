@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError, URLError
 
 import pytest
 
@@ -87,3 +88,86 @@ def test_call_tool_returns_text_content() -> None:
         with patch("urllib.request.urlopen", return_value=resp):
             result = call_tool("greet", {})
     assert result == "Hello"
+
+
+def test_get_tools_timeout_exhaustion() -> None:
+    """Test that timeout errors are retried and eventually fail."""
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", side_effect=TimeoutError("timeout")):
+            with pytest.raises(ValueError, match="timeout"):
+                get_tools()
+
+
+def test_get_tools_json_decode_error() -> None:
+    """Test handling of invalid JSON response."""
+    resp = MagicMock()
+    resp.read.return_value = b"not json"
+    resp.__enter__ = MagicMock(return_value=resp)
+    resp.__exit__ = MagicMock(return_value=None)
+
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", return_value=resp):
+            with pytest.raises(ValueError, match="Invalid JSON"):
+                get_tools()
+
+
+def test_get_tools_http_500_retries() -> None:
+    """Test that 500 errors trigger retries."""
+    error = HTTPError("http://test", 500, "Server Error", {}, None)
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", side_effect=error):
+            with pytest.raises(ValueError, match="server error"):
+                get_tools()
+
+
+def test_get_tools_http_400_no_retry() -> None:
+    """Test that 4xx errors don't retry."""
+    error = HTTPError("http://test", 400, "Bad Request", {}, None)
+    error.read = MagicMock(return_value=b"Bad request")
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", side_effect=error):
+            with pytest.raises(ValueError, match="HTTP error 400"):
+                get_tools()
+
+
+def test_get_tools_network_error_retries() -> None:
+    """Test that network errors trigger retries."""
+    error = URLError("Connection refused")
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", side_effect=error):
+            with pytest.raises(ValueError, match="Network error"):
+                get_tools()
+
+
+def test_call_tool_with_dict_response() -> None:
+    """Test call_tool with multiple content items in response."""
+    out = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {"content": [{"type": "text", "text": "First"}, {"type": "text", "text": "Second"}]},
+    }
+    resp = MagicMock()
+    resp.read.return_value = json.dumps(out).encode()
+    resp.__enter__ = MagicMock(return_value=resp)
+    resp.__exit__ = MagicMock(return_value=None)
+
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", return_value=resp):
+            result = call_tool("test", {})
+    assert result == "First"
+
+
+def test_call_tool_empty_content() -> None:
+    """Test call_tool with empty content array."""
+    out = {"jsonrpc": "2.0", "id": 1, "result": {"content": []}}
+    resp = MagicMock()
+    resp.read.return_value = json.dumps(out).encode()
+    resp.__enter__ = MagicMock(return_value=resp)
+    resp.__exit__ = MagicMock(return_value=None)
+
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", return_value=resp):
+            result = call_tool("test", {})
+    # Parse JSON and verify structure
+    parsed = json.loads(result)
+    assert parsed.get("content") == []

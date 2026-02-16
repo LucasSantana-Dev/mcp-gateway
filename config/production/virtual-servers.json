@@ -1,0 +1,339 @@
+{
+  "$schema": "./virtual-servers.schema.json",
+  "version": "1.0",
+  "description": "Virtual server configurations for MCP Gateway. Each server groups MCP tools to stay under IDE limits (~60 tools per connection).",
+  "categories": {
+    "legacy": {
+      "name": "Legacy Profiles",
+      "description": "Original profiles kept for backward compatibility",
+      "icon": "🔧",
+      "servers": [
+        {
+          "name": "default",
+          "description": "Core dev + search + browser",
+          "icon": "⭐",
+          "gateways": [
+            "sequential-thinking",
+            "filesystem",
+            "tavily",
+            "playwright",
+            "desktop-commander",
+            "chrome-devtools",
+            "uiforge",
+            "memory",
+            "fetch"
+          ],
+          "enabled": true
+        },
+        {
+          "name": "search",
+          "description": "Search and docs only",
+          "icon": "🔍",
+          "gateways": ["tavily"],
+          "enabled": true
+        },
+        {
+          "name": "browser",
+          "description": "Browser automation",
+          "icon": "🌐",
+          "gateways": ["playwright", "puppeteer", "browser-tools", "chrome-devtools", "desktop-commander"],
+          "enabled": true
+        },
+        {
+          "name": "git",
+          "description": "Git operations (local + GitHub)",
+          "icon": "📝",
+          "gateways": ["git-mcp"],
+          "enabled": true
+        },
+        {
+          "name": "router",
+          "description": "Single entry point; routes tasks to best upstream tool (requires GATEWAY_JWT)",
+          "icon": "🔀",
+          "gateways": ["tool-router"],
+          "enabled": true,
+          "requiresAuth": true
+        },
+        {
+          "name": "database",
+          "description": "PostgreSQL, MongoDB, Prisma ORM",
+          "icon": "💾",
+          "gateways": ["postgres", "mongodb", "prisma-remote"],
+          "enabled": true
+        },
+        {
+          "name": "fullstack",
+          "description": "Database + memory + git + fetch for complete dev workflows",
+          "icon": "🎯",
+          "gateways": ["postgres", "mongodb", "prisma-remote", "memory", "git-mcp", "fetch"],
+          "enabled": true
+        }
+      ]
+    },
+    "optimized": {
+      "name": "Optimized Stacks",
+      "description": "Modern stacks routing through tool-router for IDE compatibility. Full and Minimal variants for performance tuning.",
+      "icon": "🚀",
+      "servers": [
+        {
+          "name": "nodejs-typescript",
+          "description": "Node.js/TypeScript Development (Full)",
+          "icon": "📗",
+          "gateways": ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["nodejs", "typescript", "full"]
+        },
+        {
+          "name": "nodejs-typescript-minimal",
+          "description": "Node.js/TypeScript Development (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["nodejs", "typescript", "minimal"]
+        },
+        {
+          "name": "react-nextjs",
+          "description": "React/Next.js Development (Full)",
+          "icon": "⚛️",
+          "gateways": [
+            "tool-router",
+            "github",
+            "filesystem",
+            "memory",
+            "git-mcp",
+            "chrome-devtools",
+            "playwright",
+            "snyk",
+            "tavily",
+            "Context7"
+          ],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["react", "nextjs", "frontend", "full"]
+        },
+        {
+          "name": "react-nextjs-minimal",
+          "description": "React/Next.js Development (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "chrome-devtools"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["react", "nextjs", "frontend", "minimal"]
+        },
+        {
+          "name": "mobile-dev",
+          "description": "Mobile Development - React Native/Flutter (Full)",
+          "icon": "📱",
+          "gateways": ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["mobile", "react-native", "flutter", "full"]
+        },
+        {
+          "name": "mobile-dev-minimal",
+          "description": "Mobile Development - React Native/Flutter (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["mobile", "react-native", "flutter", "minimal"]
+        },
+        {
+          "name": "database-dev",
+          "description": "Database Development - PostgreSQL/MongoDB (Full)",
+          "icon": "💾",
+          "gateways": ["tool-router", "postgres", "mongodb", "prisma-remote", "memory", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["database", "postgres", "mongodb", "full"]
+        },
+        {
+          "name": "database-dev-minimal",
+          "description": "Database Development - PostgreSQL/MongoDB (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "postgres", "mongodb", "prisma-remote"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["database", "postgres", "mongodb", "minimal"]
+        },
+        {
+          "name": "java-spring",
+          "description": "Java/Spring Boot Development (Full)",
+          "icon": "☕",
+          "gateways": ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["java", "spring", "backend", "full"]
+        },
+        {
+          "name": "java-spring-minimal",
+          "description": "Java/Spring Boot Development (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["java", "spring", "backend", "minimal"]
+        },
+        {
+          "name": "python-dev",
+          "description": "Python Development (Full)",
+          "icon": "🐍",
+          "gateways": ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["python", "full"]
+        },
+        {
+          "name": "python-dev-minimal",
+          "description": "Python Development (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["python", "minimal"]
+        },
+        {
+          "name": "aws-cloud",
+          "description": "AWS Cloud Development (Full)",
+          "icon": "☁️",
+          "gateways": ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["aws", "cloud", "devops", "full"]
+        },
+        {
+          "name": "aws-cloud-minimal",
+          "description": "AWS Cloud Development (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["aws", "cloud", "devops", "minimal"]
+        },
+        {
+          "name": "testing-qa",
+          "description": "Testing & QA (Full)",
+          "icon": "🧪",
+          "gateways": [
+            "tool-router",
+            "github",
+            "filesystem",
+            "playwright",
+            "chrome-devtools",
+            "snyk",
+            "memory",
+            "git-mcp"
+          ],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["testing", "qa", "e2e", "full"]
+        },
+        {
+          "name": "testing-qa-minimal",
+          "description": "Testing & QA (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "playwright", "snyk"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["testing", "qa", "e2e", "minimal"]
+        },
+        {
+          "name": "code-quality",
+          "description": "Code Quality & Security (Full)",
+          "icon": "✨",
+          "gateways": ["tool-router", "github", "snyk", "filesystem", "memory", "git-mcp", "tavily"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["quality", "security", "linting", "full"]
+        },
+        {
+          "name": "code-quality-minimal",
+          "description": "Code Quality & Security (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "snyk", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["quality", "security", "linting", "minimal"]
+        },
+        {
+          "name": "fullstack-universal",
+          "description": "Full-Stack Universal - Comprehensive (Full)",
+          "icon": "🎯",
+          "gateways": [
+            "tool-router",
+            "github",
+            "postgres",
+            "mongodb",
+            "prisma-remote",
+            "filesystem",
+            "memory",
+            "git-mcp",
+            "snyk",
+            "tavily",
+            "Context7"
+          ],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["fullstack", "universal", "comprehensive", "full"]
+        },
+        {
+          "name": "fullstack-universal-minimal",
+          "description": "Full-Stack Universal - Comprehensive (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "postgres", "mongodb", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["fullstack", "universal", "comprehensive", "minimal"]
+        },
+        {
+          "name": "monorepo-universal",
+          "description": "Monorepo Universal - Optimized for monorepos (Full)",
+          "icon": "📦",
+          "gateways": [
+            "tool-router",
+            "github",
+            "filesystem",
+            "memory",
+            "git-mcp",
+            "snyk",
+            "tavily",
+            "Context7",
+            "playwright"
+          ],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["monorepo", "nx", "turborepo", "full"]
+        },
+        {
+          "name": "monorepo-universal-minimal",
+          "description": "Monorepo Universal - Optimized for monorepos (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "git-mcp", "memory"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["monorepo", "nx", "turborepo", "minimal"]
+        },
+        {
+          "name": "devops-cicd",
+          "description": "DevOps & CI/CD (Full)",
+          "icon": "🔧",
+          "gateways": ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["devops", "cicd", "automation", "full"]
+        },
+        {
+          "name": "devops-cicd-minimal",
+          "description": "DevOps & CI/CD (Minimal)",
+          "icon": "⚡",
+          "gateways": ["tool-router", "github", "filesystem", "git-mcp"],
+          "enabled": true,
+          "requiresAuth": true,
+          "tags": ["devops", "cicd", "automation", "minimal"]
+        }
+      ]
+    }
+  }
+}

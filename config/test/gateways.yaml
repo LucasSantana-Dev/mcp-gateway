@@ -1,0 +1,198 @@
+# Gateway Configuration
+# Defines MCP gateways that can be registered with the system
+# Local gateways use SSE transport, remote gateways use STREAMABLEHTTP
+
+# Technology Stack: React, Node.js, TypeScript, JavaScript, Java, Spring,
+# Tailwind, Next.js, Jest, Prisma
+
+local_gateways:
+  # AI & Reasoning
+  - name: sequential-thinking
+    url: http://sequential-thinking:8013/sse
+    transport: SSE
+    enabled: true
+    description: Sequential thinking and reasoning capabilities
+
+  # Browser Automation & Testing
+  - name: chrome-devtools
+    url: http://chrome-devtools:8014/sse
+    transport: SSE
+    enabled: true
+    description: Chrome DevTools Protocol integration
+
+  - name: playwright
+    url: http://playwright:8015/sse
+    transport: SSE
+    enabled: true
+    description: Browser automation with Playwright
+
+  - name: puppeteer
+    url: http://puppeteer:8018/sse
+    transport: SSE
+    enabled: true
+    description: Browser automation with Puppeteer
+
+  - name: browser-tools
+    url: http://browser-tools:8019/sse
+    transport: SSE
+    enabled: true
+    description: General browser automation tools
+
+  # UI & Design
+  - name: magicuidesign-mcp
+    url: http://magicuidesign-mcp:8016/sse
+    transport: SSE
+    enabled: true
+    description: Magic UI design tools
+
+  - name: uiforge
+    url: http://uiforge:8026/sse
+    transport: SSE
+    enabled: true
+    description: UI component forge and generation
+
+  - name: reactbits
+    url: http://reactbits:8022/sse
+    transport: SSE
+    enabled: true
+    description: React component utilities
+
+  # System & File Operations
+  - name: desktop-commander
+    url: http://desktop-commander:8017/sse
+    transport: SSE
+    enabled: true
+    description: Desktop system commands and operations
+
+  - name: filesystem
+    url: http://filesystem:8021/sse
+    transport: SSE
+    enabled: true
+    description: File system operations
+
+  # Search & Data
+  - name: tavily
+    url: http://tavily:8020/sse
+    transport: SSE
+    enabled: true
+    description: Web search and data retrieval
+
+  - name: fetch
+    url: http://fetch:8029/sse
+    transport: SSE
+    enabled: true
+    description: HTTP fetch and web scraping
+
+  # Security & Code Quality
+  - name: snyk
+    url: http://snyk:8023/sse
+    transport: SSE
+    enabled: true
+    description: Security vulnerability scanning
+
+  # Memory & State
+  - name: memory
+    url: http://memory:8027/sse
+    transport: SSE
+    enabled: true
+    description: Persistent memory and state management
+
+  # Tool Router
+  - name: tool-router
+    url: http://tool-router:8030/sse
+    transport: SSE
+    enabled: true
+    description: Intelligent tool routing and selection
+
+  # Databases
+  - name: postgres
+    url: http://postgres:8031/sse
+    transport: SSE
+    enabled: true
+    description: PostgreSQL database operations
+
+  - name: mongodb
+    url: http://mongodb:8032/sse
+    transport: SSE
+    enabled: true
+    description: MongoDB database operations
+
+  # Version Control
+  - name: github
+    url: http://github:8025/sse
+    transport: SSE
+    enabled: true
+    description: GitHub integration (required for most stack profiles)
+    notes: |
+      Configure GITHUB_PERSONAL_ACCESS_TOKEN in your IDE's mcp.json, NOT in .env
+      See docs/IDE_SETUP_GUIDE.md for configuration examples
+
+  # Temporarily Disabled (connection issues)
+  # - name: git-mcp
+  #   url: http://git-mcp:8028/sse
+  #   transport: SSE
+  #   enabled: false
+  #   description: Git operations
+  #   notes: Temporarily disabled due to connection reset errors
+
+  # - name: sqlite
+  #   url: http://sqlite:8024/sse
+  #   transport: SSE
+  #   enabled: false
+  #   description: SQLite database operations
+  #   notes: Often fails with "Unable to connect"; check docker compose logs before enabling
+
+remote_gateways:
+  # Documentation & Context
+  - name: Context7
+    url: https://mcp.context7.com/mcp
+    transport: STREAMABLEHTTP
+    enabled: true
+    description: Context7 documentation and code examples
+    auth_required: true
+    notes: Requires API key in Admin UI (Passthrough Headers)
+
+  - name: DeepWiki
+    url: https://mcp.deepwiki.com/mcp
+    transport: STREAMABLEHTTP
+    enabled: true
+    description: DeepWiki AI-powered documentation
+
+  - name: prisma-remote
+    url: https://mcp.prisma.io/mcp
+    transport: STREAMABLEHTTP
+    enabled: true
+    description: Prisma ORM remote gateway
+
+  # Disabled Remote Gateways (unreliable or require special setup)
+  # - name: context-awesome
+  #   url: https://www.context-awesome.com/api/mcp
+  #   transport: STREAMABLEHTTP
+  #   enabled: false
+  #   description: Context Awesome service
+  #   notes: Returns HTTP 406 due to upstream Context Forge limitation (missing Accept header)
+
+  # - name: cloudflare-observability
+  #   url: https://observability.mcp.cloudflare.com/mcp
+  #   transport: STREAMABLEHTTP
+  #   enabled: false
+  #   description: Cloudflare observability tools
+
+  # - name: cloudflare-bindings
+  #   url: https://bindings.mcp.cloudflare.com/mcp
+  #   transport: STREAMABLEHTTP
+  #   enabled: false
+  #   description: Cloudflare bindings
+
+  # - name: v0
+  #   url: https://mcp.v0.dev
+  #   transport: STREAMABLEHTTP
+  #   enabled: false
+  #   description: v0 AI design tool
+# Configuration Notes:
+# - Local gateways are reachable within the Docker network
+# - Remote gateways require internet connectivity
+# - Auth-required gateways must be configured in Admin UI
+# - Do NOT put secrets in this file
+# - Use EXTRA_GATEWAYS environment variable for additional gateways
+# - Set REGISTER_GATEWAYS=true to auto-register on startup

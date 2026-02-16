@@ -126,3 +126,95 @@ class TestHandleUpdateServer:
 
         assert status == 500
         assert "error" in result
+
+
+class TestWSGIApp:
+    """Test WSGI app creation."""
+
+    def test_create_wsgi_app(self, temp_config_file) -> None:
+        """Test WSGI app creation."""
+        from tool_router.api.rest import create_wsgi_app
+
+        app = create_wsgi_app()
+        assert app is not None
+        assert hasattr(app, "route")
+
+    def test_wsgi_app_routes(self, temp_config_file) -> None:
+        """Test WSGI app has routes registered."""
+        from tool_router.api.rest import create_wsgi_app
+
+        app = create_wsgi_app()
+        client = app.test_client()
+
+        # Test list endpoint
+        response = client.get("/api/virtual-servers")
+        assert response.status_code == 200
+
+    def test_wsgi_app_cors_enabled(self, temp_config_file, monkeypatch) -> None:
+        """Test WSGI app has CORS enabled."""
+        monkeypatch.setenv("CORS_ORIGINS", "http://localhost:3000")
+        from werkzeug.test import Client
+
+        from tool_router.api.rest import create_wsgi_app
+
+        app = create_wsgi_app()
+        assert app is not None
+
+        # Test CORS headers with OPTIONS request
+        client = Client(app)
+        response = client.options("/api/virtual-servers", headers={"Origin": "http://localhost:3000"})
+        assert response.headers.get("Access-Control-Allow-Origin") == "http://localhost:3000"
+        assert "Access-Control-Allow-Methods" in response.headers
+
+
+class TestFastAPIIntegration:
+    """Test FastAPI route registration."""
+
+    def test_register_fastapi_routes(self, temp_config_file) -> None:
+        """Test FastAPI route registration."""
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+
+        from tool_router.api.rest import register_fastapi_routes
+
+        app = FastAPI()
+        register_fastapi_routes(app)
+        client = TestClient(app)
+
+        # Test list endpoint
+        response = client.get("/api/virtual-servers")
+        assert response.status_code == 200
+        data = response.json()
+        assert "servers" in data
+
+    def test_fastapi_get_server(self, temp_config_file) -> None:
+        """Test FastAPI get server endpoint."""
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+
+        from tool_router.api.rest import register_fastapi_routes
+
+        app = FastAPI()
+        register_fastapi_routes(app)
+        client = TestClient(app)
+
+        response = client.get("/api/virtual-servers/cursor-default")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["found"] is True
+
+    def test_fastapi_update_server(self, temp_config_file) -> None:
+        """Test FastAPI update server endpoint."""
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+
+        from tool_router.api.rest import register_fastapi_routes
+
+        app = FastAPI()
+        register_fastapi_routes(app)
+        client = TestClient(app)
+
+        response = client.patch("/api/virtual-servers/cursor-default", json={"enabled": False})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True

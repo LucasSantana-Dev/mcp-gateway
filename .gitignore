@@ -56,9 +56,35 @@ workspace/
 # Python / coverage
 .pytest_cache/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 .ruff_cache/
 .mypy_cache/
 htmlcov/
 .coverage
 *.cover
 bandit-report.json
+*.egg-info/
+*.egg
+
+# SQLite databases (root level)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Migration backups
+.migration-backup-*/
+
+# TypeScript build artifacts
+*.tsbuildinfo
+
+# Package lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Test artifacts
+coverage/
+.hypothesis/

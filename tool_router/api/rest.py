@@ -88,6 +88,10 @@ def register_flask_routes(app: Any) -> None:
         app = Flask(__name__)
         register_flask_routes(app)
     """
+    # Register feature toggle API blueprint
+    from tool_router.api.features import features_bp
+
+    app.register_blueprint(features_bp)
 
     @app.route("/api/virtual-servers", methods=["GET"])
     def list_servers_endpoint():
@@ -178,9 +182,16 @@ if __name__ == "__main__":
     debug = os.environ.get("FLASK_DEBUG", "0") == "1"
     print(f"Starting REST API server on http://{host}:5000")
     print("Endpoints:")
-    print("  GET    /api/virtual-servers")
-    print("  GET    /api/virtual-servers/{name}")
-    print("  PATCH  /api/virtual-servers/{name}")
+    print("  Virtual Servers:")
+    print("    GET    /api/virtual-servers")
+    print("    GET    /api/virtual-servers/{name}")
+    print("    PATCH  /api/virtual-servers/{name}")
+    print("  Feature Toggles:")
+    print("    GET    /api/features")
+    print("    GET    /api/features/{name}")
+    print("    PATCH  /api/features/{name}")
+    print("    POST   /api/features/reload")
+    print("    GET    /api/features/categories")
     if debug:
         print("WARNING: Debug mode enabled - use only in safe development environments")
     app.run(host=host, port=5000, debug=debug)

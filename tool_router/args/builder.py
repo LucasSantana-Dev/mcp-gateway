@@ -23,6 +23,24 @@ def build_arguments(tool: dict[str, Any], task: str) -> dict[str, Any]:
 
     Attempts to intelligently map the task to the most appropriate parameter.
     For tools with multiple required parameters, only the primary task parameter is filled.
+
+    The function supports both standard JSON Schema "string" type and a custom "text"
+    type extension, treating "text" properties as equivalent to "string" for parameter
+    matching purposes.
+
+    Args:
+        tool: Tool definition containing inputSchema or input_schema with properties
+              and required fields. Properties with type "text" are treated like "string".
+        task: The task description string to be passed as the parameter value.
+
+    Returns:
+        Dictionary mapping parameter name to task value. Returns {"task": task} as
+        fallback when no suitable parameter is found.
+
+    Example:
+        >>> tool = {"inputSchema": {"properties": {"query": {"type": "text"}}}}
+        >>> build_arguments(tool, "search for files")
+        {"query": "search for files"}
     """
     schema = tool.get("inputSchema") or tool.get("input_schema") or {}
     schema_properties = schema.get("properties") or {}

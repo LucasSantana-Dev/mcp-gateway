@@ -1,0 +1,131 @@
+version: "1.0"
+
+# Feature Toggle Configuration
+# Naming Convention: FEATURE_<CATEGORY>_<NAME>
+# Categories: CORE, API, TOOL, UI, SECURITY, OBSERVABILITY
+# Precedence: ENV vars > YAML file > defaults
+
+features:
+  # Core Features
+  core_ai_router:
+    enabled: true
+    description: "AI-powered tool selection using Ollama"
+    category: "core"
+    requires_restart: true
+    env_var: "FEATURE_CORE_AI_ROUTER"
+    backward_compat: "ROUTER_AI_ENABLED"
+
+  core_hybrid_scoring:
+    enabled: true
+    description: "AI + keyword hybrid scoring for tool selection"
+    category: "core"
+    requires_restart: false
+    env_var: "FEATURE_CORE_HYBRID_SCORING"
+
+  core_tool_search:
+    enabled: true
+    description: "Search tools MCP endpoint"
+    category: "core"
+    requires_restart: false
+    env_var: "FEATURE_CORE_TOOL_SEARCH"
+
+  core_execute_task:
+    enabled: true
+    description: "Execute task MCP endpoint"
+    category: "core"
+    requires_restart: false
+    env_var: "FEATURE_CORE_EXECUTE_TASK"
+
+  # API Features
+  api_health:
+    enabled: true
+    description: "Health check endpoints"
+    category: "api"
+    requires_restart: false
+    env_var: "FEATURE_API_HEALTH"
+
+  api_metrics:
+    enabled: true
+    description: "Metrics and observability endpoints"
+    category: "api"
+    requires_restart: false
+    env_var: "FEATURE_API_METRICS"
+
+  api_lifecycle:
+    enabled: true
+    description: "Virtual server lifecycle management API"
+    category: "api"
+    requires_restart: false
+    env_var: "FEATURE_API_LIFECYCLE"
+
+  api_ide_config:
+    enabled: true
+    description: "IDE configuration generator API"
+    category: "api"
+    requires_restart: false
+    env_var: "FEATURE_API_IDE_CONFIG"
+
+  api_features:
+    enabled: true
+    description: "Feature toggle management API"
+    category: "api"
+    requires_restart: false
+    env_var: "FEATURE_API_FEATURES"
+
+  # Tool Features (MCP Tools)
+  tool_list_servers:
+    enabled: true
+    description: "List virtual servers MCP tool"
+    category: "tool"
+    requires_restart: false
+    env_var: "FEATURE_TOOL_LIST_SERVERS"
+
+  tool_get_server_status:
+    enabled: true
+    description: "Get server status MCP tool"
+    category: "tool"
+    requires_restart: false
+    env_var: "FEATURE_TOOL_GET_SERVER_STATUS"
+
+  tool_enable_server:
+    enabled: true
+    description: "Enable server MCP tool"
+    category: "tool"
+    requires_restart: false
+    env_var: "FEATURE_TOOL_ENABLE_SERVER"
+
+  tool_disable_server:
+    enabled: true
+    description: "Disable server MCP tool"
+    category: "tool"
+    requires_restart: false
+    env_var: "FEATURE_TOOL_DISABLE_SERVER"
+
+  # UI Features
+  ui_web_admin:
+    enabled: true
+    description: "Next.js web admin interface"
+    category: "ui"
+    requires_restart: false
+    env_var: "FEATURE_UI_WEB_ADMIN"
+
+  ui_feature_toggles:
+    enabled: true
+    description: "Feature toggle management page"
+    category: "ui"
+    requires_restart: false
+    env_var: "FEATURE_UI_FEATURE_TOGGLES"
+
+  ui_server_management:
+    enabled: true
+    description: "Virtual server management page"
+    category: "ui"
+    requires_restart: false
+    env_var: "FEATURE_UI_SERVER_MANAGEMENT"
+
+  ui_gateway_monitoring:
+    enabled: true
+    description: "Gateway status monitoring page"
+    category: "ui"
+    requires_restart: false
+    env_var: "FEATURE_UI_GATEWAY_MONITORING"

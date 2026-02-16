@@ -5,9 +5,84 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 ### Added
+- **Configuration Format Migration**: Migrated all `.txt` config files to structured YAML format
+  - Converted `gateways.txt`, `prompts.txt`, `resources.txt` to YAML with rich metadata
+  - Environment-specific configurations (development, production, test)
+  - JSON Schema validation for all config files
+  - Backward-compatible parser library supporting both formats
+  - Enable/disable controls without file deletion
+  - Enhanced metadata: descriptions, tags, categories, notes
+  - 28 gateways (25 local + 3 remote), 6 prompts, 10 resources migrated
+  - Documentation: `docs/CONFIG_MIGRATION.md`, `CONFIG_FORMAT_MIGRATION_SUMMARY.md`
+
+- **Architecture Refactoring**: Migrated to monorepo-style structure
+  - New structure: `apps/tool-router/`, `apps/web-admin/`, `apps/mcp-client/`
+  - Environment-specific configs in `config/{development,production,test}/`
+  - Consolidated tests: `apps/tool-router/tests/{unit,integration,e2e}/`
+  - Removed 4 legacy files with 0% coverage
+  - Updated all import paths and test organization
+  - Migration script with dry-run and rollback: `scripts/migrate-architecture.sh`
+  - Documentation: `docs/architecture/MIGRATION_GUIDE.md`, `MIGRATION_SUMMARY.md`
+
+- **Feature Toggle System**: Centralized feature flag management with 17 fine-grained controls
+  - YAML configuration backend (`config/features.yaml`) with environment variable overrides
+  - Naming convention: `FEATURE_<CATEGORY>_<NAME>` (CORE, API, TOOL, UI categories)
+  - REST API endpoints for feature management (`/api/features`, `/api/features/{name}`)
+  - Backward compatibility with existing `ROUTER_AI_ENABLED` environment variable
+  - Runtime feature checking with `is_feature_enabled()` helper function
+  - Comprehensive test suite with ≥85% coverage (`tool_router/core/tests/test_features.py`)
+- **Next.js Web Admin Interface**: Modern web UI for MCP Gateway management
+  - Integrated at `http://localhost:4444/admin` (Context Forge integration)
+  - Feature toggle management dashboard with 17 controls
+  - Virtual server lifecycle management (reuse existing API)
+  - Gateway status monitoring
+  - Tailwind CSS styling with dark mode support
+  - Responsive design (mobile-friendly)
+  - Production-ready JWT authentication (optional for localhost)
+  - Standalone Docker deployment with nginx reverse proxy
+
+### Added
+- **Test Coverage Improvements**: Increased overall coverage from 72.74% to **86.20%** (+13.46%) ✅
+  - Comprehensive test suite for `server.py` with 18 tests covering all error paths and edge cases (0% → 90%)
+  - Expanded test coverage for `scoring.py` with 20 tests including synonym matching and partial word matching
+  - Enhanced test coverage for `args.py` with 23 tests covering all parameter matching scenarios (0% → 100%)
+  - REST API tests with 6 new tests for WSGI/FastAPI integration (47% → 89%)
+  - Gateway client tests with 7 new tests for timeout, retry logic, and error handling (64% → 97%)
+  - Config validation tests with 15 new tests for all error paths (68% → 100%)
+  - Total: 74 new tests added, bringing total from 163 to 237 tests
+  - **Modules at 100% coverage**: config.py, args/builder.py, prompts.py, metrics.py
+  - **Modules above 95%**: gateway/client.py (97.62%), gateway_client.py (97.44%), api/health.py (95%), observability/metrics.py (95.18%)
 
 - **Developer Experience Enhancements** - Intuitive configuration and easy usage
   - Shell completions for bash, zsh, and fish
+- **Developer Experience**: New `mcp` unified CLI tool for common operations
+  - `mcp wizard` - Interactive setup wizard for IDE configuration
+  - `mcp ide detect` - Detect installed IDEs
+  - `mcp logs` - View gateway logs
+  - `mcp doctor` - Health check and diagnostics
+  - `mcp completion` - Shell completion (bash/zsh/fish)
+- **Interactive CLI Menu**: Enhanced `mcp wizard` with arrow-key navigation
+  - **Required dependency**: `gum` for interactive menus
+  - Arrow-key server selection with real-time preview pane
+  - Detailed server information showing all included tools
+  - Visual indicators for authentication requirements (🔒)
+  - Automatic JWT generation and storage in `.env`
+  - Support for pre-configured credentials with fallback prompting
+- **Enhanced CLI Visuals**: ASCII art banners with `figlet`
+  - Optional `figlet` integration for stylized command banners
+  - Automatic fallback to simple text banners if figlet not installed
+  - Applied to key commands: help, start, doctor, IDE setup
+- **JWT Authentication**: Automated token management for protected servers
+  - New helper script: `scripts/utils/ensure-jwt.sh`
+  - Checks existing JWT in `.env` file
+  - Generates token using existing credentials or prompts user
+  - Stores JWT persistently in `.env` for reuse
+  - Automatically includes JWT in IDE configuration
+- **Ollama Integration**: Local LLM inference for AI-powered tool routing
+  - Automatic model download on first start
+  - Health checks and container orchestration
+  - Configurable via `ROUTER_AI_*` environment variables
+  - See `docs/OLLAMA_SETUP.md` for details
 
 ### Changed
 
@@ -17,18 +92,11 @@ All notable changes to this project are documented here.
   - Removed legacy `config/virtual-servers.txt`
   - Server names now IDE-agnostic (removed `cursor-` prefix)
 
-### Fixed
-
-- **Ollama Health Check**: Changed from `curl` to `ollama list` command (curl not available in container)
-- **IDE Setup Wizard**: Added server selection prompt to fix missing SERVER parameter error
-
 - **Phase 4: Admin UI Enhancement** - Approach revised to CLI-first strategy
   - REST API backend complete (Sprint 5)
   - UI implementation deferred to Phase 6
   - Documented rationale in `docs/PHASE_4_REVISED.md`
   - Focus on API-first approach with CLI tools
-
-### Changed
 
 - **Virtual Server Lifecycle Management**: Enable/disable servers for optimized resource usage
   - Configuration format extended: `Name|gateways|enabled` (backward compatible)
@@ -646,7 +714,7 @@ All notable changes to this project are documented here.
 - **Configure all MCP gateways via web admin panel** – Playwright script `scripts/configure-gateways-via-admin-ui.py` logs in to the admin UI, adds gateways from the canonical list (and `EXTRA_GATEWAYS`), then creates/updates the virtual server via the admin API (JWT). Credentials from `.env`. Optional: `pip install -r requirements-playwright.txt` and `playwright install chromium`. Shared gateways list in `scripts/gateways_config.py`; admin API helpers in `scripts/mcpgateway_admin.py`. README "Configure via Admin UI (automated)" and [docs/PIPELINE.md](docs/PIPELINE.md), [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) updated.
 - **Python script to register gateways (Option B)** – When `./scripts/register-gateways.sh` times out (HTTP 000) or you prefer not to use the shell script, use `python scripts/register-gateways-admin-ui.py`. The script builds a JWT from `.env` and registers gateways and creates/updates the `mcpmarket` virtual server via the admin API. API responses are normalized for array or wrapped shapes. Requires Python 3.10+ and `pip install -r requirements.txt`. See README (Option B) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 - **Tools separated and tagged by technology** – Docker Compose profiles for toggling: `full` (all 5 mcpmarket-style), `node` (task-master, superpowers, chrome-browser), `python` (beads, gpt-researcher), `reference` (time, fetch, memory, sequential-thinking, filesystem, git). Existing 5 services have multiple profiles; 6 reference translate services under profile `reference`. `scripts/register-gateways.sh` includes reference gateways; failed gateways (e.g. profile not up) are skipped.
-- **MCP registry and groups** – [docs/MCP_REGISTRY_AND_GROUPS.md](docs/MCP_REGISTRY_AND_GROUPS.md): how to use the admin MCP registry at http://localhost:4444/admin/#mcp-registry, link to [official MCP Registry](https://registry.modelcontextprotocol.io), and server groups (reference, node, python) for adding servers and organizing tools. README points to the registry doc.
+- **MCP registry and groups** – [docs/MCP_REGISTRY_AND_GROUPS.md](docs/MCP_REGISTRY_AND_GROUPS.md): how to use the admin MCP registry at <http://localhost:4444/admin/#mcp-registry>, link to [official MCP Registry](https://registry.modelcontextprotocol.io), and server groups (reference, node, python) for adding servers and organizing tools. README points to the registry doc.
 - **Reference profile: filesystem and git** – `translate-filesystem` (path `/workspace`, volume `FILESYSTEM_WORKSPACE`) and `translate-git` (working dir `/repo`, volume `GIT_REPO_PATH`) under profile `reference`; ports 8014, 8015. `.env.example` and register-gateways.sh updated.
 - **register-gateways.sh JWT** – Script now generates the Bearer token from the gateway container (`sh -c '...'` using container env) so the JWT secret always matches the gateway. Prefer container token when the gateway container is running; fall back to `MCPGATEWAY_BEARER_TOKEN` from `.env` only when the container is not running.
 - **Java & Spring AI MCP** – [docs/MCP_SERVERS_RECOMMENDED.md](docs/MCP_SERVERS_RECOMMENDED.md) "Java & Spring AI MCP" section: links to [modelcontextprotocol/java-sdk](https://github.com/modelcontextprotocol/java-sdk) and [Spring AI MCP](https://docs.spring.io/spring-ai-mcp/reference/overview.html); run Java servers on host and add via `EXTRA_GATEWAYS`.
