@@ -249,11 +249,16 @@ phase7_move_mcp_client() {
 
     if [[ -d "src" ]] && [[ -f "src/index.ts" ]]; then
         log_info "Moving src/ to apps/mcp-client/src/"
-        mv src/* apps/mcp-client/src/
+        # Ensure target directory exists
+        mkdir -p apps/mcp-client/src
+        # Move files safely with existence check
+        if compgen -G "src/*" > /dev/null; then
+            mv src/* apps/mcp-client/src/ || { log_error "Failed to move src files"; return 1; }
+        fi
 
         # Copy relevant config files
-        cp tsconfig.json apps/mcp-client/
-        cp package.json apps/mcp-client/
+        [ -f "tsconfig.json" ] && cp tsconfig.json apps/mcp-client/ || log_warning "tsconfig.json not found"
+        [ -f "package.json" ] && cp package.json apps/mcp-client/ || log_warning "package.json not found"
 
         log_success "mcp-client moved successfully"
     fi
@@ -332,10 +337,19 @@ rollback() {
     if [[ -d "${BACKUP_DIR}" ]]; then
         log_info "Restoring from backup: ${BACKUP_DIR}"
 
-        # Restore directories
-        [[ -d "${BACKUP_DIR}/tool_router" ]] && rm -rf "${PROJECT_ROOT}/tool_router" && cp -r "${BACKUP_DIR}/tool_router" "${PROJECT_ROOT}/"
-        [[ -d "${BACKUP_DIR}/web-admin" ]] && rm -rf "${PROJECT_ROOT}/web-admin" && cp -r "${BACKUP_DIR}/web-admin" "${PROJECT_ROOT}/"
-        [[ -d "${BACKUP_DIR}/src" ]] && rm -rf "${PROJECT_ROOT}/src" && cp -r "${BACKUP_DIR}/src" "${PROJECT_ROOT}/"
+        # Restore directories (each step runs independently)
+        if [[ -d "${BACKUP_DIR}/tool_router" ]]; then
+            rm -rf "${PROJECT_ROOT}/tool_router" || true
+            cp -r "${BACKUP_DIR}/tool_router" "${PROJECT_ROOT}/" || log_error "Failed to restore tool_router"
+        fi
+        if [[ -d "${BACKUP_DIR}/web-admin" ]]; then
+            rm -rf "${PROJECT_ROOT}/web-admin" || true
+            cp -r "${BACKUP_DIR}/web-admin" "${PROJECT_ROOT}/" || log_error "Failed to restore web-admin"
+        fi
+        if [[ -d "${BACKUP_DIR}/src" ]]; then
+            rm -rf "${PROJECT_ROOT}/src" || true
+            cp -r "${BACKUP_DIR}/src" "${PROJECT_ROOT}/" || log_error "Failed to restore src"
+        fi
 
         # Restore config files
         [[ -f "${BACKUP_DIR}/pyproject.toml" ]] && cp "${BACKUP_DIR}/pyproject.toml" "${PROJECT_ROOT}/"
