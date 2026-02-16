@@ -43,7 +43,8 @@ All notable changes to this project are documented here.
   - Production-ready JWT authentication (optional for localhost)
   - Standalone Docker deployment with nginx reverse proxy
 
-### Added
+### Added (Testing & Developer Experience)
+
 - **Test Coverage Improvements**: Increased overall coverage from 72.74% to **86.20%** (+13.46%) ✅
   - Comprehensive test suite for `server.py` with 18 tests covering all error paths and edge cases (0% → 90%)
   - Expanded test coverage for `scoring.py` with 20 tests including synonym matching and partial word matching
@@ -160,7 +161,7 @@ All notable changes to this project are documented here.
   - Mock `AIToolSelector` creation in `test_get_ai_router_health_no_selector_provided` to avoid network calls
   - Strengthen `ai_usage_rate` assertion in `test_metrics.py` with exact calculation and tolerance check
 
-### Added
+### Added (AI Router & Core Features)
 
 - **AI Router with Ollama Integration**: Intelligent tool selection using local LLM
   - Hybrid scoring combining AI confidence (70%) and keyword matching (30%)

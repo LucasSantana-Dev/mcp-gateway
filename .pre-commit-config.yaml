@@ -47,7 +47,7 @@ repos:
     hooks:
       - id: npm-build
         name: npm build
-        entry: sh -c 'command -v npm >/dev/null 2>&1 && npm run build || echo "npm not found, skipping build"'
+        entry: sh -c 'if command -v npm >/dev/null 2>&1; then npm run build; else echo "npm not found, skipping build"; fi'
         language: system
         pass_filenames: false
         stages: [push]
