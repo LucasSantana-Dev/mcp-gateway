@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from tool_router.gateway.client import call_tool, get_tools
+from tool_router.gateway.client import HTTPGatewayClient, call_tool, get_tools
 
 
 def test_get_tools_raises_when_gateway_jwt_unset() -> None:
@@ -15,39 +14,31 @@ def test_get_tools_raises_when_gateway_jwt_unset() -> None:
 
 def test_get_tools_returns_list_from_list_response() -> None:
     data = [{"name": "t1", "description": "d1"}]
-    resp = MagicMock()
-    resp.read.return_value = json.dumps(data).encode()
-    resp.__enter__ = MagicMock(return_value=resp)
-    resp.__exit__ = MagicMock(return_value=None)
 
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
-        with patch("urllib.request.urlopen", return_value=resp):
-            result = get_tools()
+        with patch("tool_router.gateway.client._validate_url_security"):
+            with patch.object(HTTPGatewayClient, "_make_request", return_value=data):
+                result = get_tools()
     assert result == data
 
 
 def test_get_tools_returns_tools_from_wrapped_response() -> None:
     data = {"tools": [{"name": "t1"}]}
-    resp = MagicMock()
-    resp.read.return_value = json.dumps(data).encode()
-    resp.__enter__ = MagicMock(return_value=resp)
-    resp.__exit__ = MagicMock(return_value=None)
 
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
-        with patch("urllib.request.urlopen", return_value=resp):
-            result = get_tools()
+        with patch("tool_router.gateway.client._validate_url_security"):
+            with patch.object(HTTPGatewayClient, "_make_request", return_value=data):
+                result = get_tools()
     assert result == [{"name": "t1"}]
 
 
 def test_get_tools_returns_empty_for_unknown_shape() -> None:
-    resp = MagicMock()
-    resp.read.return_value = b"{}"
-    resp.__enter__ = MagicMock(return_value=resp)
-    resp.__exit__ = MagicMock(return_value=None)
+    data = {}
 
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
-        with patch("urllib.request.urlopen", return_value=resp):
-            result = get_tools()
+        with patch("tool_router.gateway.client._validate_url_security"):
+            with patch.object(HTTPGatewayClient, "_make_request", return_value=data):
+                result = get_tools()
     assert result == []
 
 
@@ -58,14 +49,11 @@ def test_call_tool_raises_when_gateway_jwt_unset() -> None:
 
 def test_call_tool_returns_error_message_on_jsonrpc_error() -> None:
     out = {"jsonrpc": "2.0", "id": 1, "error": {"message": "Tool not found"}}
-    resp = MagicMock()
-    resp.read.return_value = json.dumps(out).encode()
-    resp.__enter__ = MagicMock(return_value=resp)
-    resp.__exit__ = MagicMock(return_value=None)
 
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
-        with patch("urllib.request.urlopen", return_value=resp):
-            result = call_tool("bad_tool", {})
+        with patch("tool_router.gateway.client._validate_url_security"):
+            with patch.object(HTTPGatewayClient, "_make_request", return_value=out):
+                result = call_tool("bad_tool", {})
     assert "Gateway error" in result
     assert "Tool not found" in result
 
@@ -76,12 +64,9 @@ def test_call_tool_returns_text_content() -> None:
         "id": 1,
         "result": {"content": [{"type": "text", "text": "Hello"}]},
     }
-    resp = MagicMock()
-    resp.read.return_value = json.dumps(out).encode()
-    resp.__enter__ = MagicMock(return_value=resp)
-    resp.__exit__ = MagicMock(return_value=None)
 
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
-        with patch("urllib.request.urlopen", return_value=resp):
-            result = call_tool("greet", {})
+        with patch("tool_router.gateway.client._validate_url_security"):
+            with patch.object(HTTPGatewayClient, "_make_request", return_value=out):
+                result = call_tool("greet", {})
     assert result == "Hello"
