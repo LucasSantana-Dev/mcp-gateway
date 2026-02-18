@@ -1,13 +1,12 @@
 {
-  "$schema": "./patterns/code-quality/prettier/base.config.json",
   "semi": true,
+  "trailingComma": "es5",
   "singleQuote": true,
   "printWidth": 100,
   "tabWidth": 2,
   "useTabs": false,
-  "endOfLine": "lf",
-  "trailingComma": "es5",
   "arrowParens": "always",
+  "endOfLine": "lf",
   "overrides": [
     {
       "files": "*.json",
@@ -17,10 +16,7 @@
       }
     },
     {
-      "files": [
-        "*.yml",
-        "*.yaml"
-      ],
+      "files": ["*.yml", "*.yaml"],
       "options": {
         "printWidth": 80,
         "singleQuote": false
@@ -33,11 +29,5 @@
         "proseWrap": "always"
       }
     }
-  ],
-  "_patternInfo": {
-    "baseConfig": "forge-patterns/patterns/code-quality/prettier/base.config.json",
-    "mergedAt": "2026-02-18T02:43:45.634Z",
-    "project": "forge-mcp-gateway",
-    "strategy": "hybrid-preserve-custom"
-  }
+  ]
 }

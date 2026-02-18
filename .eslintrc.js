@@ -1,14 +1,19 @@
+// ESLint configuration extending UIForge shared patterns
+const baseConfig = require('./patterns/code-quality/eslint/base.config.js');
+
 module.exports = {
+  ...baseConfig,
   root: true,
   env: {
     node: true,
     es2022: true
   },
-  extends: ['eslint:recommended', 'prettier'],
+  extends: ['eslint:recommended', '@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2022,
-    sourceType: 'module'
+    sourceType: 'module',
+    project: './tsconfig.json'
   },
   plugins: ['@typescript-eslint'],
   rules: {

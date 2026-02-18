@@ -86,6 +86,13 @@ repos:
         pass_filenames: false
         files: ^src/.*\.ts$
 
+      # Pattern validation
+      - id: validate-patterns
+        name: Validate UIForge patterns
+        entry: bash scripts/validation/validate-patterns.sh
+        language: system
+        pass_filenames: false
+
       # Dependencies: Check for outdated packages (non-blocking)
       - id: npm-check-updates
         name: Check dependencies (npm-check-updates)
