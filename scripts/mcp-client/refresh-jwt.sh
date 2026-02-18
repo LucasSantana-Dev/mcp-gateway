@@ -21,7 +21,7 @@ JWT=$(get_jwt) || { log_err "Failed to generate JWT."; exit 1; }
 
 KEY=$(get_mcp_client_key "$MCP_JSON") || true
 if [[ -z "$KEY" ]]; then
-  log_err "MCP gateway entry not found in $MCP_JSON (tried: context-forge, user-context-forge, mcp-gateway). Set MCP_CLIENT_KEY if your key differs."
+  log_err "MCP gateway entry not found in $MCP_JSON (tried: context-forge, user-context-forge, forge-mcp-gateway). Set MCP_CLIENT_KEY if your key differs."
   exit 1
 fi
 

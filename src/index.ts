@@ -7,10 +7,10 @@
  * MCP protocol messages over HTTP/SSE transport.
  *
  * Usage (Local - No Auth):
- *   npx @mcp-gateway/client --url http://localhost:4444/servers/<UUID>/mcp
+ *   npx @forge-mcp-gateway/client --url http://localhost:4444/servers/<UUID>/mcp
  *
  * Usage (Remote - With Auth):
- *   npx @mcp-gateway/client --url https://gateway.example.com/servers/<UUID>/mcp --token <JWT>
+ *   npx @forge-mcp-gateway/client --url https://gateway.example.com/servers/<UUID>/mcp --token <JWT>
  *
  * Environment Variables:
  *   MCP_GATEWAY_URL - Gateway server URL (required)
@@ -58,9 +58,9 @@ if (
 if (GATEWAY_URL === undefined || GATEWAY_URL.length === 0) {
   console.error("Error: MCP_GATEWAY_URL is required");
   console.error("\nUsage (Local):");
-  console.error("  npx @mcp-gateway/client --url=http://localhost:4444/servers/<UUID>/mcp");
+  console.error("  npx @forge-mcp-gateway/client --url=http://localhost:4444/servers/<UUID>/mcp");
   console.error("\nUsage (Remote with Auth):");
-  console.error("  npx @mcp-gateway/client --url=<gateway-url> --token=<jwt>");
+  console.error("  npx @forge-mcp-gateway/client --url=<gateway-url> --token=<jwt>");
   console.error("\nOr set environment variables:");
   console.error("  MCP_GATEWAY_URL=http://localhost:4444/servers/<UUID>/mcp");
   console.error("  MCP_GATEWAY_TOKEN=<jwt-token>  # Optional for local, required for remote");
@@ -70,7 +70,7 @@ if (GATEWAY_URL === undefined || GATEWAY_URL.length === 0) {
 // Create MCP server instance
 const server = new Server(
   {
-    name: "mcp-gateway-client",
+    name: "forge-mcp-gateway-client",
     version: "0.1.0",
   },
   {

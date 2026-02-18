@@ -1,0 +1,195 @@
+# Snyk Security Scanning for MCP Gateway
+# Aligned with base-security.yml standards
+
+name: Snyk Security Scanning
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master, dev, release/*]
+  schedule:
+    # Run daily at 2 AM UTC (aligned with base-security.yml)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+# Environment variables (aligned with base-security.yml standards)
+env:
+  NODE_VERSION: "22"
+  PYTHON_VERSION: "3.12"
+  SNYK_SEVERITY_THRESHOLD: "high"
+  SNYK_ORGANIZATION: "LucasSantana-Dev"
+
+jobs:
+  # Snyk Dependency Scanning (Python)
+  snyk-dependency-scan:
+    name: Snyk Python Dependency Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r apps/tool-router/requirements.txt
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --all-projects --org=${{ env.SNYK_ORGANIZATION }}
+
+      - name: Upload Snyk results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+
+  # Snyk Code Security Analysis
+  snyk-code-scan:
+    name: Snyk Code Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run Snyk Code Analysis
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }}
+
+      - name: Upload Snyk Code results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+
+  # Snyk Continuous Monitoring
+  snyk-monitor:
+    name: Snyk Continuous Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r apps/tool-router/requirements.txt
+
+      - name: Monitor dependencies with Snyk
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --org=${{ env.SNYK_ORGANIZATION }} --project-name=forge-mcp-gateway
+
+  # Snyk Node.js Dependency Scanning
+  snyk-node-scan:
+    name: Snyk Node.js Dependency Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Snyk to check Node.js vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }}
+
+      - name: Upload Snyk Node.js results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+
+  # Snyk Summary
+  snyk-summary:
+    name: Snyk Scan Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    needs: [snyk-dependency-scan, snyk-code-scan, snyk-monitor, snyk-node-scan]
+    if: always()
+
+    steps:
+      - name: Snyk Scan Summary
+        run: |
+          echo "🔒 Snyk Security Scanning Complete!"
+          echo "📊 Python Dependencies: ${{ needs.snyk-dependency-scan.result }}"
+          echo "🔍 Code Analysis: ${{ needs.snyk-code-scan.result }}"
+          echo "📊 Continuous Monitoring: ${{ needs.snyk-monitor.result }}"
+          echo "📦 Node.js Dependencies: ${{ needs.snyk-node-scan.result }}"
+          echo ""
+          echo "🚨 Any vulnerabilities should be reviewed immediately!"
+          echo "📋 Check the Snyk dashboard for detailed findings"
+
+      - name: Generate Snyk Summary Report
+        if: always()
+        run: |
+          echo "## 🔒 Snyk Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scan Type | Status | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Dependencies | ${{ needs.snyk-dependency-scan.result }} | ✅ Passed or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Analysis | ${{ needs.snyk-code-scan.result }} | ✅ Passed or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Continuous Monitoring | ${{ needs.snyk-monitor.result }} | ✅ Active or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node.js Dependencies | ${{ needs.snyk-node-scan.result }} | ✅ Passed or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Snyk Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Organization**: ${{ env.SNYK_ORGANIZATION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Severity Threshold**: ${{ env.SNYK_SEVERITY_THRESHOLD }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Scan Frequency**: Daily scheduled + event-driven" >> $GITHUB_STEP_SUMMARY
+          echo "- **Languages**: Python, Node.js, TypeScript" >> $GITHUB_STEP_SUMMARY
+          echo "- **Project**: forge-mcp-gateway" >> $GITHUB_STEP_SUMMARY

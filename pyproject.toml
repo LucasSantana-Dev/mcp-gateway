@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-gateway"
-version = "0.1.1"
+version = "1.7.0"
 description = "Self-hosted MCP gateway (Context Forge) with tool-router"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,18 +22,32 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tool_router/tests"]
+minversion = "6.0"
+testpaths = ["apps/tool-router/tests", "service-manager/tests"]
 pythonpath = ["."]
-addopts = "-v --strict-markers"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers --cov=apps/tool-router/src --cov=service_manager --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=80"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "sleep_wake: marks tests related to sleep/wake functionality",
+    "resource_monitoring: marks tests related to resource monitoring",
+    "wake_prediction: marks tests related to wake prediction",
+    "priority_management: marks tests related to priority management",
+    "api_endpoints: marks tests related to API endpoints",
+    "memory_optimization: marks tests related to memory optimization",
+]
 
 [tool.coverage.run]
-source = ["tool_router"]
+source = ["apps/tool-router/src", "service_manager"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
-    "tool_router/__main__.py",
-    "tool_router/core/server.py",
-    "tool_router/tools/__init__.py",
+    "*/test_*.py",
+    "*/__main__.py",
 ]
 
 [tool.coverage.report]
@@ -42,13 +56,17 @@ exclude_lines = [
     "def __repr__",
     "raise AssertionError",
     "raise NotImplementedError",
-    "if __name__ == .__main__.:",
+    "if __name__ == \"__main__\":",
     "if TYPE_CHECKING:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
 show_missing = true
 precision = 2
+fail_under = 80
+
+[tool.coverage.html]
+directory = htmlcov
 
 [tool.ruff]
 line-length = 120
