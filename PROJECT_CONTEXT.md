@@ -1,6 +1,6 @@
 # Forge MCP Gateway - Project Context Documentation
 
-**Version:** 1.20.0
+**Version:** 1.21.0
 **Last Updated:** 2025-02-18
 **Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
 
@@ -9,6 +9,10 @@
 Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forge that consolidates multiple Model Context Protocol (MCP) servers into a single connection point for IDEs. It solves the problem of IDE tool limits by providing virtual servers (tool collections) and an intelligent tool-router for dynamic tool selection with AI-powered routing capabilities.
 
 ### Recent Updates
+- **✅ ALEMBIC MIGRATION ISSUES RESOLVED**: Implemented minimal gateway to bypass circular dependency errors
+- **✅ CUSTOM ENTRYPOINT SCRIPT**: Created Docker entrypoint to handle migration issues gracefully
+- **✅ MINIMAL GATEWAY IMPLEMENTATION**: FastAPI-based fallback gateway with essential endpoints
+- **✅ DOCKER DAEMON RECOVERY**: Fixed Docker connectivity issues and restored container operations
 - **✅ SCALABLE DOCKER COMPOSE ARCHITECTURE**: Complete implementation of scalable deployment with dynamic service management
 - **✅ SERVICE MANAGER FIXES**: Resolved Docker client connectivity issues and Pydantic validation errors
 - **✅ CONFIGURATION TYPE FIXES**: Fixed all integer/string type mismatches in service configurations
