@@ -25,24 +25,24 @@ jobs:
     name: Check Context Forge Updates
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     outputs:
       status: ${{ steps.check.outputs.status }}
       current_version: ${{ steps.check.outputs.current_version }}
       latest_version: ${{ steps.check.outputs.latest_version }}
-      
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        
+
       - name: Make script executable
         run: chmod +x scripts/utils/check-docker-updates.sh
-        
+
       - name: Check for updates
         id: check
         run: |
           scripts/utils/check-docker-updates.sh || true
-          
+
       - name: Upload update report
         if: steps.check.outputs.status == 'update-available'
         uses: actions/upload-artifact@v4
@@ -50,7 +50,7 @@ jobs:
           name: docker-update-report
           path: docker-update-report.md
           retention-days: 30
-          
+
       - name: Generate update summary
         if: steps.check.outputs.status == 'update-available'
         run: |
@@ -66,42 +66,42 @@ jobs:
     if: needs.check-updates.outputs.status == 'update-available'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Download update report
         uses: actions/download-artifact@v4
         with:
           name: docker-update-report
-          
+
       - name: Update docker-compose.yml
         run: |
           sed -i "s|ghcr.io/ibm/mcp-context-forge:.*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" docker-compose.yml
-          
+
       - name: Update cursor-mcp-wrapper.sh
         run: |
           sed -i "s|ghcr.io/ibm/mcp-context-forge:.*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" scripts/cursor-mcp-wrapper.sh
-          
+
       - name: Update CI workflow
         run: |
           sed -i "s|ghcr.io/ibm/mcp-context-forge:.*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" .github/workflows/ci.yml
-          
+
       - name: Update Makefile
         run: |
           sed -i "s|ghcr.io/ibm/mcp-context-forge:.*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" Makefile
-          
+
       - name: Update README.md
         run: |
           sed -i "s|ghcr.io/ibm/mcp-context-forge:[^ ]*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" README.md
-          
+
       - name: Update DEVELOPMENT.md
         run: |
           sed -i "s|ghcr.io/ibm/mcp-context-forge:[^ ]*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" docs/DEVELOPMENT.md
-          
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
@@ -110,34 +110,34 @@ jobs:
           title: "chore(docker): update Context Forge to ${{ needs.check-updates.outputs.latest_version }}"
           body: |
             ## 🐳 Context Forge Gateway Update
-            
+
             Updates the Context Forge Docker image from `${{ needs.check-updates.outputs.current_version }}` to `${{ needs.check-updates.outputs.latest_version }}`.
-            
+
             ### 🔄 Changes
-            
+
             - Updated `docker-compose.yml`
             - Updated `scripts/cursor-mcp-wrapper.sh`
             - Updated `.github/workflows/ci.yml`
             - Updated `Makefile`
             - Updated `README.md`
             - Updated `docs/DEVELOPMENT.md`
-            
+
             ### 📋 Testing Checklist
-            
+
             - [ ] Run `make stop` to stop current stack
             - [ ] Run `make start` to start with new version
             - [ ] Run `make register` to verify gateway registration
             - [ ] Run `make verify-cursor-setup` to verify Cursor integration
             - [ ] Run `make lint` and `make test` to verify CI checks
             - [ ] Test Cursor connection with wrapper
-            
+
             ### 📊 Release Notes
-            
+
             View the full changelog at:
             https://github.com/IBM/mcp-context-forge/releases/tag/${{ needs.check-updates.outputs.latest_version }}
-            
+
             ---
-            
+
             *This PR was automatically created by the Docker update checker workflow as part of the UIForge shared GitHub patterns standardization.*
           branch: chore/update-context-forge-${{ needs.check-updates.outputs.latest_version }}
           delete-branch: true
@@ -154,7 +154,7 @@ jobs:
     timeout-minutes: 3
     needs: [check-updates, create-pr]
     if: always()
-    
+
     steps:
       - name: Docker Update Summary
         run: |
@@ -169,7 +169,7 @@ jobs:
           else
             echo "ℹ️ No updates available"
           fi
-          
+
       - name: Generate Summary Report
         if: always()
         run: |

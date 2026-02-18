@@ -54,10 +54,10 @@ log_alert() {
 # Initialize monitoring directories
 init_monitoring() {
     log "Initializing monitoring directories..."
-    
+
     mkdir -p logs/monitoring/{alerts,metrics,health,performance}
     mkdir -p monitoring/{dashboards,reports,alerts}
-    
+
     # Create log rotation configuration
     cat > logs/monitoring/logrotate.conf << EOF
 logs/monitoring/*.log {
@@ -70,28 +70,28 @@ logs/monitoring/*.log {
     create 644 root root
 }
 EOF
-    
+
     log_success "Monitoring directories initialized"
 }
 
 # Collect System Metrics
 collect_system_metrics() {
     local timestamp=$(date -Iseconds)
-    
+
     # System resources
     local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | sed 's/%us,//')
     local memory_usage=$(free | grep Mem | awk '{printf "%.1f", $3/$2 * 100.0}')
     local disk_usage=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
-    
+
     # Docker resources
     local docker_containers=$(docker ps -q | wc -l)
     local docker_images=$(docker images -q | wc -l)
     local docker_volumes=$(docker volume ls -q | wc -l)
-    
+
     # Network metrics
     local network_connections=$(netstat -an | grep ESTABLISHED | wc -l)
     local listening_ports=$(netstat -an | grep LISTEN | wc -l)
-    
+
     # Log metrics
     echo "$timestamp,system,cpu,$cpu_usage" >> "$METRICS_LOG"
     echo "$timestamp,system,memory,$memory_usage" >> "$METRICS_LOG"
@@ -106,26 +106,26 @@ collect_system_metrics() {
 # Collect Service Metrics
 collect_service_metrics() {
     local timestamp=$(date -Iseconds)
-    
+
     # Get service status
     local services_status=$(curl -s "$SERVICE_MANAGER_URL/services/status" 2>/dev/null || echo "{}")
-    
+
     if [[ "$services_status" != "{}" ]]; then
         # Process each service
         echo "$services_status" | jq -r 'to_entries[] | "\(.key),\(.value.state),\(.value.last_activity // "never")"' 2>/dev/null | while IFS=',' read -r service state last_activity; do
             if [[ -n "$service" ]]; then
                 echo "$timestamp,service,$service,state,$state" >> "$METRICS_LOG"
                 echo "$timestamp,service,$service,last_activity,$last_activity" >> "$METRICS_LOG"
-                
+
                 # Get service-specific metrics
                 local service_metrics=$(curl -s "$SERVICE_MANAGER_URL/services/$service/metrics" 2>/dev/null || echo "{}")
-                
+
                 if [[ "$service_metrics" != "{}" ]]; then
                     local cpu_usage=$(echo "$service_metrics" | jq -r '.cpu_usage // 0' 2>/dev/null || echo "0")
                     local memory_usage=$(echo "$service_metrics" | jq -r '.memory_usage // 0' 2>/dev/null || echo "0")
                     local wake_time=$(echo "$service_metrics" | jq -r '.wake_time // 0' 2>/dev/null || echo "0")
                     local response_time=$(echo "$service_metrics" | jq -r '.response_time // 0' 2>/dev/null || echo "0")
-                    
+
                     echo "$timestamp,service,$service,cpu,$cpu_usage" >> "$METRICS_LOG"
                     echo "$timestamp,service,$service,memory,$memory_usage" >> "$METRICS_LOG"
                     echo "$timestamp,service,$service,wake_time,$wake_time" >> "$METRICS_LOG"
@@ -134,28 +134,28 @@ collect_service_metrics() {
             fi
         done
     fi
-    
+
     # Get performance metrics
     local performance_metrics=$(curl -s "$SERVICE_MANAGER_URL/metrics/performance" 2>/dev/null || echo "{}")
-    
+
     if [[ "$performance_metrics" != "{}" ]]; then
         local avg_wake_time=$(echo "$performance_metrics" | jq -r '.average_wake_time // 0' 2>/dev/null || echo "0")
         local total_requests=$(echo "$performance_metrics" | jq -r '.total_requests // 0' 2>/dev/null || echo "0")
         local success_rate=$(echo "$performance_metrics" | jq -r '.success_rate // 0' 2>/dev/null || echo "0")
-        
+
         echo "$timestamp,performance,average_wake_time,$avg_wake_time" >> "$PERFORMANCE_LOG"
         echo "$timestamp,performance,total_requests,$total_requests" >> "$PERFORMANCE_LOG"
         echo "$timestamp,performance,success_rate,$success_rate" >> "$PERFORMANCE_LOG"
     fi
-    
+
     # Get resource metrics
     local resource_metrics=$(curl -s "$SERVICE_MANAGER_URL/metrics/resources" 2>/dev/null || echo "{}")
-    
+
     if [[ "$resource_metrics" != "{}" ]]; then
         local total_cpu=$(echo "$resource_metrics" | jq -r '.total_cpu // 0' 2>/dev/null || echo "0")
         local total_memory=$(echo "$resource_metrics" | jq -r '.total_memory // 0' 2>/dev/null || echo "0")
         local cost_savings=$(echo "$resource_metrics" | jq -r '.cost_savings // 0' 2>/dev/null || echo "0")
-        
+
         echo "$timestamp,resource,total_cpu,$total_cpu" >> "$METRICS_LOG"
         echo "$timestamp,resource,total_memory,$total_memory" >> "$METRICS_LOG"
         echo "$timestamp,resource,cost_savings,$cost_savings" >> "$METRICS_LOG"
@@ -166,36 +166,36 @@ collect_service_metrics() {
 perform_health_checks() {
     local timestamp=$(date -Iseconds)
     local all_healthy=true
-    
+
     # Check core services
     local core_services=(
         "gateway:$GATEWAY_URL/health"
         "service-manager:$SERVICE_MANAGER_URL/health"
         "tool-router:$TOOL_ROUTER_URL/health"
     )
-    
+
     for service_info in "${core_services[@]}"; do
         local service_name=$(echo "$service_info" | cut -d':' -f1)
         local service_url=$(echo "$service_info" | cut -d':' -f2-)
-        
+
         local start_time=$(date +%s%N)
         local health_status="unhealthy"
         local response_time=0
-        
+
         if curl -f -s "$service_url" > /dev/null 2>&1; then
             local end_time=$(date +%s%N)
             response_time=$(( (end_time - start_time) / 1000000 )) # Convert to milliseconds
             health_status="healthy"
         fi
-        
+
         echo "$timestamp,health,$service_name,$health_status,$response_time" >> "$HEALTH_LOG"
-        
+
         if [[ "$health_status" != "healthy" ]]; then
             log_alert "Health check failed for $service_name"
             all_healthy=false
         fi
     done
-    
+
     # Check Service Manager API
     local sm_api_start=$(date +%s%N)
     if curl -f -s "$SERVICE_MANAGER_URL/services/status" > /dev/null 2>&1; then
@@ -207,7 +207,7 @@ perform_health_checks() {
         log_alert "Service Manager API health check failed"
         all_healthy=false
     fi
-    
+
     # Check Docker daemon
     if docker info &> /dev/null; then
         echo "$timestamp,health,docker,healthy,0" >> "$HEALTH_LOG"
@@ -216,7 +216,7 @@ perform_health_checks() {
         log_alert "Docker daemon health check failed"
         all_healthy=false
     fi
-    
+
     # Check disk space
     local disk_usage=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
     if [[ $disk_usage -lt 90 ]]; then
@@ -226,7 +226,7 @@ perform_health_checks() {
         log_alert "Disk space critically low: ${disk_usage}%"
         all_healthy=false
     fi
-    
+
     return $([[ "$all_healthy" == "true" ]] && echo 0 || echo 1)
 }
 
@@ -234,7 +234,7 @@ perform_health_checks() {
 check_alerts() {
     local timestamp=$(date -Iseconds)
     local alerts_triggered=false
-    
+
     # Check CPU usage alerts
     local cpu_usage=$(tail -10 "$METRICS_LOG" | grep ",system,cpu," | tail -1 | cut -d',' -f4 | sed 's/%//' || echo "0")
     if (( $(echo "$cpu_usage > $CPU_THRESHOLD" | bc -l) )); then
@@ -242,7 +242,7 @@ check_alerts() {
         echo "$timestamp,alert,high_cpu,${cpu_usage}" >> "$ALERT_LOG"
         alerts_triggered=true
     fi
-    
+
     # Check memory usage alerts
     local memory_usage=$(tail -10 "$METRICS_LOG" | grep ",system,memory," | tail -1 | cut -d',' -f4 | sed 's/%//' || echo "0")
     if (( $(echo "$memory_usage > $MEMORY_THRESHOLD" | bc -l) )); then
@@ -250,7 +250,7 @@ check_alerts() {
         echo "$timestamp,alert,high_memory,${memory_usage}" >> "$ALERT_LOG"
         alerts_triggered=true
     fi
-    
+
     # Check wake time alerts
     local wake_times=$(tail -10 "$METRICS_LOG" | grep ",service.*,wake_time," | tail -5 | cut -d',' -f4)
     for wake_time in $wake_times; do
@@ -260,7 +260,7 @@ check_alerts() {
             alerts_triggered=true
         fi
     done
-    
+
     # Check response time alerts
     local response_times=$(tail -10 "$METRICS_LOG" | grep ",service.*,response_time," | tail -5 | cut -d',' -f4)
     for response_time in $response_times; do
@@ -270,7 +270,7 @@ check_alerts() {
             alerts_triggered=true
         fi
     done
-    
+
     # Check cost savings alerts
     local cost_savings=$(tail -10 "$METRICS_LOG" | grep ",resource,cost_savings," | tail -1 | cut -d',' -f4 | sed 's/%//' || echo "0")
     if (( $(echo "$cost_savings < $COST_SAVINGS_THRESHOLD" | bc -l) )); then
@@ -278,7 +278,7 @@ check_alerts() {
         echo "$timestamp,alert,low_cost_savings,${cost_savings}" >> "$ALERT_LOG"
         alerts_triggered=true
     fi
-    
+
     # Check service health alerts
     local unhealthy_services=$(tail -10 "$HEALTH_LOG" | grep ",unhealthy," | cut -d',' -f3 | sort -u)
     for service in $unhealthy_services; do
@@ -286,42 +286,42 @@ check_alerts() {
         echo "$timestamp,alert,unhealthy_service,$service" >> "$ALERT_LOG"
         alerts_triggered=true
     done
-    
+
     return $([[ "$alerts_triggered" == "true" ]] && echo 1 || echo 0)
 }
 
 # Automated Response to Alerts
 automated_response() {
     local timestamp=$(date -Iseconds)
-    
+
     # Get recent alerts
     local recent_alerts=$(tail -20 "$ALERT_LOG" | grep "$(date -Iseconds | cut -d'T' -f1)")
-    
+
     if [[ -n "$recent_alerts" ]]; then
         log "Processing automated responses for alerts..."
-        
+
         # High CPU usage response
         local high_cpu_alerts=$(echo "$recent_alerts" | grep ",alert,high_cpu,")
         if [[ -n "$high_cpu_alerts" ]]; then
             log "Automated response: High CPU usage detected, sleeping low-priority services"
-            
+
             # Sleep low-priority services
             local low_priority_services=$(curl -s "$SERVICE_MANAGER_URL/services/status" | jq -r 'to_entries[] | select(.value.sleep_policy.priority == "low" and .value.state == "running") | .key' 2>/dev/null || echo "")
-            
+
             for service in $low_priority_services; do
                 curl -X POST "$SERVICE_MANAGER_URL/services/$service/sleep" -s > /dev/null || log_warning "Failed to sleep $service"
                 echo "$timestamp,response,sleep_low_priority,$service" >> "$ALERT_LOG"
             done
         fi
-        
+
         # High memory usage response
         local high_memory_alerts=$(echo "$recent_alerts" | grep ",alert,high_memory,")
         if [[ -n "$high_memory_alerts" ]]; then
             log "Automated response: High memory usage detected, optimizing memory"
-            
+
             # Reduce memory reservations for sleeping services
             local sleeping_services=$(curl -s "$SERVICE_MANAGER_URL/services/status" | jq -r 'to_entries[] | select(.value.state == "sleeping") | .key' 2>/dev/null || echo "")
-            
+
             for service in $sleeping_services; do
                 curl -X PUT "$SERVICE_MANAGER_URL/services/$service/sleep-policy" \
                      -H "Content-Type: application/json" \
@@ -330,33 +330,33 @@ automated_response() {
                 echo "$timestamp,response,optimize_memory,$service" >> "$ALERT_LOG"
             done
         fi
-        
+
         # Unhealthy service response
         local unhealthy_service_alerts=$(echo "$recent_alerts" | grep ",alert,unhealthy_service,")
         if [[ -n "$unhealthy_service_alerts" ]]; then
             log "Automated response: Unhealthy services detected, attempting recovery"
-            
+
             echo "$unhealthy_service_alerts" | while IFS=',' read -r timestamp alert_type service; do
                 if [[ -n "$service" ]]; then
                     log "Attempting to restart unhealthy service: $service"
-                    
+
                     # Try to restart the service
                     if [[ "$service" == "gateway" || "$service" == "service-manager" || "$service" == "tool-router" ]]; then
                         docker-compose -f docker-compose.scalable.yml restart "$service" || log_warning "Failed to restart $service"
                     else
                         curl -X POST "$SERVICE_MANAGER_URL/services/$service/restart" -s > /dev/null || log_warning "Failed to restart $service"
                     fi
-                    
+
                     echo "$timestamp,response,restart_service,$service" >> "$ALERT_LOG"
                 fi
             done
         fi
-        
+
         # Low cost savings response
         local low_cost_alerts=$(echo "$recent_alerts" | grep ",alert,low_cost_savings,")
         if [[ -n "$low_cost_alerts" ]]; then
             log "Automated response: Low cost savings detected, applying aggressive optimization"
-            
+
             # Apply aggressive sleep policies
             curl -X POST "$SERVICE_MANAGER_URL/optimization/aggressive" -s > /dev/null || log_warning "Failed to apply aggressive optimization"
             echo "$timestamp,response,aggressive_optimization,enabled" >> "$ALERT_LOG"
@@ -367,7 +367,7 @@ automated_response() {
 # Generate Monitoring Dashboard
 generate_dashboard() {
     local dashboard_file="monitoring/dashboards/dashboard-$(date +%Y%m%d-%H%M%S).html"
-    
+
     cat > "$dashboard_file" << 'EOF'
 <!DOCTYPE html>
 <html>
@@ -420,7 +420,7 @@ generate_dashboard() {
         function updateDashboard() {
             // Update system status
             document.getElementById('system-status').innerHTML = 'Operational';
-            
+
             // Update resource chart
             const resourceCtx = document.getElementById('resource-chart').getContext('2d');
             new Chart(resourceCtx, {
@@ -433,7 +433,7 @@ generate_dashboard() {
                     }]
                 }
             });
-            
+
             // Update performance chart
             const performanceCtx = document.getElementById('performance-chart').getContext('2d');
             new Chart(performanceCtx, {
@@ -449,33 +449,33 @@ generate_dashboard() {
                 }
             });
         }
-        
+
         updateDashboard();
         setInterval(updateDashboard, 60000); // Update every minute
     </script>
 </body>
 </html>
 EOF
-    
+
     log_success "Monitoring dashboard generated: $dashboard_file"
 }
 
 # Send Notifications
 send_notifications() {
     local timestamp=$(date -Iseconds)
-    
+
     # Get recent alerts
     local recent_alerts=$(tail -10 "$ALERT_LOG" | grep "$(date -Iseconds | cut -d'T' -f1)")
-    
+
     if [[ -n "$recent_alerts" ]]; then
         log "Sending notifications for recent alerts..."
-        
+
         # This would integrate with notification systems like:
         # - Email notifications
         # - Slack/webhook notifications
         # - SMS notifications
         # - Push notifications
-        
+
         # For now, just log the notification
         echo "$timestamp,notification,alerts_sent,$(echo "$recent_alerts" | wc -l)" >> "$ALERT_LOG"
     fi
@@ -485,18 +485,18 @@ send_notifications() {
 generate_monitoring_report() {
     local timestamp=$(date -Iseconds)
     local report_file="monitoring/reports/monitoring-report-$(date +%Y%m%d-%H%M%S).json"
-    
+
     mkdir -p monitoring/reports
-    
+
     # Collect metrics for the report
     local total_alerts=$(wc -l < "$ALERT_LOG" 2>/dev/null || echo "0")
     local critical_alerts=$(grep -c "alert,high_" "$ALERT_LOG" 2>/dev/null || echo "0")
     local warning_alerts=$(grep -c "alert,slow_" "$ALERT_LOG" 2>/dev/null || echo "0")
-    
+
     local total_services=$(curl -s "$SERVICE_MANAGER_URL/services/status" | jq 'keys | length' 2>/dev/null || echo "0")
     local running_services=$(curl -s "$SERVICE_MANAGER_URL/services/status" | jq '[.[] | select(.state == "running")] | length' 2>/dev/null || echo "0")
     local sleeping_services=$(curl -s "$SERVICE_MANAGER_URL/services/status" | jq '[.[] | select(.state == "sleeping")] | length' 2>/dev/null || echo "0")
-    
+
     # Generate report
     cat > "$report_file" << EOF
 {
@@ -516,7 +516,7 @@ generate_monitoring_report() {
   },
   "alerts": [
 EOF
-    
+
     # Add recent alerts to report
     tail -20 "$ALERT_LOG" | while IFS=',' read -r timestamp alert_type alert_value; do
         echo "    {"
@@ -525,27 +525,27 @@ EOF
         echo "      \"value\": \"$alert_value\""
         echo "    },"
     done | sed '$ s/,$//' >> "$report_file"
-    
+
     cat >> "$report_file" << EOF
   ],
   "recommendations": [
 EOF
-    
+
     # Add recommendations based on alerts
     local recommendations=()
-    
+
     if [[ $critical_alerts -gt 0 ]]; then
         recommendations+=("Address critical alerts immediately")
     fi
-    
+
     if [[ $warning_alerts -gt 5 ]]; then
         recommendations+=("Review and optimize warning conditions")
     fi
-    
+
     if [[ $running_services -lt $((total_services / 2)) ]]; then
         recommendations+=("Consider waking more services for better availability")
     fi
-    
+
     local i=0
     for recommendation in "${recommendations[@]}"; do
         if [[ $i -gt 0 ]]; then
@@ -554,40 +554,40 @@ EOF
         echo "    \"$recommendation\"" >> "$report_file"
         ((i++))
     done
-    
+
     cat >> "$report_file" << EOF
   ]
 }
 EOF
-    
+
     log_success "Monitoring report generated: $report_file"
 }
 
 # Main Monitoring Loop
 main() {
     local action=${1:-monitor}
-    
+
     case $action in
         "init")
             init_monitoring
             ;;
         "monitor")
             log "Starting advanced monitoring..."
-            
+
             while true; do
                 # Collect metrics
                 collect_system_metrics
                 collect_service_metrics
-                
+
                 # Perform health checks
                 perform_health_checks
-                
+
                 # Check for alerts
                 check_alerts
-                
+
                 # Send notifications
                 send_notifications
-                
+
                 log "Monitoring cycle completed. Next cycle in ${MONITORING_INTERVAL} seconds..."
                 sleep $MONITORING_INTERVAL
             done

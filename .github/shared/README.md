@@ -217,7 +217,7 @@ This directory contains centralized GitHub configurations, workflows, templates,
    ```bash
    # Copy shared package
    cp -r /path/to/shared/.github/shared .github/
-   
+
    # Create symlinks for commonly used files
    ln -s .github/shared/configs/renovate.json5 .github/renovate.yml
    ```
@@ -296,7 +296,7 @@ This directory contains centralized GitHub configurations, workflows, templates,
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2025-02-17  
-**Maintainer**: UIForge Development Team  
+**Version**: 1.0.0
+**Last Updated**: 2025-02-17
+**Maintainer**: UIForge Development Team
 **License**: MIT

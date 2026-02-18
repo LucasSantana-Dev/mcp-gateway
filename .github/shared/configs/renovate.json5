@@ -1,52 +1,52 @@
 {
   // Renovate Configuration for UIForge Projects
   // This configuration provides unified dependency management across all projects
-  
+
   // Global configuration
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  
+
   // Enable dependency updates
   "enabled": true,
-  
+
   // Repository configuration
   "repository": "LucasSantana-Dev/mcp-gateway",
-  
+
   // Log level
   "logLevel": "info",
-  
+
   // Platform configuration
   "platform": "github",
   "autodiscover": true,
-  
+
   // Branch configuration
   "branchPrefix": "renovate/",
   "baseBranches": ["main", "dev"],
-  
+
   // PR configuration
   "prConcurrentLimit": 3,
   "prHourlyLimit": 2,
-  
+
   // Schedule configuration (run weekly on Monday at 3 AM UTC)
   "schedule": ["before 3am on monday"],
-  
+
   // Timezone
   "timezone": "UTC",
-  
+
   // Labels
   "labels": ["dependencies"],
-  
+
   // Assignees and reviewers
   "assignees": ["lucassantana"],
   "reviewers": ["lucassantana"],
-  
+
   // Auto-merge configuration
   "autoMerge": true,
   "autoMergeType": "pr",
   "autoMergeMethod": "squash",
-  
+
   // Stabilization period (3 days for patch/minor updates)
   "stabilityDays": 3,
-  
+
   // Package rules
   "packageRules": [
     // Node.js dependencies
@@ -58,7 +58,7 @@
       "automerge": true,
       "addLabels": ["dependencies", "npm"]
     },
-    
+
     // Python dependencies
     {
       "description": "Auto-merge patch updates for Python dependencies",
@@ -68,7 +68,7 @@
       "automerge": true,
       "addLabels": ["dependencies", "python"]
     },
-    
+
     // Docker dependencies
     {
       "description": "Auto-merge patch updates for Docker dependencies",
@@ -78,7 +78,7 @@
       "automerge": true,
       "addLabels": ["dependencies", "docker"]
     },
-    
+
     // GitHub Actions
     {
       "description": "Auto-merge patch updates for GitHub Actions",
@@ -87,7 +87,7 @@
       "automerge": true,
       "addLabels": ["dependencies", "github-actions"]
     },
-    
+
     // Major updates require manual review
     {
       "description": "Require manual review for major updates",
@@ -95,7 +95,7 @@
       "automerge": false,
       "addLabels": ["dependencies", "major-update"]
     },
-    
+
     // Security updates get priority
     {
       "description": "Priority for security updates",
@@ -105,7 +105,7 @@
       "priority": 1,
       "addLabels": ["dependencies", "security"]
     },
-    
+
     // Development dependencies
     {
       "description": "Group development dependencies",
@@ -113,7 +113,7 @@
       "groupName": "devDependencies",
       "addLabels": ["dependencies", "dev"]
     },
-    
+
     // Production dependencies
     {
       "description": "Group production dependencies",
@@ -121,7 +121,7 @@
       "groupName": "dependencies",
       "addLabels": ["dependencies", "prod"]
     },
-    
+
     // Testing dependencies
     {
       "description": "Group testing dependencies",
@@ -129,7 +129,7 @@
       "groupName": "test dependencies",
       "addLabels": ["dependencies", "test"]
     },
-    
+
     // Linting dependencies
     {
       "description": "Group linting dependencies",
@@ -137,7 +137,7 @@
       "groupName": "lint dependencies",
       "addLabels": ["dependencies", "lint"]
     },
-    
+
     // TypeScript dependencies
     {
       "description": "Group TypeScript dependencies",
@@ -145,7 +145,7 @@
       "groupName": "typescript dependencies",
       "addLabels": ["dependencies", "typescript"]
     },
-    
+
     // React dependencies
     {
       "description": "Group React dependencies",
@@ -153,7 +153,7 @@
       "groupName": "react dependencies",
       "addLabels": ["dependencies", "react"]
     },
-    
+
     // FastAPI dependencies
     {
       "description": "Group FastAPI dependencies",
@@ -161,7 +161,7 @@
       "groupName": "fastapi dependencies",
       "addLabels": ["dependencies", "fastapi"]
     },
-    
+
     // MCP dependencies
     {
       "description": "Group MCP dependencies",
@@ -170,7 +170,7 @@
       "addLabels": ["dependencies", "mcp"]
     }
   ],
-  
+
   // Manager configuration
   "managers": [
     "npm",
@@ -180,7 +180,7 @@
     "pipenv",
     "poetry"
   ],
-  
+
   // Datasource configuration
   "datasources": [
     "npm",
@@ -189,16 +189,16 @@
     "github-tags",
     "github-releases"
   ],
-  
+
   // Versioning strategy
   "versioning": "semver",
-  
+
   // Range strategy
   "rangeStrategy": "bump",
-  
+
   // Pin dependencies
   "pinDigests": true,
-  
+
   // Lock file maintenance
   "lockFileMaintenance": {
     "enabled": true,
@@ -206,7 +206,7 @@
     "schedule": ["before 3am on monday"],
     "addLabels": ["dependencies", "maintenance"]
   },
-  
+
   // PR body configuration
   "prBody": [
     "This PR contains dependency updates as part of the UIForge shared GitHub patterns standardization.",
@@ -244,13 +244,13 @@
     "---",
     "This PR was created automatically by Renovate as part of the UIForge shared GitHub patterns."
   ],
-  
+
   // PR title configuration
   "prTitle": "{{#if isPin}}Pin{{else}}{{#if isMajor}}⚠️ Major{{else}}{{#if isMinor}}✨ Minor{{else}}🐛 Patch{{/if}}{{/if}}{{/if}} update: {{depName}} ({{newVersion}})",
-  
+
   // Commit message configuration
   "commitMessage": "{{#if isPin}}Pin{{else}}{{#if isMajor}}⚠️ Major{{else}}{{#if isMinor}}✨ Minor{{else}}🐛 Patch{{/if}}{{/if}}{{/if}} update: {{depName}} ({{newVersion}})",
-  
+
   // Ignore paths
   "ignorePaths": [
     "**/node_modules/**",
@@ -262,7 +262,7 @@
     "**/.git/**",
     "**/.github/ISSUE_TEMPLATE/**"
   ],
-  
+
   // Custom managers
   "customManagers": [
     {
@@ -273,14 +273,14 @@
       "datasourceTemplate": "docker"
     }
   ],
-  
+
   // Force configuration
   "force": {
     "description": "Force updates for certain packages",
     "matchPackageNames": ["node", "npm", "python"],
     "rangeStrategy": "replace"
   },
-  
+
   // Regex manager for custom files
   "regexManagers": [
     {

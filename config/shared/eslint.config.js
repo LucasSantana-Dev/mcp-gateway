@@ -24,23 +24,23 @@ export default [
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-non-null-assertion": "warn",
-      
+
       // Code quality
       "prefer-const": "error",
       "no-var": "error",
-      "eqeqeq": ["error", "always"],
-      "curly": ["error", "all"],
-      
+      eqeqeq: ["error", "always"],
+      curly: ["error", "all"],
+
       // TypeScript specific
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/no-empty-function": "warn",
-      
+
       // Import organization
       "import/order": [
         "error",
         {
-          "groups": [
+          groups: [
             "builtin",
             "external",
             "internal",
@@ -50,9 +50,9 @@ export default [
             "object",
             "type",
           ],
-          "alphabetize": {
-            "order": "asc",
-            "caseInsensitive": true,
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
           },
         },
       ],
@@ -81,13 +81,6 @@ export default [
   },
   {
     // Ignore patterns
-    ignores: [
-      "node_modules/**",
-      "dist/**",
-      "build/**",
-      "coverage/**",
-      "*.min.js",
-      "vendor/**",
-    ],
+    ignores: ["node_modules/**", "dist/**", "build/**", "coverage/**", "*.min.js", "vendor/**"],
   },
 ];

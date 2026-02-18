@@ -16,21 +16,21 @@ sync_file() {
     local source_path="$1"
     local target_path="$2"
     local backup_path="${target_path}.backup"
-    
+
     echo "📥 Syncing $source_path -> $target_path"
-    
+
     # Create backup if target exists
     if [[ -f "$target_path" ]]; then
         cp "$target_path" "$backup_path"
         echo "📋 Created backup: $backup_path"
     fi
-    
+
     # Download new version
     if curl -fsSL "https://raw.githubusercontent.com/$PATTERNS_REPO/$PATTERNS_VERSION/$source_path" -o "$target_path.tmp"; then
         mkdir -p "$(dirname "$target_path")"
         mv "$target_path.tmp" "$target_path"
         echo "✅ Updated $target_path"
-        
+
         # Remove backup if successful
         if [[ -f "$backup_path" ]]; then
             rm -f "$backup_path"
@@ -51,22 +51,22 @@ sync_file() {
 sync_directory() {
     local source_dir="$1"
     local target_dir="$2"
-    
+
     echo "📁 Syncing directory $source_dir -> $target_dir"
-    
+
     # Create target directory
     mkdir -p "$target_dir"
-    
+
     # Get list of files in source directory
     local files=$(curl -fsSL "https://api.github.com/repos/$PATTERNS_REPO/contents/$source_dir?ref=$PATTERNS_VERSION" | \
                grep -o '"name":"[^"]*"' | \
                sed 's/"name":"//g' | sed 's/"//g' || true)
-    
+
     for file in $files; do
         if [[ "$file" != *.md ]] && [[ "$file" != *.yml ]] && [[ "$file" != *.json ]]; then
             continue
         fi
-        
+
         sync_file "$source_dir/$file" "$target_dir/$file"
     done
 }

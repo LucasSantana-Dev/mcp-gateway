@@ -250,13 +250,13 @@ The test script validates:
    ```bash
    # Start a service
    python3 scripts/service-manager-client.py start filesystem
-   
+
    # Put it to sleep
    python3 scripts/service-manager-client.py sleep filesystem
-   
+
    # Check status
    python3 scripts/service-manager-client.py status filesystem
-   
+
    # Wake it up
    python3 scripts/service-manager-client.py wake filesystem
    ```
@@ -265,7 +265,7 @@ The test script validates:
    ```bash
    # Watch container states
    watch docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-   
+
    # Check container stats
    docker stats forge-filesystem
    ```

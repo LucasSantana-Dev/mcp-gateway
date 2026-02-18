@@ -17,7 +17,7 @@ main:
   restrictions:
     users: []
     teams: ["core-maintainers"]
-  
+
 dev:
   required_status_checks:
     strict: false

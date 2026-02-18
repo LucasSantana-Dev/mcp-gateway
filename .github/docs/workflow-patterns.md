@@ -31,7 +31,7 @@ jobs:
   # Extend base CI jobs
   ci:
     uses: ./.github/workflows/base-ci.yml
-    
+
   # Add project-specific jobs
   project-specific:
     runs-on: ubuntu-latest
@@ -58,7 +58,7 @@ graph TD
     A[feature/*] --> B[dev]
     B --> C[release/*]
     C --> D[main]
-    
+
     A --> E[PR to release/*]
     B --> F[Auto-deploy to dev]
     C --> G[PR to main]

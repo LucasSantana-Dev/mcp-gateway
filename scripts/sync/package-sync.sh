@@ -48,65 +48,65 @@ sync_all() {
     local project_description="$3"
     local project_repo="$4"
     local package_name="$5"
-    
+
     log "${BLUE}🔄 Syncing configurations for $project_name${NC}"
-    
+
     # Sync package.json if it exists
     if [[ -f "$project_dir/package.json" ]]; then
         log "${BLUE}📦 Processing package.json${NC}"
         # Add sync logic here
     fi
-    
+
     # Sync pyproject.toml if it exists
     if [[ -f "$project_dir/pyproject.toml" ]]; then
         log "${BLUE}📦 Processing pyproject.toml${NC}"
         # Add sync logic here
     fi
-    
+
     # Sync tsconfig.json if it exists
     if [[ -f "$project_dir/tsconfig.json" ]]; then
         log "${BLUE}📦 Processing tsconfig.json${NC}"
         # Add sync logic here
     fi
-    
+
     log "${GREEN}✅ Sync completed${NC}"
 }
 
 # Function to validate configurations
 validate_configs() {
     local project_dir="$1"
-    
+
     log "${BLUE}🔍 Validating configurations in $project_dir${NC}"
-    
+
     local errors=0
-    
+
     # Validate package.json
     if [[ -f "$project_dir/package.json" ]]; then
         if ! validate_json "$project_dir/package.json"; then
             ((errors++))
         fi
     fi
-    
+
     # Validate pyproject.toml
     if [[ -f "$project_dir/pyproject.toml" ]]; then
         if ! validate_toml "$project_dir/pyproject.toml"; then
             ((errors++))
         fi
     fi
-    
+
     # Validate tsconfig.json
     if [[ -f "$project_dir/tsconfig.json" ]]; then
         if ! validate_json "$project_dir/tsconfig.json"; then
             ((errors++))
         fi
     fi
-    
+
     if [[ $errors -eq 0 ]]; then
         log "${GREEN}✅ All configurations are valid${NC}"
     else
         log "${RED}❌ Found $errors configuration errors${NC}"
     fi
-    
+
     return $errors
 }
 

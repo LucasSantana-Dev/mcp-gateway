@@ -13,23 +13,23 @@
     ":rebaseStalePrs",
     ":prNotPendingReviews"
   ],
-  
+
   "timezone": "UTC",
   "schedule": ["before 3am on monday"],
   "semanticCommits": "enabled",
   "labels": ["dependencies"],
-  
+
   "prConcurrentLimit": 3,
   "branchConcurrentLimit": 5,
   "prHourlyLimit": 2,
   "rebaseWhen": "conflicted",
   "updateLockFiles": true,
-  
+
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 3am on monday"]
   },
-  
+
   "packageRules": [
     {
       "groupName": "Production dependencies",
@@ -86,13 +86,13 @@
       "automerge": false
     }
   ],
-  
+
   "vulnerabilityAlerts": {
     "labels": ["security"],
     "assignees": ["@LucasSantana-Dev"],
     "schedule": ["at any time"]
   },
-  
+
   "customManagers": [
     {
       "customType": "regex",
@@ -101,33 +101,33 @@
       "datasourceTemplate": "docker"
     }
   ],
-  
+
   "platformAutomerge": true,
   "platformCommit": false,
-  
+
   "docker": {
     "pinDigests": true
   },
-  
+
   "pip_requirements": {
     "fileMatch": ["requirements.txt", "apps/*/requirements.txt"]
   },
-  
+
   "npm": {
     "fileMatch": ["package.json", "apps/*/package.json"]
   },
-  
+
   "github-actions": {
     "fileMatch": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
   },
-  
+
   "postUpdateOptions": [
     "gomodTidy",
     "npmDedupe",
     "pipCompile",
     "pythonSetup"
   ],
-  
+
   "ignorePaths": [
     "**/node_modules/**",
     "**/bower_components/**",
@@ -136,7 +136,7 @@
     "**/dist/**",
     "**/build/**"
   ],
-  
+
   "regexManagers": [
     {
       "fileMatch": ["Dockerfile.*"],

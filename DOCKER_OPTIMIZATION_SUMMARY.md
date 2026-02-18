@@ -8,7 +8,7 @@ Successfully implemented comprehensive Docker optimization for the MCP Gateway, 
 ### **1. Resource Constraints & Limits**
 - **Memory Limits Applied**:
   - Gateway: 512MB limit, 256MB reservation
-  - Service Manager: 256MB limit, 128MB reservation  
+  - Service Manager: 256MB limit, 128MB reservation
   - Tool Router: 256MB limit, 128MB reservation
   - UI Forge: 512MB limit, 256MB reservation
   - Translate: 128MB limit, 64MB reservation

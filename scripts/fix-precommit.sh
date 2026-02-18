@@ -11,7 +11,7 @@ if command -v pre-commit >/dev/null 2>&1; then
 else
     echo "❌ pre-commit not found in PATH"
     echo "📍 Trying common installation paths..."
-    
+
     # Check homebrew installation
     if [ -f "/opt/homebrew/bin/pre-commit" ]; then
         echo "🍺 Found pre-commit via homebrew, adding to PATH..."

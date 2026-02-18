@@ -16,7 +16,7 @@ class OllamaSelector:
 
     def __init__(self, endpoint: str, model: str, timeout: int = 2000) -> None:
         """Initialize the Ollama selector.
-        
+
         Args:
             endpoint: Ollama API endpoint (e.g., http://localhost:11434)
             model: Model name (e.g., llama3.2:3b)
@@ -29,11 +29,11 @@ class OllamaSelector:
 
     def select_tool(self, task: str, tools: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Select the best tool for a given task using AI.
-        
+
         Args:
             task: The task description
             tools: List of available tools with name and description
-            
+
         Returns:
             Dictionary with tool_name, confidence, and reasoning, or None if failed
         """
@@ -112,7 +112,7 @@ Respond with JSON:
             # Extract JSON from the response (in case there's extra text)
             start_idx = response.find("{")
             end_idx = response.rfind("}") + 1
-            
+
             if start_idx == -1 or end_idx == 0:
                 logger.warning("No JSON found in Ollama response")
                 return None

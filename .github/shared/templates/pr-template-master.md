@@ -11,7 +11,7 @@
 - [ ] Other (please describe):
 
 ## 📝 Description
-<!-- 
+<!--
   Provide a clear and concise description of the changes.
   Include the problem being solved and the approach taken.
   For bugs: describe the issue and how it's fixed
@@ -28,7 +28,7 @@
 - [ ] Mobile responsiveness (webapp only)
 
 ### Test Details
-<!-- 
+<!--
   Describe what tests were run and their results.
   Include any test files added or modified.
 -->
@@ -41,7 +41,7 @@
 - [ ] Authentication/authorization tested (if applicable)
 
 ### Security Details
-<!-- 
+<!--
   Describe any security-related changes or considerations.
   Include any new dependencies and their security review.
 -->
@@ -54,7 +54,7 @@
 - [ ] Database performance tested (if applicable)
 
 ### Performance Details
-<!-- 
+<!--
   Describe any performance-related changes.
   Include benchmarks or measurements if available.
 -->
@@ -68,37 +68,37 @@
 - [ ] User-facing documentation updated
 
 ### Documentation Details
-<!-- 
+<!--
   Describe what documentation was updated.
   Include links to relevant documentation files.
 -->
 
 ## 🚨 Breaking Changes
-<!-- 
+<!--
   If this PR contains breaking changes, please describe them here.
   Include migration steps for existing users.
 -->
 
 ## 📦 Dependencies
-<!-- 
+<!--
   List any new dependencies added and their purpose.
   Include version numbers and reasoning for the addition.
 -->
 
 ### New Dependencies
-- 
+-
 
 ### Updated Dependencies
-- 
+-
 
 ## 🔧 Configuration Changes
-<!-- 
+<!--
   Describe any configuration changes required.
   Include environment variables, build settings, etc.
 -->
 
 ## 🎨 UI/UX Changes (Conditional)
-<!-- 
+<!--
   This section is only relevant for uiforge-webapp
   Complete if this PR contains UI changes
 -->
@@ -109,13 +109,13 @@
 - [ ] Design system tokens used
 
 ### UI Changes Details
-<!-- 
+<!--
   Describe UI/UX changes and their rationale.
   Include screenshots or links to designs if available.
 -->
 
 ## 🔌 MCP Integration (Conditional)
-<!-- 
+<!--
   This section is only relevant for mcp-gateway and uiforge-mcp
   Complete if this PR contains MCP-related changes
 -->
@@ -126,13 +126,13 @@
 - [ ] Documentation updated
 
 ### MCP Changes Details
-<!-- 
+<!--
   Describe MCP-specific changes.
   Include tool definitions, server configurations, etc.
 -->
 
 ## 🗄️ Database Changes (Conditional)
-<!-- 
+<!--
   This section is only relevant for projects with databases
   Complete if this PR contains database changes
 -->
@@ -143,7 +143,7 @@
 - [ ] Performance impact assessed
 
 ### Database Changes Details
-<!-- 
+<!--
   Describe database schema changes.
   Include migration files and their purpose.
 -->
@@ -156,7 +156,7 @@
 - [ ] Rollback procedures tested
 
 ### Deployment Details
-<!-- 
+<!--
   Describe any deployment-related changes.
   Include environment-specific requirements.
 -->
@@ -172,7 +172,7 @@
 - [ ] Security review completed (if applicable)
 
 ## 🔗 Related Issues
-<!-- 
+<!--
   Link any related issues or pull requests.
   Use GitHub issue numbers and PR numbers.
 -->
@@ -180,13 +180,13 @@
 - Related to #
 
 ## 📸 Screenshots (Optional)
-<!-- 
+<!--
   Add screenshots for UI changes if applicable.
   Drag and drop images here or use markdown image syntax.
 -->
 
 ## 💬 Additional Context
-<!-- 
+<!--
   Add any other context about the pull request here.
   Include any questions for reviewers or special considerations.
 -->

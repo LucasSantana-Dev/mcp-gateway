@@ -29,12 +29,12 @@ custom_rules:
   - prefer_const_over_let
   - require_error_handling
   - enforce_typescript_strict_mode
-  
+
   # Security rules
   - no_hardcoded_secrets
   - validate_user_input
   - secure_headers
-  
+
   # Performance rules
   - avoid_memory_leaks
   - optimize_loops
@@ -46,7 +46,7 @@ integrations:
     auto_review: true
     comment_on_pr: true
     suggest_fixes: true
-  
+
   # Quality thresholds
   quality_thresholds:
     code_coverage: 80

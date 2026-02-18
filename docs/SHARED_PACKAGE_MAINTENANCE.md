@@ -368,8 +368,8 @@ fi
 
 ---
 
-**Document Version**: 1.0.0  
-**Last Updated**: 2025-02-17  
-**Next Review**: 2025-03-17  
+**Document Version**: 1.0.0
+**Last Updated**: 2025-02-17
+**Next Review**: 2025-03-17
 
 **Maintenance is critical for the long-term success and reliability of the shared package. Regular attention to these procedures ensures consistent value delivery across all UIForge projects.**

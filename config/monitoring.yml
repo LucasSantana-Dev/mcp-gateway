@@ -4,8 +4,8 @@
 # Global monitoring settings
 global:
   enabled: true
-  collection_interval: 10  # seconds
-  retention_period: 86400    # 24 hours
+  collection_interval: 10 # seconds
+  retention_period: 86400 # 24 hours
   metrics_port: 9090
   health_check_interval: 30
 
@@ -18,7 +18,7 @@ metrics:
       - name: services_running_total
         type: gauge
         description: "Total number of running services"
-      - name: services_sleeping_total  
+      - name: services_sleeping_total
         type: gauge
         description: "Total number of sleeping services"
       - name: services_stopped_total
@@ -158,7 +158,7 @@ alerts:
   # Availability alerts
   availability:
     - name: service_down
-      condition: "up{job=\"forge-mcp\"} == 0"
+      condition: 'up{job="forge-mcp"} == 0'
       severity: critical
       message: "Service is down"
       labels: [service_name]
@@ -176,7 +176,7 @@ alerts:
         description: "Health check failure rate is {{ $value | humanizePercentage }}"
 
     - name: service_restart_frequent
-      condition: "rate(service_state_transitions_total{to_state=\"running\"}[10m]) > 0.1"
+      condition: 'rate(service_state_transitions_total{to_state="running"}[10m]) > 0.1'
       severity: warning
       message: "Service restarting frequently"
       labels: [service_name]
@@ -226,15 +226,15 @@ dashboards:
       - title: "Service States"
         type: "pie"
         metrics: ["services_running_total", "services_sleeping_total", "services_stopped_total"]
-        
+
       - title: "Resource Usage"
         type: "graph"
         metrics: ["memory_usage_bytes", "cpu_usage_percent"]
-        
+
       - title: "Wake Times"
         type: "histogram"
         metrics: ["service_wake_time_seconds"]
-        
+
       - title: "Service Health"
         type: "table"
         metrics: ["up", "health_check_success_total", "health_check_failure_total"]
@@ -245,11 +245,11 @@ dashboards:
       - title: "Wake Time Distribution"
         type: "heatmap"
         metrics: ["service_wake_time_seconds"]
-        
+
       - title: "Request Duration"
         type: "graph"
         metrics: ["request_duration_seconds"]
-        
+
       - title: "Service Response Times"
         type: "table"
         metrics: ["request_duration_seconds"]
@@ -260,11 +260,11 @@ dashboards:
       - title: "Memory Efficiency"
         type: "graph"
         metrics: ["memory_usage_bytes", "memory_reservation_bytes"]
-        
+
       - title: "CPU Efficiency"
         type: "graph"
         metrics: ["cpu_usage_percent", "cpu_reservation_cores"]
-        
+
       - title: "Resource Utilization"
         type: "gauge"
         metrics: ["system_memory_usage_percent", "system_cpu_usage_percent"]
@@ -275,11 +275,11 @@ dashboards:
       - title: "Resource Cost Trend"
         type: "graph"
         metrics: ["total_resource_cost"]
-        
+
       - title: "Service Cost Breakdown"
         type: "pie"
         metrics: ["service_resource_cost"]
-        
+
       - title: "Efficiency Savings"
         type: "singlestat"
         metrics: ["efficiency_savings_percent"]
@@ -292,14 +292,14 @@ health_checks:
     expected_status: 200
     timeout: 10
     interval: 30
-    
+
   service_manager:
     path: "/health"
     method: "GET"
     expected_status: 200
     timeout: 10
     interval: 30
-    
+
   tool_router:
     path: "/health"
     method: "GET"
@@ -318,13 +318,13 @@ logging:
       max_files: 5
     - type: "syslog"
       facility: "local0"
-      
+
   log_metrics:
     - name: log_entries_total
       type: counter
       description: "Total number of log entries"
       labels: [level, service]
-      
+
     - name: log_error_total
       type: counter
       description: "Total number of error log entries"
@@ -336,21 +336,21 @@ integrations:
     enabled: true
     port: 9090
     path: "/metrics"
-    
+
   grafana:
     enabled: true
     url: "http://grafana:3000"
     api_key: "${GRAFANA_API_KEY}"
-    
+
   alertmanager:
     enabled: true
     url: "http://alertmanager:9093"
-    
+
   slack:
     enabled: false
     webhook_url: "${SLACK_WEBHOOK_URL}"
     channel: "#alerts"
-    
+
   email:
     enabled: false
     smtp_server: "${SMTP_SERVER}"
@@ -360,21 +360,21 @@ integrations:
 # Performance targets
 performance_targets:
   wake_time:
-    high_priority: 0.05    # 50ms
-    normal_priority: 0.2   # 200ms
-    low_priority: 0.5      # 500ms
-    
+    high_priority: 0.05 # 50ms
+    normal_priority: 0.2 # 200ms
+    low_priority: 0.5 # 500ms
+
   resource_utilization:
-    memory_warning: 0.8     # 80%
-    memory_critical: 0.9    # 90%
-    cpu_warning: 0.8        # 80%
-    cpu_critical: 0.9       # 90%
-    
+    memory_warning: 0.8 # 80%
+    memory_critical: 0.9 # 90%
+    cpu_warning: 0.8 # 80%
+    cpu_critical: 0.9 # 90%
+
   availability:
-    uptime_target: 0.999     # 99.9%
-    health_check_success: 0.99  # 99%
-    
+    uptime_target: 0.999 # 99.9%
+    health_check_success: 0.99 # 99%
+
   efficiency:
-    memory_reduction_target: 0.6  # 60% reduction for sleeping services
-    cpu_reduction_target: 0.8     # 80% reduction for sleeping services
-    cost_reduction_target: 0.5    # 50% cost reduction
+    memory_reduction_target: 0.6 # 60% reduction for sleeping services
+    cpu_reduction_target: 0.8 # 80% reduction for sleeping services
+    cost_reduction_target: 0.5 # 50% cost reduction

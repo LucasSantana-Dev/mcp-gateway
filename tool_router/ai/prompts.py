@@ -23,11 +23,11 @@ Respond with JSON:
     @staticmethod
     def create_tool_selection_prompt(task: str, tool_list: str) -> str:
         """Create a tool selection prompt.
-        
+
         Args:
             task: The task description
             tool_list: Formatted list of available tools
-            
+
         Returns:
             Complete prompt string
         """

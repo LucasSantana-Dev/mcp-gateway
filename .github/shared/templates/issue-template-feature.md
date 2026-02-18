@@ -8,34 +8,34 @@ assignees: ''
 ---
 
 ## 🚀 Feature Description
-<!-- 
+<!--
   Provide a clear and concise description of the feature you'd like to see.
   What problem does this solve? What value does it add?
 -->
 
 ## 💡 Motivation
-<!-- 
+<!--
   Explain why this feature would be useful.
   Include use cases, scenarios, or problems it solves.
 -->
 
 ## 🎯 Acceptance Criteria
-<!-- 
+<!--
   Define what success looks like for this feature.
   Be specific and measurable if possible.
 -->
-- [ ] 
-- [ ] 
-- [ ] 
+- [ ]
+- [ ]
+- [ ]
 
 ## 🔄 Proposed Solution
-<!-- 
+<!--
   Describe your proposed solution in detail.
   Include implementation ideas, technical considerations, etc.
 -->
 
 ## 🎨 UI/UX Considerations (Conditional)
-<!-- 
+<!--
   This section is relevant for uiforge-webapp
   Complete if this feature involves UI changes
 -->
@@ -45,13 +45,13 @@ assignees: ''
 - [ ] Mobile responsiveness planned
 
 ### UI/UX Details
-<!-- 
+<!--
   Describe UI/UX requirements and design considerations.
   Include links to designs or mockups if available.
 -->
 
 ## 🔌 MCP Integration (Conditional)
-<!-- 
+<!--
   This section is relevant for mcp-gateway and uiforge-mcp
   Complete if this feature involves MCP functionality
 -->
@@ -61,12 +61,12 @@ assignees: ''
 - [ ] Error handling requirements
 
 ### MCP Details
-<!-- 
+<!--
   Describe MCP-specific requirements and considerations.
 -->
 
 ## 🗄️ Database Considerations (Conditional)
-<!-- 
+<!--
   This section is relevant for projects with databases
   Complete if this feature involves database changes
 -->
@@ -76,36 +76,36 @@ assignees: ''
 - [ ] Performance considerations
 
 ### Database Details
-<!-- 
+<!--
   Describe database-related requirements.
 -->
 
 ## 📊 Performance Considerations
-<!-- 
+<!--
   Describe any performance-related requirements or concerns.
   Include scalability, resource usage, etc.
 -->
 
 ## 🔒 Security Considerations
-<!-- 
+<!--
   Describe any security-related requirements or concerns.
   Include authentication, authorization, data protection, etc.
 -->
 
 ## 🌍 Environment Impact
-<!-- 
+<!--
   Describe how this feature affects different environments.
   Include development, staging, production considerations.
 -->
 
 ## 📚 Documentation Requirements
-<!-- 
+<!--
   Describe documentation that would be needed for this feature.
   Include API docs, user guides, technical documentation, etc.
 -->
 
 ## 🔄 Alternatives Considered
-<!-- 
+<!--
   Describe any alternative solutions you've considered.
   Explain why your proposed solution is preferred.
 -->
@@ -117,18 +117,18 @@ assignees: ''
 - [ ] **Low**: Nice to have eventually
 
 ## 🔗 Related Issues
-<!-- 
+<!--
   Link any related issues, discussions, or pull requests.
 -->
 
 ## 👥 Stakeholders
-<!-- 
+<!--
   List any stakeholders who would be affected by this feature.
   Include users, teams, or systems.
 -->
 
 ## 📅 Timeline
-<!-- 
+<!--
   Provide any timeline constraints or preferences.
   Include deadlines, milestones, or release targets.
 -->

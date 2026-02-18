@@ -20,7 +20,7 @@ This template provides the setup instructions for MCP Gateway projects using the
    # Python dependencies
    pip install -r requirements.txt
    pip install -r apps/tool-router/requirements.txt
-   
+
    # Node.js dependencies (if applicable)
    npm install
    ```

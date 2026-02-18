@@ -17,9 +17,9 @@ download_pattern() {
     local source_path="$1"
     local target_path="$2"
     local temp_file=$(mktemp)
-    
+
     echo "📥 Downloading $source_path -> $target_path"
-    
+
     if curl -fsSL "https://raw.githubusercontent.com/$PATTERNS_REPO/$PATTERNS_VERSION/$source_path" -o "$temp_file"; then
         mkdir -p "$(dirname "$target_path")"
         cp "$temp_file" "$target_path"
@@ -141,23 +141,23 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        
+
       - name: Sync from patterns repository
         run: |
           echo "🔄 Syncing patterns from $PATTERNS_REPO@$PATTERNS_VERSION"
-          
+
           # Download latest templates
           curl -fsSL "https://raw.githubusercontent.com/$PATTERNS_REPO/$PATTERNS_VERSION/.github/templates/PULL_REQUEST_TEMPLATE.md" -o .github/PULL_REQUEST_TEMPLATE.md.new
           curl -fsSL "https://raw.githubusercontent.com/$PATTERNS_REPO/$PATTERNS_VERSION/.github/configs/codecov.yml" -o .codecov.yml.new
           curl -fsSL "https://raw.githubusercontent.com/$PATTERNS_REPO/$PATTERNS_VERSION/.github/configs/renovate.json" -o renovate.json.new
-          
+
           # Compare and update if changed
           files_updated=false
-          
+
           for file in .github/PULL_REQUEST_TEMPLATE.md .codecov.yml renovate.json; do
             if [[ -f "\${file}.new" ]]; then
               if ! diff -q "\$file" "\${file}.new" >/dev/null 2>&1; then
@@ -170,7 +170,7 @@ jobs:
               fi
             fi
           done
-          
+
           if [[ "\$files_updated" == "true" ]]; then
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"

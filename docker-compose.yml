@@ -4,11 +4,11 @@ x-translate: &translate
   deploy:
     resources:
       limits:
-        cpus: '0.25'
+        cpus: "0.25"
         memory: 128M
         pids: 20
       reservations:
-        cpus: '0.05'
+        cpus: "0.05"
         memory: 64M
   memswap_limit: 192M
   ulimits:
@@ -46,11 +46,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
           pids: 50
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 256M
     memswap_limit: 768M
     ulimits:
@@ -95,11 +95,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
           pids: 30
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 128M
     memswap_limit: 384M
     ulimits:
@@ -136,7 +136,7 @@ services:
     command:
       - sh
       - -c
-      - 'python3 -m tool_router'
+      - "python3 -m tool_router"
     ports:
       - "${FORGE_TOOL_ROUTER_PORT:-8030}:8030"
     depends_on:
@@ -145,11 +145,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
           pids: 30
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 128M
     memswap_limit: 384M
     ulimits:
@@ -181,11 +181,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 2G
           pids: 50
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 512M
     memswap_limit: 3G
     ulimits:
@@ -227,11 +227,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
           pids: 50
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 256M
     memswap_limit: 768M
     ulimits:
@@ -257,10 +257,10 @@ services:
       FORGE_SLEEP_POLICY_ENABLED: true
       FORGE_SERVICE_PRIORITY: normal
       FORGE_AUTO_START: false
-      FORGE_IDLE_TIMEOUT: 300  # 5 minutes
+      FORGE_IDLE_TIMEOUT: 300 # 5 minutes
       FORGE_MIN_SLEEP_TIME: 60
       FORGE_MEMORY_RESERVATION: 64MB
-      FORGE_WAKE_TIME_TARGET: 200  # < 200ms wake time
+      FORGE_WAKE_TIME_TARGET: 200 # < 200ms wake time
     healthcheck:
       test: ["CMD", "python3", "-c", "import mcpgateway.translate; import sys; sys.exit(0)"]
       interval: 30s

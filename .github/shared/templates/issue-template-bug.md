@@ -8,46 +8,46 @@ assignees: ''
 ---
 
 ## 🐛 Bug Description
-<!-- 
+<!--
   Provide a clear and concise description of the bug.
   What happened? What should have happened?
 -->
 
 ## 🔄 Reproduction Steps
-<!-- 
+<!--
   Provide detailed steps to reproduce the issue.
   Be as specific as possible.
 -->
-1. 
-2. 
-3. 
-4. 
+1.
+2.
+3.
+4.
 
 ## 🎯 Expected Behavior
-<!-- 
+<!--
   Describe what you expected to happen.
 -->
 
 ## 📊 Current Behavior
-<!-- 
+<!--
   Describe what actually happened.
   Include error messages, stack traces, etc.
 -->
 
 ## 🌍 Environment
-<!-- 
+<!--
   Complete the following information.
 -->
-- **Project**: 
-- **Version**: 
-- **Operating System**: 
-- **Browser** (if applicable): 
-- **Node.js Version** (if applicable): 
-- **Python Version** (if applicable): 
-- **Docker Version** (if applicable): 
+- **Project**:
+- **Version**:
+- **Operating System**:
+- **Browser** (if applicable):
+- **Node.js Version** (if applicable):
+- **Python Version** (if applicable):
+- **Docker Version** (if applicable):
 
 ## 📋 Context
-<!-- 
+<!--
   Provide any additional context about the issue.
   Include screenshots, logs, or other relevant information.
 -->
@@ -59,35 +59,35 @@ assignees: ''
 - [ ] **Low**: Minor issue, cosmetic
 
 ## 🔍 Debugging Information
-<!-- 
+<!--
   Include any debugging information you've gathered.
   This can help speed up the resolution process.
 -->
 
 ### Error Messages
-<!-- 
+<!--
   Paste any error messages here.
 -->
 
 ### Logs
-<!-- 
+<!--
   Include relevant log entries.
 -->
 
 ### Screenshots
-<!-- 
+<!--
   Add screenshots to help explain your problem.
   Drag and drop images here or use markdown image syntax.
 -->
 
 ## ✅ Possible Solutions
-<!-- 
+<!--
   Suggest any potential solutions or workarounds.
   This is optional but can help with faster resolution.
 -->
 
 ## 🔗 Related Issues
-<!-- 
+<!--
   Link any related issues or pull requests.
 -->
 

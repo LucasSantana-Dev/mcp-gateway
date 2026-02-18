@@ -3,7 +3,7 @@
 
 dashboard:
   title: "MCP Gateway High-Efficiency Docker Monitor"
-  refresh_interval: 30  # seconds
+  refresh_interval: 30 # seconds
 
 metrics:
   # Service State Metrics
@@ -25,7 +25,7 @@ metrics:
       - name: "CPU Usage (%)"
         query: "cpu_usage"
         color: "#FF6B6B"
-        target: 5.0  # < 5% for sleeping services
+        target: 5.0 # < 5% for sleeping services
       - name: "Memory Usage (MB)"
         query: "memory_usage"
         color: "#4ECDC4"
@@ -37,15 +37,15 @@ metrics:
     metrics:
       - name: "Sleep Ratio (%)"
         query: "sleep_ratio"
-        target: 70.0  # 70% of services should be sleeping when idle
+        target: 70.0 # 70% of services should be sleeping when idle
         color: "#45B7D1"
       - name: "Wake Time (ms)"
         query: "avg_wake_time"
-        target: 200.0  # < 200ms wake time
+        target: 200.0 # < 200ms wake time
         color: "#96CEB4"
       - name: "Memory Reduction (%)"
         query: "avg_sleep_efficiency"
-        target: 60.0  # > 60% memory reduction
+        target: 60.0 # > 60% memory reduction
         color: "#FFEAA7"
 
   # System Health
@@ -105,7 +105,7 @@ services:
       - tool-router
     monitoring:
       availability_target: 99.9
-      wake_time_target: 50  # < 50ms
+      wake_time_target: 50 # < 50ms
       alerts:
         - service_down
         - slow_response
@@ -120,8 +120,8 @@ services:
       - git-mcp
     monitoring:
       availability_target: 99.8
-      wake_time_target: 200  # < 200ms
-      sleep_efficiency_target: 60  # > 60%
+      wake_time_target: 200 # < 200ms
+      sleep_efficiency_target: 60 # > 60%
 
   # Browser Services (low priority, resource intensive)
   browser_services:
@@ -132,8 +132,8 @@ services:
       - browser-tools
     monitoring:
       availability_target: 99.5
-      wake_time_target: 500  # < 500ms
-      sleep_efficiency_target: 80  # > 80%
+      wake_time_target: 500 # < 500ms
+      sleep_efficiency_target: 80 # > 80%
 
   # Security Services
   security_services:
@@ -141,8 +141,8 @@ services:
       - snyk
     monitoring:
       availability_target: 99.8
-      wake_time_target: 300  # < 300ms
-      sleep_efficiency_target: 70  # > 70%
+      wake_time_target: 300 # < 300ms
+      sleep_efficiency_target: 70 # > 70%
 
 # Compliance Tracking
 compliance:
@@ -176,23 +176,23 @@ compliance:
 # Performance Targets (from standards)
 performance_targets:
   wake_times:
-    high_priority: 50      # < 50ms
-    normal_priority: 200   # < 200ms
-    low_priority: 500      # < 500ms
+    high_priority: 50 # < 50ms
+    normal_priority: 200 # < 200ms
+    low_priority: 500 # < 500ms
 
   resource_usage:
-    sleeping_cpu: 5        # < 5% CPU
-    sleeping_memory: 30    # < 30% of running memory
+    sleeping_cpu: 5 # < 5% CPU
+    sleeping_memory: 30 # < 30% of running memory
 
   efficiency:
-    memory_reduction: 60   # > 60% reduction
-    cost_savings: 50        # > 50% cost reduction
-    service_density: 3     # 3-4x more services per resource
+    memory_reduction: 60 # > 60% reduction
+    cost_savings: 50 # > 50% cost reduction
+    service_density: 3 # 3-4x more services per resource
 
   reliability:
-    running_availability: 99.9      # 99.9% for running services
-    effective_availability: 99.8    # 99.8% including wake time
-    state_transition_success: 99.9   # 99.9% successful transitions
+    running_availability: 99.9 # 99.9% for running services
+    effective_availability: 99.8 # 99.8% including wake time
+    state_transition_success: 99.9 # 99.9% successful transitions
 
 # Dashboard Layout
 layout:

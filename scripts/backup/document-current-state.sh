@@ -17,7 +17,7 @@ mkdir -p "${STATE_DIR}"
 cat > "${STATE_FILE}" << EOF
 # Project State Documentation: ${PROJECT_NAME}
 
-**Generated:** $(date)  
+**Generated:** $(date)
 **Timestamp:** ${TIMESTAMP}
 
 ## 📊 Project Overview

@@ -181,7 +181,7 @@ Recommended branch protection rules:
    ```bash
    # Test coverage locally
    pytest --cov=src --cov-report=xml
-   
+
    # Test linting
    ruff check .
    npm run lint

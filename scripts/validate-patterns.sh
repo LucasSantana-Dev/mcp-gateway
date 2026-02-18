@@ -11,7 +11,7 @@ echo "============================================================"
 check_file() {
     local file_path="$1"
     local description="$2"
-    
+
     if [[ -f "$file_path" ]]; then
         echo "✅ $description: $file_path"
         return 0
@@ -25,7 +25,7 @@ check_file() {
 check_dir() {
     local dir_path="$1"
     local description="$2"
-    
+
     if [[ -d "$dir_path" ]]; then
         echo "✅ $description: $dir_path"
         return 0
@@ -39,7 +39,7 @@ check_dir() {
 validate_yaml() {
     local file_path="$1"
     local description="$2"
-    
+
     if command -v yq >/dev/null 2>&1; then
         if yq eval '.' "$file_path" >/dev/null 2>&1; then
             echo "✅ $description: Valid YAML"

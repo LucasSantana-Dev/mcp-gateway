@@ -17,8 +17,8 @@ mkdir -p "${ROLLBACK_DIR}"
 cat > "${ROLLBACK_FILE}" << EOF
 # Rollback Plan: ${PROJECT_NAME}
 
-**Created:** $(date)  
-**Timestamp:** ${TIMESTAMP}  
+**Created:** $(date)
+**Timestamp:** ${TIMESTAMP}
 **Project:** ${PROJECT_NAME}
 
 ## 🚨 Emergency Rollback Procedures
@@ -314,8 +314,8 @@ fi
 
 ---
 
-**Rollback plan created at:** $(date)  
-**Next review date:** $(date -v +1m)  
+**Rollback plan created at:** $(date)
+**Next review date:** $(date -v +1m)
 **Plan version:** 1.0
 EOF
 
@@ -349,50 +349,50 @@ case "${ROLLBACK_TYPE}" in
             echo "❌ No backup found for ${PROJECT_NAME}"
             exit 1
         fi
-        
+
         echo "📍 Using backup: ${LATEST_BACKUP}"
         tar -xzf "${LATEST_BACKUP}"
         echo "✅ Backup restored"
         ;;
-        
+
     "git")
         echo "🔄 Resetting git state..."
         git reset --hard HEAD~1
         git clean -fd
         echo "✅ Git reset completed"
         ;;
-        
+
     "config")
         echo "⚙️ Restoring configuration files..."
         git checkout HEAD -- .eslintrc* eslint.config.* .prettierrc* .coderabbit.yaml
         echo "✅ Configuration files restored"
         ;;
-        
+
     "docs")
         echo "📝 Restoring documentation..."
         git checkout HEAD -- README* docs/ .github/PULL_REQUEST_TEMPLATE.md
         echo "✅ Documentation restored"
         ;;
-        
+
     "ci-cd")
         echo "🔄 Restoring CI/CD workflows..."
         git checkout HEAD -- .github/workflows/
         echo "✅ CI/CD workflows restored"
         ;;
-        
+
     "docker")
         echo "🐳 Restoring Docker configuration..."
         git checkout HEAD -- Dockerfile* docker-compose.yml
         echo "✅ Docker configuration restored"
         ;;
-        
+
     "full")
         echo "🔄 Full rollback..."
         ./rollback-cleanup.sh "${PROJECT_NAME}" backup
         ./rollback-cleanup.sh "${PROJECT_NAME}" git
         echo "✅ Full rollback completed"
         ;;
-        
+
     *)
         echo "❌ Unknown rollback type: ${ROLLBACK_TYPE}"
         echo "Available types: backup, git, config, docs, ci-cd, docker, full"

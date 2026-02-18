@@ -155,7 +155,7 @@ echo "- Package files: $(find . -name "package.json" -type f | wc -l)"
 cat > "cleanup-inventory-${PROJECT_NAME}-summary.md" << EOF
 # Duplicate Inventory Summary: ${PROJECT_NAME}
 
-**Generated:** $(date)  
+**Generated:** $(date)
 **Timestamp:** ${TIMESTAMP}
 
 ## 📊 File Counts

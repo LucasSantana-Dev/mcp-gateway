@@ -24,13 +24,13 @@ log_validation() {
     local test_name="$1"
     local result="$2"
     local details="$3"
-    
+
     echo "[$result] $test_name" >> "${VALIDATION_LOG}"
     if [ -n "$details" ]; then
         echo "   $details" >> "${VALIDATION_LOG}"
     fi
     echo "" >> "${VALIDATION_LOG}"
-    
+
     if [ "$result" = "PASS" ]; then
         echo "✅ $test_name"
     else
@@ -91,7 +91,7 @@ if [ -n "$json_files" ]; then
             invalid_json=$((invalid_json + 1))
         fi
     done
-    
+
     if [ $invalid_json -eq 0 ]; then
         log_validation "JSON Configuration" "PASS" "All JSON files are valid"
     else
@@ -107,14 +107,14 @@ if [ -f "package.json" ]; then
     if python -m json.tool package.json >/dev/null 2>&1; then
         # Check if required scripts exist
         scripts=$(cat package.json 2>/dev/null | python -c "import sys, json; data=json.load(sys.stdin); print(' '.join(data.get('scripts', {}).keys()))" 2>/dev/null || echo "")
-        
+
         missing_scripts=""
         for script in lint build test; do
             if ! echo "$scripts" | grep -q "$script"; then
                 missing_scripts="$missing_scripts $script"
             fi
         done
-        
+
         if [ -z "$missing_scripts" ]; then
             log_validation "Package Scripts" "PASS" "All required scripts present"
         else
@@ -139,7 +139,7 @@ if [ -f "docker-compose.yml" ]; then
     else
         log_validation "Docker Compose" "SKIP" "docker-compose not available"
     fi
-    
+
     # Validate Dockerfiles
     dockerfiles=$(find . -name "Dockerfile*" 2>/dev/null || true)
     if [ -n "$dockerfiles" ]; then
@@ -150,7 +150,7 @@ if [ -f "docker-compose.yml" ]; then
                 invalid_dockerfiles=$((invalid_dockerfiles + 1))
             fi
         done
-        
+
         if [ $invalid_dockerfiles -eq 0 ]; then
             log_validation "Dockerfiles" "PASS" "All Dockerfiles are valid"
         else
@@ -201,7 +201,7 @@ echo "🔧 Validating environment files..."
 env_files=$(find . -name ".env*" -type f 2>/dev/null || true)
 if [ -n "$env_files" ]; then
     log_validation "Environment Files" "INFO" "Found $(echo $env_files | wc -w) environment files"
-    
+
     # Check for example files
     if [ -f ".env.example" ]; then
         log_validation "Environment Example" "PASS" ".env.example exists"
@@ -218,14 +218,14 @@ fi
     echo "=================="
     echo "Completed: $(date)"
     echo ""
-    
+
     # Count results
     pass_count=$(grep -c "\[PASS\]" "${VALIDATION_LOG}" || echo "0")
     fail_count=$(grep -c "\[FAIL\]" "${VALIDATION_LOG}" || echo "0")
     warn_count=$(grep -c "\[WARN\]" "${VALIDATION_LOG}" || echo "0")
     skip_count=$(grep -c "\[SKIP\]" "${VALIDATION_LOG}" || echo "0")
     info_count=$(grep -c "\[INFO\]" "${VALIDATION_LOG}" || echo "0")
-    
+
     echo "Results:"
     echo "- Pass: $pass_count"
     echo "- Fail: $fail_count"
@@ -234,7 +234,7 @@ fi
     echo "- Info: $info_count"
     echo ""
     echo "Total: $((pass_count + fail_count + warn_count + skip_count + info_count))"
-    
+
     if [ $fail_count -eq 0 ]; then
         echo "Status: SUCCESS"
     else
