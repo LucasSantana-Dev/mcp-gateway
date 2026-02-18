@@ -150,7 +150,7 @@ Run the same checks CI runs so failures are caught before push:
 | Lint | `make lint` (requires shellcheck and ruff; or use Dev Container) |
 | Test | `make test` (requires Python 3.12, `pip install -r requirements.txt pytest`) |
 | Docker build + gateway smoke | `docker compose build sequential-thinking tool-router`, then create a minimal `.env` (see CI workflow), `docker compose up -d gateway`, then `curl -sf http://localhost:4444/health` (requires Docker and a pullable gateway image tag) |
-| Trivy | `trivy image mcp-gateway-tool-router:latest` (optional; install [Trivy](https://github.com/aquasecurity/trivy) or run in Dev Container) |
+| Trivy | `trivy image forge-mcp-gateway-tool-router:latest` (optional; install [Trivy](https://github.com/aquasecurity/trivy) or run in Dev Container) |
 | Secret scan | `pre-commit run --all-files` (includes secret checks), or run Trufflehog manually with base/head refs |
 
 Gateway smoke requires the gateway image to be pullable (see [docker-compose.yml](../docker-compose.yml)); if the image tag is missing or changed upstream, update the tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh`.

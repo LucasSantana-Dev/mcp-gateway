@@ -30,7 +30,7 @@ fi
 
 source "$SCRIPT_DIR/lib/gateway.sh"
 KEY=$(get_mcp_client_key "$MCP_JSON") || true
-[[ -z "$KEY" ]] && KEY="mcp-gateway"
+[[ -z "$KEY" ]] && KEY="forge-mcp-gateway"
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT

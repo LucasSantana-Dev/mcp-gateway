@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from tool_router.args.builder import build_arguments
+from tool_router.core.config import ToolRouterConfig
 from tool_router.gateway.client import call_tool, get_tools
 from tool_router.observability import get_logger, get_metrics
 from tool_router.observability.metrics import TimingContext
-from tool_router.scoring.matcher import select_top_matching_tools
-
+from tool_router.scoring.matcher import select_top_matching_tools, select_top_matching_tools_hybrid
+from tool_router.ai.selector import OllamaSelector
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -16,6 +17,31 @@ except ImportError:
 mcp = FastMCP("tool-router", json_response=True)
 logger = get_logger(__name__)
 metrics = get_metrics()
+
+# Global AI selector (initialized when AI is enabled)
+_ai_selector: OllamaSelector | None = None
+_config: ToolRouterConfig | None = None
+
+
+def initialize_ai(config: ToolRouterConfig) -> None:
+    """Initialize AI selector if enabled."""
+    global _ai_selector, _config
+    _config = config
+
+    if config.ai.enabled:
+        try:
+            _ai_selector = OllamaSelector(
+                endpoint=config.ai.endpoint,
+                model=config.ai.model,
+                timeout=config.ai.timeout_ms
+            )
+            logger.info(f"AI selector initialized with model {config.ai.model} at {config.ai.endpoint}")
+        except Exception as e:
+            logger.error(f"Failed to initialize AI selector: {e}")
+            _ai_selector = None
+    else:
+        logger.info("AI selector disabled")
+        _ai_selector = None
 
 
 @mcp.tool()
@@ -44,7 +70,17 @@ def execute_task(task: str, context: str = "") -> str:
 
         try:
             with TimingContext("execute_task.pick_best_tools"):
-                best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
+                # Use hybrid scoring if AI is enabled, otherwise fall back to keyword-only
+                if _ai_selector and _config:
+                    best_matching_tools = select_top_matching_tools_hybrid(
+                        tools, task, context, top_n=1,
+                        ai_selector=_ai_selector,
+                        ai_weight=_config.ai.weight
+                    )
+                    metrics.increment_counter("execute_task.ai_selection_attempt")
+                else:
+                    best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
+                    metrics.increment_counter("execute_task.keyword_only_selection")
         except Exception as selection_error:
             logger.exception(f"Error picking tool: {type(selection_error).__name__}: {selection_error}")
             metrics.increment_counter("execute_task.errors.pick_tools")
@@ -131,6 +167,14 @@ def search_tools(query: str, limit: int = 10) -> str:
 
 
 def main() -> None:
+    """Initialize and run the MCP server."""
+    # Load configuration
+    config = ToolRouterConfig.load_from_environment()
+
+    # Initialize AI selector if enabled
+    initialize_ai(config)
+
+    # Run the MCP server
     mcp.run(transport="stdio")
 
 
