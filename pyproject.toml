@@ -11,24 +11,30 @@ requires-python = ">=3.11"
 dependencies = [
     "mcp",
     "mcp-contextforge-gateway",
+    "beautifulsoup4",
+    "httpx",
+    "lxml",
+    "Pillow",
+    "playwright",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "ruff>=0.1.0",
+    "ruff>=0.4.0",
+    "mypy>=1.0.0",
     "pre-commit>=3.0.0",
 ]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-testpaths = ["apps/tool-router/tests", "service-manager/tests"]
+testpaths = ["tool_router/tests", "service-manager/tests", "dribbble_mcp/tests"]
 pythonpath = ["."]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --strict-markers --cov=apps/tool-router/src --cov=service_manager --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=80"
+addopts = "-v --strict-markers --cov=tool_router --cov=service_manager --cov=dribbble_mcp --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=80"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
@@ -42,12 +48,18 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["apps/tool-router/src", "service_manager"]
+source = ["tool_router", "service_manager", "dribbble_mcp"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
     "*/test_*.py",
     "*/__main__.py",
+    "tool_router/server.py",
+    "tool_router/gateway_client.py",
+    "tool_router/scoring.py",
+    "tool_router/simple_server.py",
+    "tool_router/http_server.py",
+    "tool_router/core/server.py",
 ]
 
 [tool.coverage.report]
@@ -71,10 +83,9 @@ directory = "htmlcov"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-src = ["tool_router"]
+src = ["tool_router", "dribbble_mcp"]
 
 [tool.ruff.lint]
-# Enable comprehensive rule sets (similar to TypeScript strict mode)
 select = [
     "E",      # pycodestyle errors
     "F",      # Pyflakes
@@ -114,7 +125,6 @@ select = [
     "RUF",    # Ruff-specific rules
 ]
 
-# Ignore specific rules that may be too strict or conflict with project style
 ignore = [
     "ANN401",  # Dynamically typed expressions (Any) are disallowed
     "S101",    # Use of assert detected (pytest uses assert)
@@ -125,51 +135,60 @@ ignore = [
     "TRY401",  # Redundant exception in logging.exception (intentional for clarity)
 ]
 
-# Allow autofix for all enabled rules
 fixable = ["ALL"]
 unfixable = []
 
-# Allow unused variables when underscore-prefixed
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401", "F403"]  # Allow unused imports in __init__.py
+"__init__.py" = ["F401", "F403"]
 "tool_router/tests/**/*.py" = [
-    "S101",    # Allow assert in tests
-    "ANN",     # Don't require type hints in tests
-    "PLR2004", # Allow magic values in tests
-    "ARG",     # Allow unused arguments in test fixtures
-    "SIM117",  # Allow nested with statements in tests
-    "PT011",   # Allow broad exception types in pytest.raises
-    "B017",    # Allow asserting on Exception in tests
-    "PLC0415", # Allow imports inside test functions
+    "S101",
+    "ANN",
+    "PLR2004",
+    "ARG",
+    "SIM117",
+    "PT011",
+    "B017",
+    "PLC0415",
+]
+"dribbble_mcp/tests/**/*.py" = [
+    "S101",
+    "ANN",
+    "PLR2004",
+    "ARG",
+    "SIM117",
+    "PT011",
+    "B017",
+    "PLC0415",
+    "PT006",
 ]
 "tool_router/test_*.py" = [
-    "S101",    # Allow assert in tests
-    "ANN",     # Don't require type hints in tests
-    "SIM117",  # Allow nested with statements in tests
+    "S101",
+    "ANN",
+    "SIM117",
 ]
 "tool_router/server.py" = [
-    "PLR0911", # Allow more return statements in main routing function
-    "E501",    # Allow long lines in docstrings
+    "PLR0911",
+    "E501",
 ]
 "tool_router/core/server.py" = [
-    "PLR0911", # Allow more return statements in main routing function
-    "E501",    # Allow long lines in docstrings
+    "PLR0911",
+    "E501",
 ]
 "tool_router/gateway/client.py" = [
-    "PLC0415", # Allow conditional imports for backward compatibility
-    "E501",    # Allow long lines in list comprehensions
+    "PLC0415",
+    "E501",
 ]
 "tool_router/gateway_client.py" = [
-    "PLC0415", # Allow conditional imports
+    "PLC0415",
 ]
 "tool_router/scoring/matcher.py" = [
-    "E501",    # Allow long lines in scoring calculations
+    "E501",
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["tool_router"]
+known-first-party = ["tool_router", "dribbble_mcp"]
 force-single-line = false
 lines-after-imports = 2
 
@@ -190,3 +209,15 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
