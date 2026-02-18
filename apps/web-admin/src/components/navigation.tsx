@@ -10,7 +10,8 @@ import {
   BarChart3,
   Users,
   Zap,
-  Hammer
+  Hammer,
+  Monitor
 } from 'lucide-react'
 
 const navigation = [
@@ -24,6 +25,12 @@ const navigation = [
     name: 'Virtual Servers',
     href: '/servers',
     icon: Server,
+    current: false
+  },
+  {
+    name: 'IDE Integration',
+    href: '/ide-integration',
+    icon: Monitor,
     current: false
   },
   {
