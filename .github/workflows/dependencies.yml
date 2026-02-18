@@ -129,7 +129,7 @@ jobs:
           cat outdated-node.txt
 
       - name: Upload outdated reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: outdated-reports
           path: |
