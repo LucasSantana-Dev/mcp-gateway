@@ -1,0 +1,37 @@
+#!/bin/bash
+# commit-msg hook — conventional commit enforcement
+set -euo pipefail
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+CONVENTIONAL_PATTERN='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+'
+if [[ ! "$COMMIT_MSG" =~ $CONVENTIONAL_PATTERN ]]; then
+  echo "❌ Commit message does not follow conventional commit format"
+  echo ""
+  echo "Expected format: <type>(<scope>): <description>"
+  echo "Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+  echo "Example: feat(gateway): add JWT token validation"
+  echo ""
+  echo "Current message: $COMMIT_MSG"
+  exit 1
+fi
+
+if [[ ${#COMMIT_MSG} -lt 10 ]]; then
+  echo "❌ Commit message too short (minimum 10 characters)"
+  exit 1
+fi
+
+DESCRIPTION=$(echo "$COMMIT_MSG" | cut -d':' -f2- | sed 's/^ *//')
+
+if [[ ! "$DESCRIPTION" =~ ^[a-z] ]]; then
+  echo "❌ Description should start with lowercase letter"
+  exit 1
+fi
+
+if [[ "$DESCRIPTION" =~ \.$ ]]; then
+  echo "❌ Description should not end with a period"
+  exit 1
+fi
+
+echo "✅ Commit message validation passed"

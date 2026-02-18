@@ -1,0 +1,71 @@
+#!/bin/bash
+# pre-commit hook — forge-patterns gate
+set -euo pipefail
+
+echo "🚀 Running UIForge pre-commit validations..."
+
+FAILED=0
+
+# 1. Security validation
+if [ -f "scripts/security/validate-no-secrets.sh" ]; then
+  echo "🔒 Running security validation..."
+  if ! bash scripts/security/validate-no-secrets.sh; then
+    echo "❌ Security validation failed."
+    FAILED=1
+  else
+    echo "✅ Security validation passed."
+  fi
+fi
+
+# 2. Python linting (ruff)
+if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
+  echo "🐍 Running Python lint..."
+  if command -v ruff &>/dev/null; then
+    if ! ruff check .; then
+      echo "❌ Python lint failed."
+      FAILED=1
+    else
+      echo "✅ Python lint passed."
+    fi
+  fi
+fi
+
+# 3. Node.js lint (if applicable)
+if [ -f "package.json" ]; then
+  echo "📝 Running lint-staged..."
+  if ! npx lint-staged; then
+    echo "❌ Lint/format check failed."
+    FAILED=1
+  else
+    echo "✅ Lint/format check passed."
+  fi
+fi
+
+# 4. TypeScript type check
+if [ -f "tsconfig.json" ]; then
+  echo "🔍 Running type check..."
+  if ! npx tsc --noEmit; then
+    echo "❌ Type check failed."
+    FAILED=1
+  else
+    echo "✅ Type check passed."
+  fi
+fi
+
+# 5. Fast tests
+echo "🧪 Running tests..."
+if command -v pytest &>/dev/null; then
+  if ! pytest -x --timeout=30 -q 2>/dev/null; then
+    echo "❌ Tests failed."
+    FAILED=1
+  else
+    echo "✅ Tests passed."
+  fi
+fi
+
+if [ $FAILED -eq 0 ]; then
+  echo "✅ All pre-commit validations passed!"
+else
+  echo "❌ Some validations failed. Please fix the issues above."
+  exit 1
+fi
