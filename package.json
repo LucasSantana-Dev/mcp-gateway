@@ -1,10 +1,10 @@
 {
-  "name": "@forge-mcp-gateway/client",
+  "name": "@forgespace/mcp",
   "version": "1.27.0",
-  "description": "Forge MCP Gateway client - Connect to your Forge MCP Gateway instance via NPX",
+  "description": "Forgespace MCP Gateway - Connect to your Forgespace MCP Gateway instance via NPX",
   "type": "module",
   "bin": {
-    "forge-mcp-gateway": "./build/index.js"
+    "forgespace-mcp": "./build/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -34,33 +34,27 @@
     "integrate:uiforge-mcp": "node scripts/integrate.js --project=uiforge-mcp",
     "integrate:uiforge-webapp": "node scripts/integrate.js --project=uiforge-webapp"
   },
-  "files": [
-    "build",
-    "README.md",
-    "LICENSE"
-  ],
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "mcp-server",
-    "forge-mcp-gateway",
-    "ai",
-    "llm"
-  ],
-  "author": "Forge MCP Gateway Contributors",
+  "files": ["build", "README.md", "LICENSE"],
+  "keywords": ["mcp", "model-context-protocol", "mcp-server", "forgespace", "ai", "llm"],
+  "author": "Forgespace Contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lucassantana/forge-mcp-gateway.git"
+    "url": "https://github.com/Forge-Space/mcp-gateway.git"
   },
+  "bugs": {
+    "url": "https://github.com/Forge-Space/mcp-gateway/issues"
+  },
+  "homepage": "https://github.com/Forge-Space/mcp-gateway#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
+    "@forgespace/core": "^1.1.1",
     "@types/node": "^20.5.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-import-resolver-typescript": "^3.7.0",
@@ -73,8 +67,7 @@
     "@types/fs-extra": "^11.0.1",
     "@types/semver": "^7.5.0",
     "husky": "^8.0.3",
-    "lint-staged": "^13.2.3",
-    "@uiforge/forge-patterns": "file:../forge-patterns"
+    "lint-staged": "^13.2.3"
   },
   "engines": {
     "node": ">=22.0.0"
