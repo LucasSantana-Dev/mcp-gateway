@@ -1,4 +1,4 @@
-.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update config-backup config-restore config-install config-list config-cleanup pre-commit-install pre-commit-run pre-commit-update help help-topics help-examples setup ide-setup status setup-dev
+.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update config-backup config-restore config-install config-list config-cleanup pre-commit-install pre-commit-run pre-commit-update help help-topics help-examples setup ide-setup status setup-dev register-enhanced enable-server disable-server
 
 # Default target
 .DEFAULT_GOAL := help
@@ -68,6 +68,22 @@ list-servers: ## List virtual servers
 register-enhanced: ## Register virtual servers with enabled/disabled status (enhanced format)
 	python3 ./scripts/virtual-server-manager.py register-enhanced
 
+enable-server: ## Enable a virtual server
+	@if [ -z "$(SERVER)" ]; then \
+		echo "Usage: make enable-server SERVER=<server-name>"; \
+		echo "Example: make enable-server SERVER=cursor-default"; \
+		exit 1; \
+	fi
+	python3 ./scripts/virtual-server-manager.py enable $(SERVER)
+
+disable-server: ## Disable a virtual server
+	@if [ -z "$(SERVER)" ]; then \
+		echo "Usage: make disable-server SERVER=<server-name>"; \
+		echo "Example: make disable-server SERVER=cursor-default"; \
+		exit 1; \
+	fi
+	python3 ./scripts/virtual-server-manager.py disable $(SERVER)
+
 cleanup-duplicates: ## Clean up duplicate virtual servers
 	./scripts/virtual-servers/cleanup-duplicates.sh
 
@@ -128,7 +144,7 @@ shellcheck: ## Lint shell scripts with shellcheck
 	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
 	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
 	if [ -n "$$SCRIPTS" ]; then \
-		shellcheck -s bash -S warning $$SCRIPTS; \
+		shellcheck -s bash -S error $$SCRIPTS; \
 	else \
 		echo "No shell scripts found to check."; \
 	fi

@@ -24,7 +24,7 @@ echo "    \"configuration_files\": {" >> "${OUTPUT_FILE}"
 # ESLint configurations
 echo "      \"eslint\": {" >> "${OUTPUT_FILE}"
 find . -name ".eslintrc*" -o -name "eslint.config.*" 2>/dev/null | while read file; do
-    echo "        \"$(basename "$file\")\": {" >> "${OUTPUT_FILE}"
+    echo "        \"$(basename "$file")\": {" >> "${OUTPUT_FILE}"
     echo "          \"path\": \"$file\"," >> "${OUTPUT_FILE}"
     echo "          \"size\": $(wc -c < "$file")," >> "${OUTPUT_FILE}"
     echo "          \"lines\": $(wc -l < "$file")" >> "${OUTPUT_FILE}"
@@ -35,7 +35,7 @@ echo "      }," >> "${OUTPUT_FILE}"
 # Prettier configurations
 echo "      \"prettier\": {" >> "${OUTPUT_FILE}"
 find . -name ".prettierrc*" 2>/dev/null | while read file; do
-    echo "        \"$(basename "$file\")\": {" >> "${OUTPUT_FILE}"
+    echo "        \"$(basename "$file")\": {" >> "${OUTPUT_FILE}"
     echo "          \"path\": \"$file\"," >> "${OUTPUT_FILE}"
     echo "          \"size\": $(wc -c < "$file")," >> "${OUTPUT_FILE}"
     echo "          \"lines\": $(wc -l < "$file")" >> "${OUTPUT_FILE}"
@@ -46,7 +46,7 @@ echo "      }," >> "${OUTPUT_FILE}"
 # CodeRabbit configurations
 echo "      \"coderabbit\": {" >> "${OUTPUT_FILE}"
 find . -name ".coderabbit*" 2>/dev/null | while read file; do
-    echo "        \"$(basename "$file\")\": {" >> "${OUTPUT_FILE}"
+    echo "        \"$(basename "$file")\": {" >> "${OUTPUT_FILE}"
     echo "          \"path\": \"$file\"," >> "${OUTPUT_FILE}"
     echo "          \"size\": $(wc -c < "$file")," >> "${OUTPUT_FILE}"
     echo "          \"lines\": $(wc -l < "$file")" >> "${OUTPUT_FILE}"
