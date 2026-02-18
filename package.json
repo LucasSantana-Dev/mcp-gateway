@@ -1,7 +1,7 @@
 {
-  "name": "@forge-mcp-gateway/client",
+  "name": "@forge-ai/mcp",
   "version": "1.27.0",
-  "description": "Forge MCP Gateway client - Connect to your Forge MCP Gateway instance via NPX",
+  "description": "Forge AI MCP Gateway - Connect to your Forge MCP Gateway instance via NPX",
   "type": "module",
   "bin": {
     "forge-mcp-gateway": "./build/index.js"
@@ -43,7 +43,7 @@
     "mcp",
     "model-context-protocol",
     "mcp-server",
-    "forge-mcp-gateway",
+    "forge-ai",
     "ai",
     "llm"
   ],
@@ -51,7 +51,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lucassantana/forge-mcp-gateway.git"
+    "url": "https://github.com/LucasSantana-Dev/mcp-gateway.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
