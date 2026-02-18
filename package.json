@@ -58,7 +58,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@uiforge/forge-patterns": "^1.1.1",
+    "@forge-ai/core": "^1.1.1",
     "@types/node": "^20.5.0",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
