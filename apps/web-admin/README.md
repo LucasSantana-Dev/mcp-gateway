@@ -11,7 +11,7 @@ A comprehensive Next.js admin dashboard for managing the Forge MCP Gateway, prov
 - **Server Templates**: Template management for quick server deployment and configuration
 
 ### Technical Stack
-- **Frontend**: Next.js 16 with App Router and TypeScript
+- **Frontend**: Next.js 14.2.15 with App Router and TypeScript
 - **Styling**: Tailwind CSS with custom design system
 - **State Management**: Zustand for React state management
 - **Data Fetching**: React Query for server state and caching
