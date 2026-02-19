@@ -142,7 +142,7 @@ status-detailed: ## Detailed system status with JSON output
 status-json: ## System status in JSON format
 	@python3 scripts/status.py --json
 
-help: ## Show enhanced help system
+help-enhanced: ## Show enhanced help system
 	@python3 scripts/help.py
 
 help-topics: ## Show available help topics

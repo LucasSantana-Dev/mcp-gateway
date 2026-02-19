@@ -35,7 +35,16 @@ import {
   Cpu,
   HardDrive,
   Network,
-  RefreshCw
+  RefreshCw,
+  Download,
+  Upload,
+  Filter,
+  Search,
+  Bell,
+  BellOff,
+  Maximize2,
+  Minimize2,
+  X
 } from 'lucide-react'
 
 interface VirtualServer {
@@ -333,8 +342,8 @@ export default function EnhancedServerManagement() {
             onClick={() => setShowDeployModal(true)}
             className="flex items-center gap-2"
           >
-            <Globe className="w-4 h-4" />
-            Deploy to Kubernetes
+            <Upload className="w-4 h-4" />
+            Deploy Service
           </Button>
           <Button
             onClick={() => setShowCreateModal(true)}
@@ -541,13 +550,30 @@ export default function EnhancedServerManagement() {
                 ×
               </Button>
             </div>
-            <KubernetesDeployment onClose={() => setShowDeployModal(false)} />
+            <div className="text-center py-8">
+              <Server className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h4 className="text-lg font-medium mb-2">Kubernetes Deployment</h4>
+              <p className="text-muted-foreground mb-4">
+                Kubernetes deployment is not available. The MCP Gateway uses Docker Compose for optimal simplicity and efficiency.
+              </p>
+              <div className="space-y-2 text-sm text-left max-w-md mx-auto">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>Docker Compose provides simpler deployment</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>60-80% memory reduction with sleep/wake</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>Better suited for individual developers</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
     </div>
   )
 }
-
-// Import the Kubernetes deployment component
-import { KubernetesDeployment } from '@/components/kubernetes/kubernetes-deployment'
