@@ -13,14 +13,14 @@ from __future__ import annotations
 from .data_extraction import PatternExtractor, DataSource
 from .knowledge_base import KnowledgeBase, PatternCategory
 from .training_pipeline import TrainingPipeline
-from .evaluation import SpecialistEvaluator, EvaluationMetrics
+from .evaluation import SpecialistEvaluator, EvaluationMetric
 
 __all__ = [
     "PatternExtractor",
-    "DataSource", 
+    "DataSource",
     "KnowledgeBase",
     "PatternCategory",
     "TrainingPipeline",
     "SpecialistEvaluator",
-    "EvaluationMetrics",
+    "EvaluationMetric",
 ]

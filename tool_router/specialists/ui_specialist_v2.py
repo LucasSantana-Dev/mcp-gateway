@@ -456,6 +456,7 @@ export class {component_type.title()}Component {{
   }}
 </style>'''
 
+        base_props = [
             {"name": "children", "type": "ReactNode", "required": False, "description": "Child components"},
             {"name": "id", "type": "string", "required": False, "description": "Unique identifier"}
         ]
