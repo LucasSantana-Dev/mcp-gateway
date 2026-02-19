@@ -34,7 +34,7 @@ class TestPromptTemplates:
         assert task in result
         assert tool_list in result
         assert context in result
-        assert "Context:" in result
+        assert "## Context" in result
 
     def test_create_tool_selection_prompt_no_context_section_when_empty(self) -> None:
         result = PromptTemplates.create_tool_selection_prompt("task", "- tool: desc", context="")
@@ -47,11 +47,11 @@ class TestPromptTemplates:
         result = PromptTemplates.create_tool_selection_prompt(task, tool_list, similar_tools=similar_tools)
         assert "search_web" in result
         assert "find_info" in result
-        assert "Historically successful tools" in result
+        assert "Previously successful for similar tasks" in result
 
     def test_create_tool_selection_prompt_no_history_when_none(self) -> None:
         result = PromptTemplates.create_tool_selection_prompt("task", "- tool: desc", similar_tools=None)
-        assert "Historically successful tools" not in result
+        assert "Previously successful for similar tasks" not in result
 
     def test_create_tool_selection_prompt_with_all_parameters(self) -> None:
         task = "Search the web"
@@ -139,8 +139,8 @@ class TestPromptTemplates:
             "task", "- tool: desc", context="some context"
         )
         assert "some context" in result
-        assert "Context:" in result
+        assert "## Context" in result
 
     def test_create_multi_tool_selection_prompt_no_context_when_empty(self) -> None:
         result = PromptTemplates.create_multi_tool_selection_prompt("task", "- tool: desc", context="")
-        assert "Context:" not in result
+        assert "## Context" not in result

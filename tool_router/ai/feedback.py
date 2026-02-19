@@ -282,14 +282,21 @@ class FeedbackStore:
 
         # Enhanced boost calculation considering multiple factors
         base_boost = 0.5 + stats.success_rate  # Historical success rate
-        confidence_boost = (stats.avg_confidence - 0.5) * 0.3  # Confidence factor
-        recent_boost = (stats.recent_success_rate - 0.5) * 0.2  # Recent performance
+        
+        # For confidence and recent boosts, only apply if there's some success
+        # to avoid penalizing tools that have never succeeded
+        confidence_boost = 0.0
+        recent_boost = 0.0
+        
+        if stats.success_count > 0:
+            confidence_boost = (stats.avg_confidence - 0.5) * 0.3  # Confidence factor
+            recent_boost = (stats.recent_success_rate - 0.5) * 0.2  # Recent performance
 
         # Combine factors
         enhanced_boost = base_boost + confidence_boost + recent_boost
 
-        # Clamp to reasonable range
-        return max(0.3, min(1.7, enhanced_boost))
+        # Clamp to reasonable range (minimum 0.1 for very poor performers, maximum 1.7)
+        return max(0.1, min(1.7, enhanced_boost))
 
     def get_task_type_boost(self, tool_name: str, task_type: str) -> float:
         """Get boost based on task type performance."""
