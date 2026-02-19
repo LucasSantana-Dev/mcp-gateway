@@ -42,12 +42,6 @@ const navigation = [
     current: false
   },
   {
-    name: 'Kubernetes',
-    href: '/kubernetes',
-    icon: Globe,
-    current: false
-  },
-  {
     name: 'Virtual Servers',
     href: '/servers',
     icon: Server,

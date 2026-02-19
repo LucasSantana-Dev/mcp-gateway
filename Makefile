@@ -1,7 +1,7 @@
 # MCP Gateway - Simplified Makefile (Phase 3: Command Simplification)
 # Reduced from 50+ targets to 12 core targets for easier onboarding
 
-.PHONY: setup start stop register status ide-setup auth lint lint:strict test deps help clean
+.PHONY: setup start stop register status ide-setup auth lint lint-strict test deps help clean quickstart
 
 # Default target
 .DEFAULT_GOAL := help
@@ -107,7 +107,7 @@ lint: ## Run all linters (replaces lint-python, lint-typescript, shellcheck, lin
 	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
 	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS || echo "⚠️ Shell lint issues found"; fi
 
-lint:strict: ## Run all linters without fallbacks (CI-friendly)
+lint-strict: ## Run all linters without fallbacks (CI-friendly)
 	@echo "🔍 Running strict linters (no fallbacks)..."
 	@echo "==> Python..."
 	ruff check tool_router/
@@ -245,7 +245,6 @@ clean: ## Clean up and reset (replaces reset-db, cleanup-duplicates, config-clea
 	@echo "✅ Cleanup complete. Run 'make setup && make start && make register' to recreate."
 
 # === Quick Start Examples ===
-.PHONY: quickstart
 quickstart: ## Quick start for new users
 	@echo "🚀 MCP Gateway Quick Start"
 	@echo "========================"
