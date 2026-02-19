@@ -9,23 +9,37 @@ WORKDIR /app
 
 COPY dribbble_mcp/requirements.txt /app/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    playwright install chromium --with-deps && \
-    rm -rf /root/.cache/pip /tmp/*
-
-COPY dribbble_mcp/ /app/dribbble_mcp/
-
 RUN groupadd -g 1000 app && \
     useradd -u 1000 -g app -s /bin/sh -m app && \
     chown -R app:app /app
 
 USER app
 
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright playwright install chromium --with-deps && \
+    rm -rf /home/app/.cache/pip /tmp/*
+
+COPY dribbble_mcp/ /app/dribbble_mcp/
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD python3 -c "import dribbble_mcp; print('ok')" || exit 1
+  CMD python3 -c "
+import sys
+import subprocess
+try:
+    # Check if the process is running
+    result = subprocess.run(['pgrep', '-f', 'dribbble_mcp'],
+                          capture_output=True, text=True)
+    if result.returncode == 0 and result.stdout.strip():
+        sys.exit(0)
+    else:
+        sys.exit(1)
+except Exception:
+    sys.exit(1)
+" || exit 1
 
 CMD ["python3", "-m", "dribbble_mcp"]

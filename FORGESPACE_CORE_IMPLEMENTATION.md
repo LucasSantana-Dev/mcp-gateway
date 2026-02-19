@@ -8,16 +8,16 @@
 - **TypeScript ESLint**: Fixed version conflicts (updated to ^8.55.0)
 
 ### 🔧 **Code Integration**
-- **src/index.ts**: 
+- **src/index.ts**:
   ```typescript
   import { ForgeCore } from "@forgespace/core";
-  
+
   const forgeCore = new ForgeCore({
     gatewayUrl: GATEWAY_URL,
     authToken: GATEWAY_TOKEN,
     timeout: REQUEST_TIMEOUT_MILLISECONDS,
   });
-  
+
   // In main() function:
   await forgeCore.initialize();
   ```
@@ -59,13 +59,13 @@ const forgeCore = new ForgeCore({
 ## 📋 **Next Steps**
 
 ### 🔄 **Immediate Actions**
-1. **Install dependencies**: `npm install --legacy-peer-deps`
+1. **Install dependencies**: `npm install` (Note: May require --legacy-peer-deps due to TypeScript ESLint version conflicts)
 2. **Build project**: `npm run build`
 3. **Test integration**: `node test-forge-core.js`
 4. **Validate**: `node validate-forge-core.js`
 
 ### 🐛 **Troubleshooting**
-- **Dependency conflicts**: Use `--legacy-peer-deps` flag
+- **Dependency conflicts**: TypeScript ESLint version conflicts between @typescript-eslint/eslint-plugin@^6.0.0 and @typescript-eslint/parser@^8.55.0 - use --legacy-peer-deps as workaround
 - **TypeScript errors**: Check import paths and types
 - **Runtime errors**: Verify ForgeCore API compatibility
 
@@ -84,9 +84,9 @@ const forgeCore = new ForgeCore({
 - Seamless integration with existing codebase
 
 ### 🔧 **Technical Debt**
-- None identified
-- Follows existing patterns and conventions
-- Maintains backward compatibility
+- **Peer dependency conflict**: TypeScript ESLint version conflicts between @typescript-eslint/eslint-plugin@^6.0.0 and @typescript-eslint/parser@^8.55.0 require --legacy-peer-deps workaround
+- **Resolution needed**: Update TypeScript ESLint versions to be compatible or wait for upstream fixes
+- **Impact**: Installation may require legacy peer deps flag until dependencies are resolved
 
 ### 🛡️ **Security**
 - No additional security risks

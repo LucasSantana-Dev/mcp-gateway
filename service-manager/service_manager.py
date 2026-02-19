@@ -357,7 +357,7 @@ class ServiceManager:
     async def initialize(self):
         """Initialize the service manager."""
         try:
-            self.docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+            self.docker_client = docker.DockerClient(base_url="unix:///var/run/docker.sock")
             self.docker_client.ping()
             logger.info("Docker client initialized successfully")
         except Exception as e:
@@ -473,6 +473,8 @@ class ServiceManager:
                 container_config["volumes"] = service_config.volumes
 
             # Start container
+            if not self.docker_client:
+                raise RuntimeError("Docker client not available - cannot start container")
             container = self.docker_client.containers.run(**container_config)
 
             # Update status
@@ -518,6 +520,8 @@ class ServiceManager:
             current_status.status = "stopping"
 
             if current_status.container_id:
+                if not self.docker_client:
+                    raise RuntimeError("Docker client not available - cannot stop container")
                 container = self.docker_client.containers.get(current_status.container_id)
                 container.stop(timeout=10)
                 container.remove()

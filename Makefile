@@ -1,7 +1,7 @@
 # MCP Gateway - Simplified Makefile (Phase 3: Command Simplification)
 # Reduced from 50+ targets to 12 core targets for easier onboarding
 
-.PHONY: setup start stop register status ide-setup auth lint test deps help clean
+.PHONY: setup start stop register status ide-setup auth lint lint:strict test deps help clean
 
 # Default target
 .DEFAULT_GOAL := help
@@ -89,8 +89,8 @@ auth: ## Authentication commands (replaces jwt, auth-check, auth-refresh, genera
 		fi'; \
 	elif [ "$(ACTION)" = "secrets" ]; then \
 		echo "# Add these to .env (min 32 chars):"; \
-		echo "JWT_SECRET_KEY=$$(shell openssl rand -base64 32)"; \
-		echo "AUTH_ENCRYPTION_SECRET=$$(shell openssl rand -base64 32)"; \
+		echo "JWT_SECRET_KEY=$$(openssl rand -base64 32)"; \
+		echo "AUTH_ENCRYPTION_SECRET=$$(openssl rand -base64 32)"; \
 	else \
 		echo "❌ Unknown action: $(ACTION)"; \
 		exit 1; \
@@ -106,6 +106,17 @@ lint: ## Run all linters (replaces lint-python, lint-typescript, shellcheck, lin
 	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
 	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
 	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS || echo "⚠️ Shell lint issues found"; fi
+
+lint:strict: ## Run all linters without fallbacks (CI-friendly)
+	@echo "🔍 Running strict linters (no fallbacks)..."
+	@echo "==> Python..."
+	ruff check tool_router/
+	@echo "==> TypeScript..."
+	@if [ -f package.json ]; then npm run lint; fi
+	@echo "==> Shell scripts..."
+	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
+	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
+	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS; fi
 
 test: ## Run tests (replaces test, test-coverage)
 	@echo "🧪 Running tests..."

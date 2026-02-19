@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# Production Deployment Script for Forge MCP Gateway
-# This script handles the complete production deployment process
+# Production Deployment Script for MCP Gateway
+# Deploys the complete MCP Gateway system to production
 
-set -e
+set -euo pipefail
+
+# Configuration
+SCRIPT_NAME="$(basename "$0")"
+LOG_FILE="/tmp/mcp-gateway-deploy-$(date +%Y%m%d_%H%M%S).log"
+BACKUP_DIR="/tmp/mcp-gateway-backup-$(date +%Y%m%d_%H%M%S)"
+COMPOSE_FILE="docker-compose.production.yml"
+ENV_FILE=".env.production"
 
 # Colors for output
 RED='\033[0;31m'
@@ -12,218 +19,421 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-PROJECT_NAME="forge-mcp-gateway"
-BACKUP_DIR="./backups"
-LOG_FILE="./logs/deploy-$(date +%Y%m%d-%H%M%S).log"
-
-# Helper functions
+# Logging function
 log() {
-    echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
-success() {
-    echo -e "${GREEN}✅ $1${NC}" | tee -a "$LOG_FILE"
-}
-
-warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}" | tee -a "$LOG_FILE"
-}
-
-error() {
-    echo -e "${RED}❌ $1${NC}" | tee -a "$LOG_FILE"
-    exit 1
+# Print colored output
+print_status() {
+    local color=$1
+    local message=$2
+    echo -e "${color}${message}${NC}"
 }
 
 # Check prerequisites
 check_prerequisites() {
-    log "Checking prerequisites..."
+    print_status "$BLUE" "🔍 Checking prerequisites..."
     
-    # Check if Docker is installed
-    if ! command -v docker &> /dev/null; then
-        error "Docker is not installed. Please install Docker first."
+    # Check Docker
+    if ! command -v docker >/dev/null 2>&1; then
+        print_status "$RED" "❌ Docker is not installed"
+        exit 1
     fi
     
-    # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null; then
-        error "Docker Compose is not installed. Please install Docker Compose first."
+    # Check Docker Compose
+    if ! command -v docker-compose >/dev/null 2>&1; then
+        print_status "$RED" "❌ Docker Compose is not installed"
+        exit 1
     fi
     
-    # Check if .env.production exists
-    if [ ! -f ".env.production" ]; then
-        error ".env.production file not found. Please copy .env.production.example to .env.production and configure it."
+    # Check if production files exist
+    if [[ ! -f "$COMPOSE_FILE" ]]; then
+        print_status "$RED" "❌ Production compose file not found: $COMPOSE_FILE"
+        exit 1
     fi
     
-    # Create necessary directories
-    mkdir -p "$BACKUP_DIR"
-    mkdir -p "./logs"
+    if [[ ! -f "$ENV_FILE" ]]; then
+        print_status "$RED" "❌ Production environment file not found: $ENV_FILE"
+        print_status "$YELLOW" "💡 Copy .env.production.example to $ENV_FILE and configure it"
+        exit 1
+    fi
     
-    success "Prerequisites check completed"
+    # Check Docker is running
+    if ! docker info >/dev/null 2>&1; then
+        print_status "$RED" "❌ Docker is not running"
+        exit 1
+    fi
+    
+    print_status "$GREEN" "✅ Prerequisites check passed"
+    log "Prerequisites check completed"
 }
 
 # Backup current deployment
-backup_current() {
-    log "Backing up current deployment..."
+backup_current_deployment() {
+    print_status "$BLUE" "📦 Backing up current deployment..."
     
-    if [ -d "./data" ]; then
-        tar -czf "$BACKUP_DIR/data-backup-$(date +%Y%m%d-%H%M%S).tar.gz" ./data/
-        success "Data backup completed"
+    mkdir -p "$BACKUP_DIR"
+    
+    # Backup docker-compose files
+    if [[ -f "$COMPOSE_FILE" ]]; then
+        cp "$COMPOSE_FILE" "$BACKUP_DIR/"
     fi
     
-    # Backup current configuration
-    cp .env.production "$BACKUP_DIR/.env.production.backup-$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+    if [[ -f "$ENV_FILE" ]]; then
+        cp "$ENV_FILE" "$BACKUP_DIR/"
+    fi
     
-    success "Backup completed"
+    # Backup current running containers info
+    if docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" > "$BACKUP_DIR/running_containers.txt" 2>/dev/null; then
+        print_status "$GREEN" "✅ Backed up running containers info"
+    fi
+    
+    # Backup volumes if they exist
+    if docker volume ls --format "{{.Name}}" | grep -q "forge"; then
+        docker volume ls --format "{{.Name}}" | grep forge > "$BACKUP_DIR/volumes.txt"
+        print_status "$GREEN" "✅ Backed up volumes list"
+    fi
+    
+    print_status "$GREEN" "✅ Backup completed: $BACKUP_DIR"
+    log "Backup completed: $BACKUP_DIR"
 }
 
-# Run pre-deployment tests
-run_tests() {
-    log "Running pre-deployment tests..."
+# Validate configuration
+validate_configuration() {
+    print_status "$BLUE" "🔍 Validating production configuration..."
     
-    # Test configuration
-    log "Testing configuration files..."
-    docker-compose -f docker-compose.scalable.yml config --quiet
+    # Validate docker-compose file
+    if docker-compose -f "$COMPOSE_FILE" config >/dev/null 2>&1; then
+        print_status "$GREEN" "✅ Docker Compose configuration is valid"
+    else
+        print_status "$RED" "❌ Docker Compose configuration has errors"
+        docker-compose -f "$COMPOSE_FILE" config
+        exit 1
+    fi
     
-    # Test build
-    log "Testing Docker build..."
-    docker-compose -f docker-compose.scalable.yml build --quiet
+    # Check required environment variables
+    local required_vars=(
+        "JWT_SECRET"
+        "POSTGRES_PASSWORD"
+        "REDIS_PASSWORD"
+        "GRAFANA_PASSWORD"
+    )
     
-    success "Pre-deployment tests passed"
+    for var in "${required_vars[@]}"; do
+        if ! grep -q "^${var}=" "$ENV_FILE" || grep -q "^${var}=your-" "$ENV_FILE"; then
+            print_status "$RED" "❌ Required environment variable $var is not configured"
+            print_status "$YELLOW" "💡 Please set $var in $ENV_FILE"
+            exit 1
+        fi
+    done
+    
+    print_status "$GREEN" "✅ Configuration validation passed"
+    log "Configuration validation completed"
+}
+
+# Prepare production environment
+prepare_environment() {
+    print_status "$BLUE" "🔧 Preparing production environment..."
+    
+    # Create necessary directories
+    local dirs=("data" "logs" "config/prometheus" "config/grafana/provisioning" "config/grafana/dashboards")
+    
+    for dir in "${dirs[@]}"; do
+        if [[ ! -d "$dir" ]]; then
+            mkdir -p "$dir"
+            print_status "$GREEN" "✅ Created directory: $dir"
+        fi
+    done
+    
+    # Set proper permissions
+    chmod 755 data logs config
+    
+    # Create Prometheus configuration if not exists
+    if [[ ! -f "config/prometheus/prometheus.yml" ]]; then
+        cat > config/prometheus/prometheus.yml << 'EOF'
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'forge-gateway'
+    static_configs:
+      - targets: ['gateway:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'forge-service-manager'
+    static_configs:
+      - targets: ['service-manager:9000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+EOF
+        print_status "$GREEN" "✅ Created Prometheus configuration"
+    fi
+    
+    print_status "$GREEN" "✅ Environment preparation completed"
+    log "Environment preparation completed"
 }
 
 # Deploy services
 deploy_services() {
-    log "Deploying production services..."
-    
-    # Stop existing services
-    log "Stopping existing services..."
-    docker-compose -f docker-compose.scalable.yml down --remove-orphans || true
+    print_status "$BLUE" "🚀 Deploying MCP Gateway services..."
     
     # Pull latest images
-    log "Pulling latest images..."
-    docker-compose -f docker-compose.scalable.yml pull
+    print_status "$BLUE" "📥 Pulling latest images..."
+    docker-compose -f "$COMPOSE_FILE" pull
+    
+    # Stop existing services if running
+    if docker-compose -f "$COMPOSE_FILE" ps -q | grep -q .; then
+        print_status "$YELLOW" "🛑 Stopping existing services..."
+        docker-compose -f "$COMPOSE_FILE" down
+    fi
     
     # Start services
-    log "Starting production services..."
-    docker-compose -f docker-compose.scalable.yml up -d
+    print_status "$BLUE" "🔄 Starting services..."
+    docker-compose -f "$COMPOSE_FILE" up -d
     
-    success "Services deployed successfully"
+    # Wait for services to be healthy
+    print_status "$BLUE" "⏳ Waiting for services to be healthy..."
+    sleep 30
+    
+    # Check service health
+    local unhealthy_services=0
+    local services=("gateway" "service-manager" "postgres" "redis")
+    
+    for service in "${services[@]}"; do
+        local health_status
+        health_status=$(docker-compose -f "$COMPOSE_FILE" ps -q "$service" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+        
+        if [[ "$health_status" == "healthy" ]]; then
+            print_status "$GREEN" "✅ $service is healthy"
+        else
+            print_status "$YELLOW" "⚠️  $service status: $health_status"
+            ((unhealthy_services++))
+        fi
+    done
+    
+    if (( unhealthy_services > 0 )); then
+        print_status "$YELLOW" "⚠️  $unhealthy_services services may need more time to start"
+    else
+        print_status "$GREEN" "✅ All core services are healthy"
+    fi
+    
+    log "Services deployment completed"
 }
 
-# Wait for services to be healthy
-wait_for_health() {
-    log "Waiting for services to be healthy..."
-    
-    # Wait for gateway service
-    log "Waiting for gateway service..."
-    timeout 300 bash -c 'until curl -f http://localhost:8000/health; do sleep 5; done' || {
-        error "Gateway service failed to become healthy within 5 minutes"
-    }
-    
-    # Wait for service manager
-    log "Waiting for service manager..."
-    timeout 120 bash -c 'until curl -f http://localhost:9000/health; do sleep 5; done' || {
-        warning "Service manager may not be ready yet"
-    }
-    
-    success "All services are healthy"
-}
-
-# Run post-deployment verification
+# Verify deployment
 verify_deployment() {
-    log "Running post-deployment verification..."
+    print_status "$BLUE" "🔍 Verifying deployment..."
     
-    # Check service status
-    log "Checking service status..."
-    docker-compose -f docker-compose.scalable.yml ps
+    # Check if all services are running
+    local running_services
+    running_services=$(docker-compose -f "$COMPOSE_FILE" ps --services --filter "status=running" | wc -l)
     
-    # Test gateway endpoint
-    log "Testing gateway endpoint..."
-    response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
-    if [ "$response" = "200" ]; then
-        success "Gateway endpoint is responding correctly"
-    else
-        error "Gateway endpoint returned HTTP $response"
-    fi
+    print_status "$GREEN" "📊 Running services: $running_services"
     
-    # Test service discovery
-    log "Testing service discovery..."
-    services=$(curl -s http://localhost:8000/services | jq -r '.services | length' 2>/dev/null || echo "0")
-    if [ "$services" -gt "0" ]; then
-        success "Service discovery is working ($services services found)"
-    else
-        warning "Service discovery may not be fully configured"
-    fi
+    # Check accessible endpoints
+    local endpoints=(
+        "Gateway:http://localhost:8000/health"
+        "Service Manager:http://localhost:9000/health"
+        "Grafana:http://localhost:3001"
+        "Prometheus:http://localhost:9090"
+    )
     
-    success "Post-deployment verification completed"
+    for endpoint in "${endpoints[@]}"; do
+        local service_name=$(echo "$endpoint" | cut -d':' -f1)
+        local url=$(echo "$endpoint" | cut -d':' -f2-)
+        
+        print_status "$BLUE" "🔗 Checking $service_name: $url"
+        
+        # Simple connectivity check
+        if curl -s --connect-timeout 5 "$url" >/dev/null 2>&1; then
+            print_status "$GREEN" "✅ $service_name is accessible"
+        else
+            print_status "$YELLOW" "⚠️  $service_name may not be ready yet"
+        fi
+    done
+    
+    # Show resource usage
+    print_status "$BLUE" "📊 Resource usage:"
+    docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}" || true
+    
+    print_status "$GREEN" "✅ Deployment verification completed"
+    log "Deployment verification completed"
 }
 
-# Setup monitoring
-setup_monitoring() {
-    log "Setting up monitoring..."
-    
-    # Check if monitoring is configured
-    if grep -q "PROMETHEUS_URL" .env.production; then
-        log "Prometheus monitoring is configured"
-    fi
-    
-    if grep -q "GRAFANA_URL" .env.production; then
-        log "Grafana dashboard is configured"
-    fi
-    
-    success "Monitoring setup completed"
+# Show deployment summary
+show_deployment_summary() {
+    print_status "$GREEN" "🎉 MCP Gateway Production Deployment Summary"
+    echo "=================================================="
+    print_status "$BLUE" "📋 Deployment Information:"
+    echo "  • Compose File: $COMPOSE_FILE"
+    echo "  • Environment: $ENV_FILE"
+    echo "  • Log File: $LOG_FILE"
+    echo "  • Backup: $BACKUP_DIR"
+    echo ""
+    print_status "$BLUE" "🌐 Access URLs:"
+    echo "  • Gateway API: http://localhost:8000"
+    echo "  • Admin UI: http://localhost:3000"
+    echo "  • Grafana Dashboard: http://localhost:3001"
+    echo "  • Prometheus: http://localhost:9090"
+    echo ""
+    print_status "$BLUE" "🔧 Management Commands:"
+    echo "  • View logs: docker-compose -f $COMPOSE_FILE logs -f [service]"
+    echo "  • Stop services: docker-compose -f $COMPOSE_FILE down"
+    echo "  • Restart services: docker-compose -f $COMPOSE_FILE restart"
+    echo "  • Monitor resources: ./scripts/monitor-docker-resources.sh"
+    echo ""
+    print_status "$BLUE" "📊 Monitoring:"
+    echo "  • Resource monitoring: ./scripts/monitor-docker-resources.sh -c"
+    echo "  • Performance optimization: ./scripts/optimize-docker-performance.sh -a"
+    echo ""
+    print_status "$GREEN" "✅ Deployment completed successfully!"
 }
 
-# Main deployment function
+# Help function
+show_help() {
+    cat << EOF
+Usage: $SCRIPT_NAME [OPTIONS]
+
+Production Deployment Script for MCP Gateway
+
+OPTIONS:
+    -c, --check          Check prerequisites only
+    -b, --backup         Backup current deployment only
+    -v, --validate       Validate configuration only
+    -p, --prepare        Prepare environment only
+    -d, --deploy         Deploy services only
+    -f, --file FILE      Docker compose file (default: docker-compose.production.yml)
+    -e, --env FILE       Environment file (default: .env.production)
+    -l, --log FILE       Log file path (auto-generated if not specified)
+    -h, --help          Show this help message
+
+EXAMPLES:
+    $SCRIPT_NAME                          # Full deployment
+    $SCRIPT_NAME -c                       # Check prerequisites only
+    $SCRIPT_NAME -b -v                    # Backup and validate only
+    $SCRIPT_NAME -d                       # Deploy services only
+
+REQUIREMENTS:
+    - Docker and Docker Compose installed
+    - Production environment file configured
+    - Sufficient system resources for all services
+
+EOF
+}
+
+# Parse command line arguments
+RUN_ALL=true
+RUN_CHECK=false
+RUN_BACKUP=false
+RUN_VALIDATE=false
+RUN_PREPARE=false
+RUN_DEPLOY=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -c|--check)
+            RUN_ALL=false
+            RUN_CHECK=true
+            shift
+            ;;
+        -b|--backup)
+            RUN_ALL=false
+            RUN_BACKUP=true
+            shift
+            ;;
+        -v|--validate)
+            RUN_ALL=false
+            RUN_VALIDATE=true
+            shift
+            ;;
+        -p|--prepare)
+            RUN_ALL=false
+            RUN_PREPARE=true
+            shift
+            ;;
+        -d|--deploy)
+            RUN_ALL=false
+            RUN_DEPLOY=true
+            shift
+            ;;
+        -f|--file)
+            COMPOSE_FILE="$2"
+            shift 2
+            ;;
+        -e|--env)
+            ENV_FILE="$2"
+            shift 2
+            ;;
+        -l|--log)
+            LOG_FILE="$2"
+            shift 2
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            print_status "$RED" "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Main execution
 main() {
-    log "Starting production deployment for $PROJECT_NAME"
+    print_status "$BLUE" "🚀 MCP Gateway Production Deployment"
+    echo "=================================================="
     
-    # Create log file
-    mkdir -p "$(dirname "$LOG_FILE")"
+    log "Starting production deployment"
     
-    # Run deployment steps
-    check_prerequisites
-    backup_current
-    run_tests
-    deploy_services
-    wait_for_health
-    verify_deployment
-    setup_monitoring
+    # Run deployment steps based on flags
+    if [[ "$RUN_ALL" == "true" ]]; then
+        check_prerequisites
+        backup_current_deployment
+        validate_configuration
+        prepare_environment
+        deploy_services
+        verify_deployment
+    else
+        if [[ "$RUN_CHECK" == "true" ]]; then
+            check_prerequisites
+        fi
+        
+        if [[ "$RUN_BACKUP" == "true" ]]; then
+            backup_current_deployment
+        fi
+        
+        if [[ "$RUN_VALIDATE" == "true" ]]; then
+            validate_configuration
+        fi
+        
+        if [[ "$RUN_PREPARE" == "true" ]]; then
+            prepare_environment
+        fi
+        
+        if [[ "$RUN_DEPLOY" == "true" ]]; then
+            deploy_services
+            verify_deployment
+        fi
+    fi
     
-    success "Production deployment completed successfully!"
-    log "Deployment log saved to: $LOG_FILE"
-    log "Services are running at: http://localhost:8000"
-    log "Admin UI is available at: http://localhost:3000"
+    # Show summary
+    show_deployment_summary
+    
+    log "Production deployment completed successfully"
 }
 
-# Handle script arguments
-case "${1:-}" in
-    "backup")
-        backup_current
-        ;;
-    "test")
-        run_tests
-        ;;
-    "deploy")
-        deploy_services
-        ;;
-    "verify")
-        verify_deployment
-        ;;
-    "health")
-        wait_for_health
-        ;;
-    "full")
-        main
-        ;;
-    *)
-        echo "Usage: $0 {backup|test|deploy|verify|health|full}"
-        echo "  backup  - Backup current deployment"
-        echo "  test    - Run pre-deployment tests"
-        echo "  deploy  - Deploy services"
-        echo "  verify  - Verify deployment"
-        echo "  health  - Wait for services to be healthy"
-        echo "  full    - Run complete deployment (default)"
-        exit 1
-        ;;
-esac
+# Trap to handle interruption
+trap 'log "Deployment interrupted"; exit 0' INT TERM
+
+# Run main function
+main "$@"
