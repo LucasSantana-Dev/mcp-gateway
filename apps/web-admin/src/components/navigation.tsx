@@ -16,9 +16,10 @@ import {
   Globe,
   Shield,
   Database,
-  Cpu
+  Cpu,
   HardDrive,
-  Network
+  Network,
+  Activity
 } from 'lucide-react'
 
 const navigation = [
@@ -32,6 +33,12 @@ const navigation = [
     name: 'AI Performance',
     href: '/ai',
     icon: Brain,
+    current: false
+  },
+  {
+    name: 'Monitoring',
+    href: '/monitoring',
+    icon: Activity,
     current: false
   },
   {
