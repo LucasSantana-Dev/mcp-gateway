@@ -2,6 +2,39 @@
 
 All notable changes to this project are documented here.
 
+## [1.31.0] - 2026-02-19
+
+### 🎨 Phase 5: Admin UI Enhancements
+
+- **✅ Complete Server Management UI**: Full-featured virtual server management interface
+  - **Server Enable/Disable Toggles**: Interactive switch controls with real-time status updates
+  - **Visual Server Configuration**: Comprehensive UI with cards, status indicators, and detailed server views
+  - **Copy-to-Clipboard Functionality**: One-click configuration copying for all supported IDEs
+  - **IDE Integration Support**: Native support for Cursor, VSCode, Windsurf, and Claude Desktop
+  - **Downloadable Configurations**: Export server configurations as JSON files for easy sharing
+  - **Real-time Health Monitoring**: Live status updates and performance metrics tracking
+  - **Tool Usage Analytics**: Server statistics, tool counts, and active/inactive server tracking
+  - **Performance Dashboard**: Real-time metrics with charts and visual indicators
+  - **Server Lifecycle Management**: Complete CRUD operations with visual feedback
+  - **Multi-IDE Support**: Unified configuration management across different development environments
+
+**Technical Implementation**:
+- **React Components**: Modern React components with TypeScript and Tailwind CSS
+- **State Management**: Integrated with Supabase database for persistent server state
+- **Real-time Updates**: Automatic polling and status synchronization
+- **Responsive Design**: Mobile-friendly interface with adaptive layouts
+- **Accessibility**: ARIA labels and keyboard navigation support
+- **Error Handling**: Comprehensive error states and user feedback
+
+**User Experience Improvements**:
+- **Intuitive Interface**: Clean, modern design with clear visual hierarchy
+- **One-Click Operations**: Simplified server enable/disable and configuration management
+- **Visual Feedback**: Loading states, success indicators, and error messages
+- **Quick Actions**: Contextual buttons for common server management tasks
+- **Comprehensive Views**: Detailed server information with expandable sections
+
+**Impact**: Significantly improved server management experience with visual interface and one-click operations
+
 ## [1.30.0] - 2026-02-19
 
 ### 🔧 Phase 3: Command Simplification
