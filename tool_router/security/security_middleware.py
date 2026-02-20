@@ -246,6 +246,13 @@ class SecurityMiddleware:
                 details={"violations": violations}
             )
 
+            # Add penalty metadata to result
+            metadata["penalty_applied"] = {
+                "duration": penalty_duration,
+                "reason": f"High risk score: {risk_score:.2f}",
+                "timestamp": time.time()
+            }
+
         # Update metadata
         metadata.update({
             "validation_results": {
@@ -255,6 +262,7 @@ class SecurityMiddleware:
             "rate_limit": {
                 "allowed": rate_limit_result.allowed,
                 "remaining": rate_limit_result.remaining,
+                "reset_time": rate_limit_result.reset_time,
                 "retry_after": rate_limit_result.retry_after
             },
             "security_level": self.config.get("validation_level", "standard"),
@@ -331,6 +339,10 @@ class SecurityMiddleware:
     def update_config(self, new_config: Dict[str, Any]) -> None:
         """Update security configuration."""
         self.config.update(new_config)
+
+        # Update strict_mode if provided
+        if "strict_mode" in new_config:
+            self.strict_mode = new_config["strict_mode"]
 
         # Reinitialize components if needed
         if "validation_level" in new_config:
