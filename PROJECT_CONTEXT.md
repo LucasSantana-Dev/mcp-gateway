@@ -1,6 +1,6 @@
 # Forge MCP Gateway - Project Context Documentation
 
-**Version:** 1.35.1
+**Version:** 1.34.0
 **Last Updated:** 2026-02-19
 **Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
 
@@ -31,12 +31,6 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **90%** reduction in manual optimization tasks through automation
 - **100%** audit compliance with regulatory requirements
 - **95%** reduction in compliance reporting time
-
-**Recent Quality Improvements**:
-- **🧹 Documentation Cleanup**: Comprehensive cleanup of project documentation removing 19 temporary files while preserving 30 essential files
-- **🔧 Code Quality Enhancement**: Significant RAG Manager linting fixes including modern Python typing, improved error handling, and security improvements
-- **📊 Development Workflow**: Improved development environment with better import organization and code formatting
-- **🎯 Test Coverage**: Maintained 70.57% test coverage for RAG Manager with all 11 tests passing
 
 **Previous Completed Phases**:
 - **✅ PHASE 1: PRODUCTION DEPLOYMENT COMPLETE**: Complete production deployment infrastructure
@@ -852,8 +846,9 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 
 ### Issue 7: Context7/Context Awesome 406 Errors
 **Severity**: Low
-**Cause**: Upstream MCP Gateway missing Accept header
+**Cause**: Upstream Context Forge missing Accept header
 **Workaround**: Add via Admin UI with proper headers
+**Tracking**: https://github.com/IBM/mcp-context-forge/issues
 
 ## 📊 Business Rules & Constraints
 
@@ -1349,46 +1344,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - **.dockerignore**: Comprehensive exclusion patterns for optimal build performance
 - **Dockerfile.*: Security-hardened, performance-optimized container definitions
 
-<<<<<<< Updated upstream
 ###  **Documentation Requirements**
-=======
-### ✅ Phase 5.4: Advanced User Management (COMPLETE)
-
-**Goal**: Implement comprehensive RBAC (Role-Based Access Control) system with advanced user management capabilities
-
-**Completed**:
-- ✅ **Advanced User Management Component**: Complete RBAC implementation with granular permissions
-  - **User Management**: Bulk operations, advanced filtering, user lifecycle management
-  - **Role Management**: 5-tier role system (Super Admin, Admin, Moderator, Developer, Viewer)
-  - **Permission Management**: 14 granular permissions across 5 categories (servers, users, monitoring, settings, analytics)
-  - **Activity Monitoring**: User activity logging and session management
-  - **Bulk Operations**: Multi-select user actions with role changes and status updates
-- ✅ **RBAC Architecture**: Hierarchical permission system with role inheritance
-  - **Role Levels**: 100 (Super Admin) → 80 (Admin) → 60 (Moderator) → 40 (Developer) → 20 (Viewer)
-  - **Permission Categories**: Servers (4), Users (4), Monitoring (3), Settings (2), Analytics (2)
-  - **Access Control**: Feature-level permissions with UI integration
-  - **Role Assignment**: Dynamic role assignment with permission inheritance
-- ✅ **Advanced Features**: Enterprise-grade user management capabilities
-  - **User Analytics**: Real-time user statistics and activity tracking
-  - **Session Management**: Active session monitoring and termination
-  - **Activity Logging**: Comprehensive audit trail with IP tracking
-  - **Bulk Operations**: Multi-user selection and batch actions
-  - **Import/Export**: User data import/export capabilities
-- ✅ **UI Integration**: Seamless integration with existing admin interface
-  - **Tabbed Interface**: Users, Roles, Permissions, Activity, Sessions tabs
-  - **Search & Filtering**: Advanced user search with role and status filters
-  - **Real-time Updates**: Live user statistics and activity monitoring
-  - **Responsive Design**: Mobile-friendly interface with adaptive layouts
-
-**Technical Implementation**:
-- **Component Architecture**: Modular React components with TypeScript interfaces
-- **State Management**: Zustand store integration with real-time data updates
-- **Permission System**: Hierarchical RBAC with granular access control
-- **Activity Tracking**: Comprehensive user activity logging and session management
-- **Bulk Operations**: Efficient multi-user operations with batch processing
-
-**Impact**: Enterprise-grade user management with comprehensive RBAC, real-time activity monitoring, and advanced user lifecycle management capabilities
->>>>>>> Stashed changes
 
 #### **Technical Documentation**
 - [ ] Production deployment guide
