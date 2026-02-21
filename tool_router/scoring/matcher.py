@@ -1,16 +1,14 @@
+from __future__ import annotations
+
 import logging
 import re
 from typing import TYPE_CHECKING, Any
 
 from tool_router.ai.selector import OllamaSelector
 
+
 if TYPE_CHECKING:
     from tool_router.ai.feedback import FeedbackStore
-else:
-    try:
-        from tool_router.ai.feedback import FeedbackStore
-    except ImportError:
-        FeedbackStore = None
 
 
 logger = logging.getLogger(__name__)
@@ -115,7 +113,7 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
     top_n: int = 1,
     ai_selector: OllamaSelector | None = None,
     ai_weight: float = 0.7,
-    feedback_store: Any = None,
+    feedback_store: FeedbackStore | None = None,
 ) -> list[dict[str, Any]]:
     """Select the best matching tools using enhanced hybrid AI + keyword scoring.
 

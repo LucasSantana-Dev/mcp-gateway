@@ -395,6 +395,7 @@ def test_get_tools_returns_tools_from_wrapped_response() -> None:
 
 
 def test_get_tools_returns_empty_for_unknown_shape() -> None:
+    """Test graceful handling of unknown response shapes."""
     resp = MagicMock()
     resp.read.return_value = b"{}"
     resp.__enter__ = MagicMock(return_value=resp)
@@ -403,7 +404,35 @@ def test_get_tools_returns_empty_for_unknown_shape() -> None:
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
         with patch("urllib.request.urlopen", return_value=resp):
             result = get_tools()
+
+    # Business logic: unknown/empty response should return empty list
     assert result == []
+
+    # Business logic: test with malformed JSON response
+    malformed_resp = MagicMock()
+    malformed_resp.read.return_value = b"not valid json"
+    malformed_resp.__enter__ = MagicMock(return_value=malformed_resp)
+    malformed_resp.__exit__ = MagicMock(return_value=None)
+
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", return_value=malformed_resp):
+            # Should handle JSON parsing errors gracefully
+            result = get_tools()
+            assert result == []  # Should default to empty list on JSON error
+
+    # Business logic: test with null response
+    null_resp = MagicMock()
+    null_resp.read.return_value = b"null"
+    null_resp.__enter__ = MagicMock(return_value=null_resp)
+    null_resp.__exit__ = MagicMock(return_value=None)
+
+    with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
+        with patch("urllib.request.urlopen", return_value=null_resp):
+            result = get_tools()
+            assert result == []  # Should handle null response
+
+    # Business logic: verify function doesn't crash with various edge cases
+    # This tests the robustness of the response parsing logic
 
 
 def test_call_tool_raises_when_gateway_jwt_unset() -> None:

@@ -1,18 +1,26 @@
-"""Training module for AI specialist agents.
+"""Training module for specialist AI agents.
 
-This module provides the foundational data layer for the AI training system,
-including knowledge base management, pattern extraction, and data models.
+Provides comprehensive training infrastructure including:
+- Data extraction from public sources
+- Knowledge base management
+- Pattern recognition and categorization
+- Training pipeline orchestration
+- Evaluation and continuous learning
 """
 
-from .data_extraction import DataSource, ExtractedPattern, PatternCategory
-from .knowledge_base import KnowledgeBase, KnowledgeItem, KnowledgeStatus
+from __future__ import annotations
 
+from .data_extraction import PatternExtractor, DataSource
+from .knowledge_base import KnowledgeBase, PatternCategory
+from .training_pipeline import TrainingPipeline
+from .evaluation import SpecialistEvaluator, EvaluationMetric
 
 __all__ = [
+    "PatternExtractor",
     "DataSource",
-    "ExtractedPattern",
     "KnowledgeBase",
-    "KnowledgeItem",
-    "KnowledgeStatus",
     "PatternCategory",
+    "TrainingPipeline",
+    "SpecialistEvaluator",
+    "EvaluationMetric",
 ]

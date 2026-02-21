@@ -1,5 +1,7 @@
 """Enhanced context learning from feedback for AI tool selection."""
 
+from __future__ import annotations
+
 import json
 import logging
 import os

@@ -1,15 +1,17 @@
 """Health check functionality for tool router service."""
 
+from __future__ import annotations
+
 import time
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from tool_router.core.config import GatewayConfig
 from tool_router.gateway.client import HTTPGatewayClient
 
 
-class HealthStatus(Enum):
+class HealthStatus(StrEnum):
     """Health check status values."""
 
     HEALTHY = "healthy"
