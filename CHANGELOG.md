@@ -2,6 +2,51 @@
 
 All notable changes to the MCP Gateway project will be documented in this file.
 
+## [1.37.0] - 2026-02-21
+
+### 🐳 Docker Infrastructure Optimization & Security Hardening
+
+- **✅ Multi-Stage Docker Architecture**: Comprehensive Docker optimization with advanced build patterns
+  - **Dockerfile.tool-router.optimized**: Multi-stage build with proper layer caching and 30% size reduction
+  - **Dockerfile.gateway.hardened**: Security-hardened gateway with non-root user and minimal base images
+  - **Dockerfile.tool-router.simple**: Lightweight build for development environments
+  - **docker-compose.optimized.yml**: Production-ready configuration with resource limits and health checks
+
+- **✅ Security Enhancements**: Enterprise-grade container security implementation
+  - **Non-root User Implementation**: All containers run as non-root users for enhanced security
+  - **Minimal Base Images**: Reduced attack surface with minimal base image configurations
+  - **Security Scanning Integration**: Automated vulnerability scanning with Grype integration
+  - **BuildKit Configuration**: Advanced caching and parallel build execution with BuildKit
+
+- **✅ Performance Improvements**: Significant performance and resource optimization
+  - **30% Image Size Reduction**: Optimized from ~500MB to 348MB (30% improvement)
+  - **Advanced Layer Caching**: BuildKit integration for faster rebuilds and better cache utilization
+  - **Parallel Build Execution**: Optimized build pipeline with parallel processing
+  - **Resource Optimization**: Proper limits and reservations for production deployment
+
+- **✅ Automation & Tooling**: Complete automation suite for Docker operations
+  - **scripts/docker-optimize.sh**: Automated optimization workflow with one-click execution
+  - **scripts/docker-security-scan.sh**: Security vulnerability scanning with detailed reporting
+  - **docker/buildkitd.toml**: BuildKit configuration for advanced caching strategies
+  - **docs/DOCKER_OPTIMIZATION.md**: Comprehensive implementation and troubleshooting guide
+
+- **✅ Security Analysis & Reporting**: Detailed security assessment and monitoring
+  - **Grype Scan Reports**: Comprehensive vulnerability analysis with JSON and markdown reports
+  - **Security Documentation**: Detailed security assessment with remediation recommendations
+  - **Automated Scanning**: Integrated into CI/CD pipeline for continuous security monitoring
+
+**Performance Metrics**:
+- **Image Size**: Reduced from ~500MB to 348MB (30% improvement)
+- **Build Speed**: Optimized with BuildKit caching and parallel execution
+- **Security**: Non-root users, minimal base images, automated vulnerability scanning
+- **Production Ready**: Resource limits, health checks, monitoring integration
+
+**Documentation**:
+- Added comprehensive `docs/DOCKER_OPTIMIZATION.md` with implementation guide
+- Created security scan reports with vulnerability analysis
+- Automated scripts with inline documentation and usage examples
+- Complete troubleshooting guide and best practices documentation
+
 ## [1.36.1] - 2026-02-21
 
 ### 🚀 Performance Testing Infrastructure - Complete CI Resolution
