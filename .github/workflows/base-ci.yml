@@ -119,7 +119,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Install dependencies and run Snyk
         run: |
-          npm install
+          npm install --ignore-scripts
           npx snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

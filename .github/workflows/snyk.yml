@@ -140,7 +140,7 @@ jobs:
           cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --ignore-scripts
 
       - name: Run Snyk to check Node.js vulnerabilities
         uses: snyk/actions/node@master
