@@ -82,7 +82,7 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
         }
         return response.json()
       })
-      .then((data: { uptime?: number; version?: string }) => {
+      .then((data: any) => {
         set({
           status: {
             status: 'online',
@@ -272,7 +272,7 @@ function connectWebSocket() {
 
 // Cleanup on unmount
 if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
+  (window as any).addEventListener('beforeunload', () => {
     if (ws) {
       ws.close()
     }
