@@ -26,18 +26,7 @@ class VirtualServerManager:
     """Manages virtual server lifecycle."""
 
     def __init__(self, config_file: str = None):
-        # Validate config file path to prevent path traversal
-        if config_file is not None:
-            # Ensure config_file is relative and within project
-            config_path = Path(config_file)
-            if config_path.is_absolute():
-                raise ValueError("Config file must be relative to project directory")
-            if ".." in config_path.parts:
-                raise ValueError("Config file cannot contain parent directory references")
-            self.config_file = config_file
-        else:
-            self.config_file = "config/virtual-servers.txt"
-
+        self.config_file = config_file or "config/virtual-servers.txt"
         self.config_path = Path(self.config_file)
         self.servers: Dict[str, VirtualServer] = {}
         self.load_servers()
@@ -96,17 +85,13 @@ class VirtualServerManager:
 
     def save_servers(self) -> None:
         """Save virtual servers to configuration file."""
-        # Additional safety check before opening file
-        if not self.config_path.is_relative() or ".." in self.config_path.parts:
-            raise ValueError("Invalid config path detected")
-
         # Create backup
-        backup_path = self.config_path.with_suffix(".backup")
+        backup_path = self.config_path.with_suffix('.backup')
         if self.config_path.exists():
             backup_path.write_text(self.config_path.read_text())
 
         # Write new configuration
-        with self.config_path.open("w") as f:
+        with open(self.config_path, 'w') as f:
             f.write("# Virtual servers: Name|enabled|gateways|description\n")
             f.write("# enabled: true/false - controls server creation\n")
             f.write("# gateways: comma-separated list of gateway names\n")

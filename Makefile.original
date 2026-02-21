@@ -19,7 +19,7 @@ help-examples: ## Show practical command examples
 
 # === Setup & Secrets ===
 generate-secrets: ## Generate JWT and encryption secrets for .env
-	@echo "# Add these to .env (min 32 chars; weak secrets cause 'Server disconnected' / mcp-gateway errors):"
+	@echo "# Add these to .env (min 32 chars; weak secrets cause 'Server disconnected' / context-forge errors):"
 	@echo "JWT_SECRET_KEY=$(shell openssl rand -base64 32)"
 	@echo "AUTH_ENCRYPTION_SECRET=$(shell openssl rand -base64 32)"
 
