@@ -1,5 +1,7 @@
 """Enhanced prompt templates for AI tool selection with improved NLP."""
 
+from typing import Any
+
 
 class PromptTemplates:
     """Enhanced prompt templates for AI tool selection."""
@@ -128,6 +130,7 @@ Respond with valid JSON only, no additional text:
         
         history_section = ""
         if similar_tools:
+<<<<<<< Updated upstream
             history_section = f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
         
         if enhanced:
@@ -135,6 +138,14 @@ Respond with valid JSON only, no additional text:
         else:
             template = cls.TOOL_SELECTION_TEMPLATE
         
+=======
+            history_section = (
+                f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
+            )
+
+        template = cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
+
+>>>>>>> Stashed changes
         return template.format(
             task=task,
             tool_list=tool_list,

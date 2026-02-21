@@ -137,10 +137,6 @@ services:
       ROUTER_AI_ENDPOINT: ${ROUTER_AI_ENDPOINT:-http://ollama:11434}
       ROUTER_AI_TIMEOUT_MS: ${ROUTER_AI_TIMEOUT_MS:-2000}
       ROUTER_AI_WEIGHT: ${ROUTER_AI_WEIGHT:-0.7}
-    command:
-      - sh
-      - -c
-      - "python3 -m tool_router"
     ports:
       - "${FORGE_TOOL_ROUTER_PORT:-8030}:8030"
     depends_on:
