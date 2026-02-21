@@ -852,9 +852,8 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 
 ### Issue 7: Context7/Context Awesome 406 Errors
 **Severity**: Low
-**Cause**: Upstream Context Forge missing Accept header
+**Cause**: Upstream MCP Gateway missing Accept header
 **Workaround**: Add via Admin UI with proper headers
-**Tracking**: https://github.com/IBM/mcp-context-forge/issues
 
 ## 📊 Business Rules & Constraints
 
