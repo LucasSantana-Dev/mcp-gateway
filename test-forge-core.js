@@ -15,8 +15,8 @@ async function testForgeCoreIntegration() {
 
     // Test ForgeCore instantiation
     const forgeCore = new ForgeCore({
-      gatewayUrl: process.env.GATEWAY_URL || "http://localhost:4444",
-      authToken: process.env.FORGE_CORE_AUTH_TOKEN,
+      gatewayUrl: process.env.TEST_GATEWAY_URL || "http://localhost:4444",
+      authToken: process.env.TEST_AUTH_TOKEN || "test-token-placeholder",
       timeout: 120000,
     });
     console.log("✅ ForgeCore instantiation successful");

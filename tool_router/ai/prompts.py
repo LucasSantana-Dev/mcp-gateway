@@ -131,7 +131,6 @@ Respond with valid JSON only, no additional text:
         history_section = ""
         if similar_tools:
 <<<<<<< Updated upstream
-<<<<<<< Updated upstream
             history_section = f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
         
         if enhanced:
@@ -143,13 +142,6 @@ Respond with valid JSON only, no additional text:
             history_section = (
                 f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
             )
-=======
-            history_section = (
-                f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
-            )
-
-        template = cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
->>>>>>> Stashed changes
 
         template = cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
 

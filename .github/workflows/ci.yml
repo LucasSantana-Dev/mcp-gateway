@@ -5,9 +5,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, master, dev, release/*, feature/*]
+    branches: [main, master, dev, release/*, feature/*, feat/*]
   pull_request:
-    branches: [main, master, dev, release/*]
+    branches: [main, master, dev, release/*, feature/*, feat/*]
 
 # Environment variables (aligned with shared template)
 env:
@@ -17,10 +17,10 @@ env:
   CACHE_VERSION: "v1"
 
 jobs:
-  # Use shared base CI workflow
+  # Use local base CI workflow
   ci:
     name: Base CI Pipeline
-    uses: ./.github/workflows/base-ci.yml
+    uses: ./.github/workflows/base-ci-shared.yml
     with:
       project-type: 'gateway'
       node-version: '22'
@@ -28,8 +28,6 @@ jobs:
       enable-docker: true
       enable-security: true
       enable-coverage: true
-      coverage-threshold: '80'
-      test-parallel: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

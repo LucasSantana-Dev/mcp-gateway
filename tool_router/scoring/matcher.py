@@ -1,14 +1,16 @@
-from __future__ import annotations
-
 import logging
 import re
 from typing import TYPE_CHECKING, Any
 
 from tool_router.ai.selector import OllamaSelector
 
-
 if TYPE_CHECKING:
     from tool_router.ai.feedback import FeedbackStore
+else:
+    try:
+        from tool_router.ai.feedback import FeedbackStore
+    except ImportError:
+        FeedbackStore = None
 
 
 logger = logging.getLogger(__name__)
@@ -113,7 +115,7 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
     top_n: int = 1,
     ai_selector: OllamaSelector | None = None,
     ai_weight: float = 0.7,
-    feedback_store: FeedbackStore | None = None,
+    feedback_store: Any = None,
 ) -> list[dict[str, Any]]:
     """Select the best matching tools using enhanced hybrid AI + keyword scoring.
 
@@ -140,9 +142,7 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
 
     if ai_selector:
         try:
-            ai_result = ai_selector.select_tool(
-                task, tools, context=context or "", similar_tools=similar_tools or None
-            )
+            ai_result = ai_selector.select_tool(task, tools, context=context or "", similar_tools=similar_tools or None)
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
@@ -165,7 +165,10 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
             hybrid_score = (ai_score * ai_weight) + (normalized_keyword_score * (1 - ai_weight))
             logger.info(
                 "Hybrid score for %s: AI=%.2f, Keyword=%.2f, Hybrid=%.2f",
-                tool_name, ai_score, normalized_keyword_score, hybrid_score,
+                tool_name,
+                ai_score,
+                normalized_keyword_score,
+                hybrid_score,
             )
         else:
             # Non-AI-selected tools get keyword-only scoring
@@ -224,9 +227,7 @@ def select_top_matching_tools_enhanced(  # noqa: PLR0913
 
     if ai_selector:
         try:
-            ai_result = ai_selector.select_tool(
-                task, tools, context=context or "", similar_tools=similar_tools or None
-            )
+            ai_result = ai_selector.select_tool(task, tools, context=context or "", similar_tools=similar_tools or None)
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
