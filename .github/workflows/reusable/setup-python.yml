@@ -7,18 +7,22 @@ on:
         description: 'Python version to use'
         required: false
         default: '3.12'
+        type: string
       cache-dependency-path:
         description: 'Path to requirements file'
         required: false
         default: 'requirements.txt'
+        type: string
       enable-cache:
         description: 'Enable dependency caching'
         required: false
         default: true
+        type: boolean
       requirements-files:
         description: 'List of requirements files'
         required: false
         default: 'requirements.txt'
+        type: string
 
 jobs:
   setup-python:

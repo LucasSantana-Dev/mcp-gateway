@@ -7,18 +7,22 @@ on:
         description: 'Coverage files to upload'
         required: false
         default: './coverage.xml,./htmlcov/'
+        type: string
       flags:
         description: 'Coverage flags'
         required: false
         default: 'unittests'
+        type: string
       name:
         description: 'Coverage report name'
         required: false
         default: 'codecov-umbrella'
+        type: string
       fail_ci_if_error:
         description: 'Fail CI if upload fails'
         required: false
         default: false
+        type: boolean
     secrets:
       CODECOV_TOKEN:
         description: 'Codecov token'

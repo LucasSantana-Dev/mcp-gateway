@@ -7,34 +7,42 @@ on:
         description: 'Type of project (gateway, webapp, mcp)'
         required: false
         default: 'gateway'
+        type: string
       node-version:
         description: 'Node.js version to use'
         required: false
         default: '22'
+        type: string
       python-version:
         description: 'Python version to use'
         required: false
         default: '3.12'
+        type: string
       enable-docker:
         description: 'Enable Docker builds'
         required: false
         default: true
+        type: boolean
       enable-security:
         description: 'Enable security scanning'
         required: false
         default: true
+        type: boolean
       enable-coverage:
         description: 'Enable coverage reporting'
         required: false
         default: true
+        type: boolean
       coverage-threshold:
         description: 'Coverage threshold percentage'
         required: false
         default: '80'
+        type: string
       test-parallel:
         description: 'Run tests in parallel'
         required: false
         default: true
+        type: boolean
     secrets:
       CODECOV_TOKEN:
         description: 'Codecov token'
@@ -89,7 +97,7 @@ jobs:
 
       - name: Run Ruff linting
         run: |
-          ruff check apps/ src/ scripts/ --format=github
+          ruff check apps/ src/ scripts/ --output-format=github
 
       - name: Run Black formatting check
         run: |
@@ -171,15 +179,15 @@ jobs:
             --cov-report=term-missing \
             --cov-fail-under=${{ inputs.coverage-threshold }}
 
-      - name: Upload coverage
+      - name: Upload coverage to Codecov
         if: inputs.enable-coverage
-        uses: ./.github/workflows/reusable/upload-coverage.yml
+        uses: codecov/codecov-action@v4
         with:
-          coverage-files: './coverage.xml,./htmlcov/'
-          flags: 'python-tests'
-          name: 'python-coverage'
-        secrets:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml,./htmlcov/
+          flags: python-tests
+          name: python-coverage
+          fail_ci_if_error: false
 
   test-typescript:
     name: Test TypeScript
@@ -205,15 +213,15 @@ jobs:
         run: |
           npm test || npm run test:unit
 
-      - name: Upload coverage
+      - name: Upload coverage to Codecov
         if: inputs.enable-coverage
-        uses: ./.github/workflows/reusable/upload-coverage.yml
+        uses: codecov/codecov-action@v4
         with:
-          coverage-files: './coverage/lcov.info,./coverage/'
-          flags: 'typescript-tests'
-          name: 'typescript-coverage'
-        secrets:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info,./coverage/
+          flags: typescript-tests
+          name: typescript-coverage
+          fail_ci_if_error: false
 
   # Build jobs
   build-python:

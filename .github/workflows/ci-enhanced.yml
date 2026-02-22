@@ -63,7 +63,7 @@ jobs:
       - name: Run linting and formatting checks
         run: |
           pip install ruff black mypy
-          ruff check . --format=github
+          ruff check . --output-format=github
           black --check .
           mypy . --ignore-missing-imports || true
 
@@ -199,10 +199,8 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: |
-            ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
-            forge-mcp-gateway-tool-router:latest
-            forge-mcp-gateway-service-manager:latest
+          scan-type: 'fs'
+          scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
